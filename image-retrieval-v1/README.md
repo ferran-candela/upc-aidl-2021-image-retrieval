@@ -8,7 +8,7 @@ conda create --name image-retrieval-v1 python=3.8
 Then, activate the environment
 
 ```
-conda activate aidl-session3
+conda activate image-retrieval-v1
 ```
 and install the dependencies
 
