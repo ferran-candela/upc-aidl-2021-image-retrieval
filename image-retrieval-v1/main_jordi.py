@@ -150,26 +150,26 @@ feature_extractor
 # it only requires running the convolutional base once for every input image, and the convolutional base is by far the most expensive 
 # part of the pipeline. However, for the exact same reason, this technique would not allow us to leverage data augmentation at all.
 
-# def extract_features(path):
-#     transform = transforms.Compose([
-#                                 transforms.Resize(150),
-#                                 transforms.CenterCrop(150),
-#                                 transforms.ToTensor(),
-#     ])
-#     dataset = MyDataset(path, transform=transform)
-#     dataloader = DataLoader(dataset, batch_size=100, shuffle=False) #, num_workers=4
-#     features = []
-#     labels = []
-#     with torch.no_grad():
-#         for image_batch, label_batch in dataloader:
-#             image_batch, label_batch = image_batch.to(device), label_batch.to(device)
-#             features_batch = feature_extractor(image_batch)
-#             features.append(features_batch)
-#             labels.append(label_batch)
-#     features_tensor = torch.cat(features, dim=0)
-#     labels_tensor = torch.cat(labels, dim=0)
+def extract_features(path):
+    transform = transforms.Compose([
+                                transforms.Resize(150),
+                                transforms.CenterCrop(150),
+                                transforms.ToTensor(),
+    ])
+    dataset = MyDataset(path, transform=transform)
+    dataloader = DataLoader(dataset, batch_size=100, shuffle=False) #, num_workers=4
+    features = []
+    labels = []
+    with torch.no_grad():
+        for image_batch, label_batch in dataloader:
+            image_batch, label_batch = image_batch.to(device), label_batch.to(device)
+            features_batch = feature_extractor(image_batch)
+            features.append(features_batch)
+            labels.append(label_batch)
+    features_tensor = torch.cat(features, dim=0)
+    labels_tensor = torch.cat(labels, dim=0)
 
-#     return features_tensor, labels_tensor
+    return features_tensor, labels_tensor
 
 
 # train_features, train_labels = extract_features(train_dir)

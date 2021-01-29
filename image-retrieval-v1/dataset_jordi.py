@@ -24,4 +24,4 @@ class MyDataset(Dataset):
         sample = Image.open(path)
         if self.transform:
             sample = self.transform(sample)
-        return sample
+        return sample,masterCategory
