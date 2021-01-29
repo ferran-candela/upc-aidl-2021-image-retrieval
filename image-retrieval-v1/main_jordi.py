@@ -108,6 +108,7 @@ plt.imshow(ds[0])
 plt.xticks([]); plt.yticks([]); plt.grid(False)
 
 
+#Data preprocessing
 # images = 60x80 pixels
 transform = transforms.Compose([
     transforms.Resize(128),
@@ -125,10 +126,10 @@ val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
 print(train_dataset [0].shape)
 
-for data_batch, labels_batch in train_loader:
-    print('data batch shape:', data_batch.shape)
-    print('labels batch shape:', labels_batch.shape)
-    break
+# for data_batch, labels_batch in train_loader:
+#     print('data batch shape:', data_batch.shape)
+#     print('labels batch shape:', labels_batch.shape)
+#     break
 
 
 
@@ -140,29 +141,67 @@ pretrained_model = vgg16(pretrained=True)
 pretrained_model.eval()
 pretrained_model.to(device)
 
+# takes the first part of the model, to use it as a feature_extractor
 feature_extractor = pretrained_model.features
 feature_extractor    
 
-def extract_features(path):
-    transform = transforms.Compose([
-                                transforms.Resize(150),
-                                transforms.CenterCrop(150),
-                                transforms.ToTensor(),
-    ])
-    dataset = MyDataset(path, transform=transform)
-    dataloader = DataLoader(dataset, batch_size=100, shuffle=False) #, num_workers=4
-    features = []
-    labels = []
-    with torch.no_grad():
-        for image_batch, label_batch in dataloader:
-            image_batch, label_batch = image_batch.to(device), label_batch.to(device)
-            features_batch = feature_extractor(image_batch)
-            features.append(features_batch)
-            labels.append(label_batch)
-    features_tensor = torch.cat(features, dim=0)
-    labels_tensor = torch.cat(labels, dim=0)
+#The method we will use consists in running the convolutional base over our dataset, recording its output to a Numpy array on disk, 
+# then using this data as input to a standalone densely-connected classifier. This solution is very fast and cheap to run, because 
+# it only requires running the convolutional base once for every input image, and the convolutional base is by far the most expensive 
+# part of the pipeline. However, for the exact same reason, this technique would not allow us to leverage data augmentation at all.
 
-    return features_tensor, labels_tensor
+# def extract_features(path):
+#     transform = transforms.Compose([
+#                                 transforms.Resize(150),
+#                                 transforms.CenterCrop(150),
+#                                 transforms.ToTensor(),
+#     ])
+#     dataset = MyDataset(path, transform=transform)
+#     dataloader = DataLoader(dataset, batch_size=100, shuffle=False) #, num_workers=4
+#     features = []
+#     labels = []
+#     with torch.no_grad():
+#         for image_batch, label_batch in dataloader:
+#             image_batch, label_batch = image_batch.to(device), label_batch.to(device)
+#             features_batch = feature_extractor(image_batch)
+#             features.append(features_batch)
+#             labels.append(label_batch)
+#     features_tensor = torch.cat(features, dim=0)
+#     labels_tensor = torch.cat(labels, dim=0)
+
+#     return features_tensor, labels_tensor
 
 
-train_features, train_labels = extract_features(train_dir)    
+# train_features, train_labels = extract_features(train_dir)
+
+#The extracted features are currently of shape (samples, 512, 4, 4). We will feed them to a densely-connected classifier, so first we must flatten them to (samples, 8192):
+
+# train_features = np.reshape(train_features, (-1, 4 * 4 * 512))
+# validation_features = np.reshape(validation_features, (-1, 4 * 4 * 512))
+
+# densely-connected classifier 
+# feature_classifier = nn.Sequential(
+#     nn.Linear(4x4x512, 256),
+#     nn.ReLU(),
+#     nn.Dropout(0.5),
+#     nn.Linear(256, 1),
+#     nn.Sigmoid()
+# )
+
+
+# feature_classifier.to(device)
+
+# optimizer = optim.Adam(feature_classifier.parameters(), lr=0.001)
+# criterion = nn.BCELoss()
+
+# from torch.utils.data import TensorDataset
+
+# batch_size = 64
+# train_features_dataset = TensorDataset(torch.tensor(train_features), torch.tensor(train_labels))
+# train_features_loader = DataLoader(train_features_dataset, batch_size=batch_size, shuffle=True)
+
+# val_features_dataset = TensorDataset(torch.tensor(validation_features), torch.tensor(validation_labels))
+# val_features_loader = DataLoader(val_features_dataset, batch_size=batch_size, shuffle=False)
+
+# epochs = 10
+# train_accuracies, train_losses, val_accuracies, val_losses = train_model(feature_classifier, optimizer, criterion, train_features_loader, val_features_loader, epochs)
