@@ -21,7 +21,7 @@ class MyDataset(Dataset):
         
         imageid,gender,masterCategory,subCategory,articleType,baseColour,season,year,usage,productDisplayName = self.labels_df.loc[idx, :]
         path = os.path.join(self.images_path, f"{imageid}.jpg")
-        sample = Image.open(path)
+        sample = Image.open(path).convert('RGB')
         if self.transform:
             sample = self.transform(sample)
         return sample,masterCategory

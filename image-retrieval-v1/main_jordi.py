@@ -14,6 +14,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from sklearn.preprocessing import normalize
+from sklearn.decomposition import PCA
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -26,7 +28,7 @@ original_labels_file = original_dataset_dir + 'styles.csv'
 base_dir = '/home/manager/upcschool-ai/data/FashionProduct/processed_datalab'
 
 #Delete all processed data directory
-shutil.rmtree(base_dir)
+#shutil.rmtree(base_dir)
 
 if not os.path.exists(base_dir):
     os.mkdir(base_dir)
@@ -43,75 +45,68 @@ test_dir = os.path.join(base_dir, 'test')
 if not os.path.exists(test_dir):
     os.mkdir(test_dir)
 
-# Divide labels in train, test and validate
-labels_df = pd.read_csv(original_labels_file, error_bad_lines=False)
-train_df, validate_df, test_df = np.split(labels_df.sample(frac=1, random_state=42), 
-                                        [int(.6*len(labels_df)), int(.8*len(labels_df))])
-# Divide images for train, test and validate and copy in destination folder
-for index, row in train_df.iterrows():
-    src = os.path.join(original_image_dir, str(row['id']) + ".jpg")
-    if os.path.isfile(src):
-        dst = os.path.join(train_dir, str(row['id']) + ".jpg")
-        shutil.copyfile(src, dst)
-    else:        
-        train_df.drop(index, inplace=True)
+if not os.path.isfile(os.path.join(train_dir, "train_styles.csv")):
 
-for index, row in validate_df.iterrows():
-    src = os.path.join(original_image_dir, str(row['id']) + ".jpg")
-    if os.path.isfile(src):
-        dst = os.path.join(validation_dir, str(row['id']) + ".jpg")
-        shutil.copyfile(src, dst)        
-    else:        
-        validate_df.drop(index, inplace=True)
+    # Divide labels in train, test and validate
+    labels_df = pd.read_csv(original_labels_file, error_bad_lines=False)
 
-for index, row in test_df.iterrows():
-    src = os.path.join(original_image_dir, str(row['id']) + ".jpg")
-    if os.path.isfile(src):
-        dst = os.path.join(test_dir, str(row['id']) + ".jpg")
-        shutil.copyfile(src, dst)        
-    else:        
-        test_df.drop(index, inplace=True)
+    #train_df, validate_df, test_df = np.split(labels_df.sample(frac=1, random_state=42), 
+    #                                    [int(.6*len(labels_df)), int(.8*len(labels_df))])
+    train_df = labels_df.sample(640)
+    validate_df = labels_df.sample(128)
+    test_df= labels_df.sample(128)
 
+    # Save datasets for don't repeat the copy images
+    train_df.to_csv(os.path.join(train_dir, "train_styles.csv"),index=False)
+    validate_df.to_csv(os.path.join(validation_dir, "val_styles.csv"),index=False)
+    test_df.to_csv(os.path.join(test_dir, "test_styles.csv"),index=False)
 
-#num_files = len([f for f in os.listdir(original_image_dir)if os.path.isfile(os.path.join(original_image_dir, f))])
+    # Divide images for train, test and validate and copy in destination folder
+    for index, row in train_df.iterrows():
+        src = os.path.join(original_image_dir, str(row['id']) + ".jpg")
+        if os.path.isfile(src):
+            dst = os.path.join(train_dir, str(row['id']) + ".jpg")
+            shutil.copyfile(src, dst)
+        else:        
+            train_df.drop(index, inplace=True)
 
-# Divide images for train, test and validate
+    for index, row in validate_df.iterrows():
+        src = os.path.join(original_image_dir, str(row['id']) + ".jpg")
+        if os.path.isfile(src):
+            dst = os.path.join(validation_dir, str(row['id']) + ".jpg")
+            shutil.copyfile(src, dst)        
+        else:        
+            validate_df.drop(index, inplace=True)
 
-#train_size = int(0.6 * num_files)
-#test_size = int(0.2 * num_files)
-#validate_size = num_files - train_size - test_size
+    for index, row in test_df.iterrows():
+        src = os.path.join(original_image_dir, str(row['id']) + ".jpg")
+        if os.path.isfile(src):
+            dst = os.path.join(test_dir, str(row['id']) + ".jpg")
+            shutil.copyfile(src, dst)        
+        else:        
+            test_df.drop(index, inplace=True)
 
-# parent_list = os.listdir(original_image_dir)
-# count =0
-# for child in parent_list:
-#     if count < train_size:
-#         folder = train_dir
-#     elif count >= train_size and count < train_size + test_size:
-#         folder = test_dir
-#     else:
-#         folder = validation_dir
-#     src = os.path.join(original_image_dir, child)
-#     dst = os.path.join(folder, child)
-#     shutil.copyfile(src, dst)        
-#     count = count+1
+    #Test load train dataset and show image
+    # ds = MyDataset(original_image_dir,labels_df)
+    # print('Number of images', len(ds))
+    # plt.figure(figsize=(8, 10))
+    # plt.imshow(ds[0][0])
+    # plt.xticks([]); plt.yticks([]); plt.grid(False)
 
+else:
+    train_df = pd.read_csv(os.path.join(train_dir, "train_styles.csv"))
+    validate_df = pd.read_csv(os.path.join(validation_dir, "val_styles.csv"))
+    test_df = pd.read_csv(os.path.join(test_dir, "test_styles.csv"))
 
 print('total training images:', len(os.listdir(train_dir)))
 print('total test images:', len(os.listdir(test_dir)))
 print('total validation images:', len(os.listdir(validation_dir)))
 
-#Test load train dataset and show image
-ds = MyDataset(original_image_dir,labels_df)
-print('Number of images', len(ds))
-plt.figure(figsize=(8, 10))
-plt.imshow(ds[0])
-plt.xticks([]); plt.yticks([]); plt.grid(False)
-
-
 #Data preprocessing
 # images = 60x80 pixels
+
 transform = transforms.Compose([
-    transforms.Resize(128),
+    transforms.Resize((128,128)),
     transforms.CenterCrop(128-32),
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -124,7 +119,7 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 val_dataset = MyDataset(validation_dir,validate_df,transform=transform)
 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)        
 
-print(train_dataset [0].shape)
+print(train_dataset [0][0].shape)
 
 # for data_batch, labels_batch in train_loader:
 #     print('data batch shape:', data_batch.shape)
@@ -136,72 +131,142 @@ print(train_dataset [0].shape)
 #VGG16 network, trained on ImageNet
 pretrained_model = vgg16(pretrained=True)
 
+# Tuning the batch norm
+
+# Here we're going to apply a rudimentaty domain adaptation trick. The batch norm statistics for this network match those of the ImageNet dataset. 
+# We can use a trick to get them to match our dataset. The idea is to put the network into train mode and do a pass over the dataset without doing any backpropagation. 
+# This will cause the network to update the batch norm statistics for the model without modifying the weights. This can sometimes improve results.
+pretrained_model.train()
+n_batches = len(train_loader)
+i = 1
+for image_batch, label_batch in train_loader:
+    # move batch to device and forward pass through network
+    pretrained_model(image_batch.to(device))
+    print(f'\rTuning batch norm statistics {i}/{n_batches}', end='', flush=True)
+    i += 1
+
+
 # It is very important to put the network into eval mode before extracting features! This 
 # turns off things like dropout and using batch statistics in batch norm.
 pretrained_model.eval()
 pretrained_model.to(device)
 
-# takes the first part of the model, to use it as a feature_extractor
-feature_extractor = pretrained_model.features
-feature_extractor    
 
-#The method we will use consists in running the convolutional base over our dataset, recording its output to a Numpy array on disk, 
-# then using this data as input to a standalone densely-connected classifier. This solution is very fast and cheap to run, because 
-# it only requires running the convolutional base once for every input image, and the convolutional base is by far the most expensive 
-# part of the pipeline. However, for the exact same reason, this technique would not allow us to leverage data augmentation at all.
-
-def extract_features(path):
+def extract_features(dataloader):
     transform = transforms.Compose([
-                                transforms.Resize(150),
-                                transforms.CenterCrop(150),
-                                transforms.ToTensor(),
+        transforms.Resize((128,128)),
+        transforms.CenterCrop(128-32),
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
-    dataset = MyDataset(path, transform=transform)
-    dataloader = DataLoader(dataset, batch_size=100, shuffle=False) #, num_workers=4
+    n_batches = len(dataloader)
+    i = 1    
     features = []
-    labels = []
     with torch.no_grad():
         for image_batch, label_batch in dataloader:
-            image_batch, label_batch = image_batch.to(device), label_batch.to(device)
-            features_batch = feature_extractor(image_batch)
-            features.append(features_batch)
-            labels.append(label_batch)
-    features_tensor = torch.cat(features, dim=0)
-    labels_tensor = torch.cat(labels, dim=0)
+            image_batch = image_batch.to(device)
 
-    return features_tensor, labels_tensor
+            batch_features = pretrained_model(image_batch)
 
+            # features to numpy
+            batch_features = torch.squeeze(batch_features).cpu().numpy()
 
-# train_features, train_labels = extract_features(train_dir)
+            # collect features
+            features.append(batch_features)
+            print(f'\rProcessed {i} of {n_batches} batches', end='', flush=True)
 
-#The extracted features are currently of shape (samples, 512, 4, 4). We will feed them to a densely-connected classifier, so first we must flatten them to (samples, 8192):
+            i += 1
 
-# train_features = np.reshape(train_features, (-1, 4 * 4 * 512))
-# validation_features = np.reshape(validation_features, (-1, 4 * 4 * 512))
-
-# densely-connected classifier 
-# feature_classifier = nn.Sequential(
-#     nn.Linear(4x4x512, 256),
-#     nn.ReLU(),
-#     nn.Dropout(0.5),
-#     nn.Linear(256, 1),
-#     nn.Sigmoid()
-# )
+    # stack the features into a N x D matrix            
+    features = np.vstack(features)
+    return features
 
 
-# feature_classifier.to(device)
+train_features = extract_features(train_loader)
 
-# optimizer = optim.Adam(feature_classifier.parameters(), lr=0.001)
-# criterion = nn.BCELoss()
+print(f'\nFeatures are {train_features.shape}')
 
-# from torch.utils.data import TensorDataset
+#Postprocessing
+# A standard postprocessing pipeline used in retrieval applications is to do L2-normalization,
+# PCA whitening, and L2-normalization again. 
+# Effectively this decorrelates the features and makes them unit vectors.
+train_features = normalize(train_features, norm='l2')
+train_features = PCA(128, whiten=True).fit_transform(train_features)
+train_features= normalize(train_features, norm='l2')
 
-# batch_size = 64
-# train_features_dataset = TensorDataset(torch.tensor(train_features), torch.tensor(train_labels))
-# train_features_loader = DataLoader(train_features_dataset, batch_size=batch_size, shuffle=True)
+print(f'\nNormalized features are {train_features.shape}')
 
-# val_features_dataset = TensorDataset(torch.tensor(validation_features), torch.tensor(validation_labels))
-# val_features_loader = DataLoader(val_features_dataset, batch_size=batch_size, shuffle=False)
 
-# epochs = 10
-# train_accuracies, train_losses, val_accuracies, val_losses = train_model(feature_classifier, optimizer, criterion, train_features_loader, val_features_loader, epochs)
+#Querying the data - don't normalize
+
+img_ds = MyDataset(train_dir,train_df)
+
+# change this to the index of the image to use as a query!
+query_idx = 1
+
+
+#Similar images will produce similar feature vectors. 
+#There are many ways to measure similarity, but the most common are 
+#euclidean distance and cosine similarity
+
+# COSINE SIMILARITY
+# searching can be done using cosine similarity
+# since the features are normalized, this is just a matrix multiplication
+
+query = train_features[query_idx]
+print(query.shape)
+
+scores = train_features @ query # Xq
+print(scores.shape)
+
+# rank by score, descending, and skip the top match (because it will be the query)
+ranking = (-scores).argsort()[1:]
+
+# show the query image
+print('Query')
+plt.figure(figsize=(2.8,2.8))
+plt.imshow(img_ds[query_idx][0])
+plt.grid(False)
+plt.xticks([])
+plt.yticks([])
+plt.show()
+
+print('Top 10')
+fig, ax = plt.subplots(nrows=2, ncols=5, figsize=(18, 6))
+ax = ax.ravel()
+for i in range(10):
+    img = img_ds[ranking[i]][0]
+
+    # show the image (remove ticks and grid)
+    ax[i].imshow(img)
+    ax[i].grid(False) 
+    ax[i].set_xticks([])
+    ax[i].set_yticks([])
+    ax[i].set_title(i)
+plt.show()
+
+
+
+#Run evaluation
+
+#compute the similarity matrix
+S = train_features @ train_features.T
+print(S.shape)
+
+from sklearn.metrics import average_precision_score
+
+def evaluate(S, features, index):
+    query = features[index]
+    scores = features @ query
+        #     aps = []
+#     for i, q in enumerate(q_indx):
+#         s = S[:, q]
+#         y_t = y_true[i]
+#         ap = average_precision_score(y_t, s)
+#         aps.append(ap)
+#     df = pd.DataFrame({'ap': aps}, index=q_indx)
+#     return df
+
+# #compute mAP
+# df = evaluate(S, y_true, q_indx)
+# print(f'mAP: {df.ap.mean():0.04f}')
