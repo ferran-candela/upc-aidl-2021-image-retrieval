@@ -13,7 +13,7 @@ conda activate image-retrieval-v1
 and install the dependencies
 
 ```
-pip install -r requirements.txt
+pip install -r image-retrieval-v1/requirements.txt 
 ```
 
 ## References
