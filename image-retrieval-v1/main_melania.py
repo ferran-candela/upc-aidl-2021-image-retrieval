@@ -1,9 +1,6 @@
 import os, shutil
 import torch
 from torch.utils.data import DataLoader
-from dataset_jordi import MyDataset
-#from model import MyModel
-#from utils import accuracy
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
 from torchvision.models import vgg16
@@ -17,6 +14,10 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import normalize
 from sklearn.decomposition import PCA
 
+from dataset_jordi import MyDataset
+from file_management import create_directory, divide_images_into_df
+from feature_extraction import extract_features
+
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 # The path to the directory where the original dataset was uncompressed
@@ -28,22 +29,14 @@ original_labels_file = original_dataset_dir + '/styles.csv'
 base_dir = '/Users/melaniasanchezblanco/Documents/UPC_AIDL/Project/processed_datalab'
 
 #Delete all processed data directory
-#shutil.rmtree(base_dir)
 
 if not os.path.exists(base_dir):
     os.mkdir(base_dir)
 
-
 # Directories for our training, validation and test splits
-train_dir = os.path.join(base_dir, 'train')
-if not os.path.exists(train_dir):
-    os.mkdir(train_dir)
-validation_dir = os.path.join(base_dir, 'validation')
-if not os.path.exists(validation_dir):
-    os.mkdir(validation_dir)
-test_dir = os.path.join(base_dir, 'test')
-if not os.path.exists(test_dir):
-    os.mkdir(test_dir)
+train_dir = create_directory(base_dir, 'train')
+validation_dir = create_directory(base_dir, 'validation')
+test_dir = create_directory(base_dir, 'test')
 
 if not os.path.isfile(os.path.join(train_dir, "train_styles.csv")):
 
@@ -62,36 +55,9 @@ if not os.path.isfile(os.path.join(train_dir, "train_styles.csv")):
     test_df.to_csv(os.path.join(test_dir, "test_styles.csv"),index=False)
 
     # Divide images for train, test and validate and copy in destination folder
-    for index, row in train_df.iterrows():
-        src = os.path.join(original_image_dir, str(row['id']) + ".jpg")
-        if os.path.isfile(src):
-            dst = os.path.join(train_dir, str(row['id']) + ".jpg")
-            shutil.copyfile(src, dst)
-        else:        
-            train_df.drop(index, inplace=True)
-
-    for index, row in validate_df.iterrows():
-        src = os.path.join(original_image_dir, str(row['id']) + ".jpg")
-        if os.path.isfile(src):
-            dst = os.path.join(validation_dir, str(row['id']) + ".jpg")
-            shutil.copyfile(src, dst)        
-        else:        
-            validate_df.drop(index, inplace=True)
-
-    for index, row in test_df.iterrows():
-        src = os.path.join(original_image_dir, str(row['id']) + ".jpg")
-        if os.path.isfile(src):
-            dst = os.path.join(test_dir, str(row['id']) + ".jpg")
-            shutil.copyfile(src, dst)        
-        else:        
-            test_df.drop(index, inplace=True)
-
-    #Test load train dataset and show image
-    # ds = MyDataset(original_image_dir,labels_df)
-    # print('Number of images', len(ds))
-    # plt.figure(figsize=(8, 10))
-    # plt.imshow(ds[0][0])
-    # plt.xticks([]); plt.yticks([]); plt.grid(False)
+    divide_images_into_df(train_df, original_image_dir, train_dir)
+    divide_images_into_df(validate_df, original_image_dir, validation_dir)
+    divide_images_into_df(test_df, original_image_dir, test_dir)
 
 else:
     train_df = pd.read_csv(os.path.join(train_dir, "train_styles.csv"))
@@ -99,8 +65,8 @@ else:
     test_df = pd.read_csv(os.path.join(test_dir, "test_styles.csv"))
 
 print('total training images:', len(os.listdir(train_dir)))
-print('total test images:', len(os.listdir(test_dir)))
 print('total validation images:', len(os.listdir(validation_dir)))
+print('total test images:', len(os.listdir(test_dir)))
 
 #Data preprocessing
 # images = 60x80 pixels
@@ -121,12 +87,6 @@ val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
 
 print(train_dataset [0][0].shape)
 
-# for data_batch, labels_batch in train_loader:
-#     print('data batch shape:', data_batch.shape)
-#     print('labels batch shape:', labels_batch.shape)
-#     break
-
-
 
 #VGG16 network, trained on ImageNet
 pretrained_model = vgg16(pretrained=True)
@@ -145,44 +105,12 @@ for image_batch, label_batch in train_loader:
     print(f'\rTuning batch norm statistics {i}/{n_batches}', end='', flush=True)
     i += 1
 
-
 # It is very important to put the network into eval mode before extracting features! This 
 # turns off things like dropout and using batch statistics in batch norm.
 pretrained_model.eval()
 pretrained_model.to(device)
 
-
-def extract_features(dataloader):
-    transform = transforms.Compose([
-        transforms.Resize((128,128)),
-        transforms.CenterCrop(128-32),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-    n_batches = len(dataloader)
-    i = 1    
-    features = []
-    with torch.no_grad():
-        for image_batch, label_batch in dataloader:
-            image_batch = image_batch.to(device)
-
-            batch_features = pretrained_model(image_batch)
-
-            # features to numpy
-            batch_features = torch.squeeze(batch_features).cpu().numpy()
-
-            # collect features
-            features.append(batch_features)
-            print(f'\rProcessed {i} of {n_batches} batches', end='', flush=True)
-
-            i += 1
-
-    # stack the features into a N x D matrix            
-    features = np.vstack(features)
-    return features
-
-
-train_features = extract_features(train_loader)
+train_features = extract_features(train_loader, pretrained_model, n_batches, device)
 
 print(f'\nFeatures are {train_features.shape}')
 
@@ -246,27 +174,8 @@ for i in range(10):
 plt.show()
 
 
-
 #Run evaluation
 
 #compute the similarity matrix
 S = train_features @ train_features.T
 print(S.shape)
-
-from sklearn.metrics import average_precision_score
-
-def evaluate(S, features, index):
-    query = features[index]
-    scores = features @ query
-        #     aps = []
-#     for i, q in enumerate(q_indx):
-#         s = S[:, q]
-#         y_t = y_true[i]
-#         ap = average_precision_score(y_t, s)
-#         aps.append(ap)
-#     df = pd.DataFrame({'ap': aps}, index=q_indx)
-#     return df
-
-# #compute mAP
-# df = evaluate(S, y_true, q_indx)
-# print(f'mAP: {df.ap.mean():0.04f}')
