@@ -100,8 +100,8 @@ for image_batch, label_batch in train_loader:
     print(f'\rTuning batch norm statistics {i}/{n_batches}', end='', flush=True)
     i += 1
 
-# It is very important to put the network into eval mode before extracting features! This 
-# turns off things like dropout and using batch statistics in batch norm.
+# It is very important to put the network into eval mode before extracting features! 
+# This turns off things like dropout and using batch statistics in batch norm.
 pretrained_model.eval()
 pretrained_model.to(device)
 
@@ -174,3 +174,10 @@ plt.show()
 #compute the similarity matrix
 S = train_features @ train_features.T
 print(S.shape)
+
+# queries = load_ground_truth_entries(test_dir)
+# q_indx, y_true = make_ground_truth_matrix(dataset.filenames, queries)
+
+# #Compute mean Average Precision (mAP)
+# df = evaluate(S, y_true, q_indx)
+# print(f'mAP: {df.ap.mean():0.04f}')
