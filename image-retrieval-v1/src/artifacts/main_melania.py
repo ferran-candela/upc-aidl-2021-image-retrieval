@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import normalize
 from sklearn.decomposition import PCA
 
-from dataset_jordi import MyDataset
+from dataset import MyDataset
 from file_management import create_directory, divide_images_into_df
 from feature_extraction import extract_features
 
@@ -43,8 +43,6 @@ if not os.path.isfile(os.path.join(train_dir, "train_styles.csv")):
     # Divide labels in train, test and validate
     labels_df = pd.read_csv(original_labels_file, error_bad_lines=False)
 
-    #train_df, validate_df, test_df = np.split(labels_df.sample(frac=1, random_state=42), 
-    #                                    [int(.6*len(labels_df)), int(.8*len(labels_df))])
     train_df = labels_df.sample(640)
     validate_df = labels_df.sample(128)
     test_df= labels_df.sample(128)
