@@ -27,9 +27,6 @@ original_labels_file = original_dataset_dir + '/styles.csv'
 
 # The directory where we will store our smaller dataset
 base_dir = '/Users/melaniasanchezblanco/Documents/UPC_AIDL/Project/processed_datalab'
-
-#Delete all processed data directory
-
 if not os.path.exists(base_dir):
     os.mkdir(base_dir)
 
