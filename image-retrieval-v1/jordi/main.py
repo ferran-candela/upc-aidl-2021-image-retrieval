@@ -3,11 +3,13 @@ import torch
 from dataset import MyDataset
 from data_preparation import Prepare_Data
 from pretained_models import PretainedModels
+from utils import ProcessTime, LogFile, ImageSize
 from torchvision import transforms
 from torch.utils.data import DataLoader
 import pickle
 import matplotlib.pyplot as plt
 import pandas as pd
+import time
 
 #if not torch.cuda.is_available():
 #    raise Exception("You should enable GPU")
@@ -47,6 +49,10 @@ def main(config):
 
     # Work directory
     work_dir = config["work_dir"]
+
+    #Log directory
+    if not os.path.exists(config["log_dir"]):
+        os.mkdir(config["log_dir"])
 
     train_df, test_df, validate_df = Prepare_Data(original_dataset_dir=dataset_image_dir,
                                                     original_labels_file=labels_file,
@@ -88,21 +94,45 @@ def main(config):
         train_dataset = MyDataset(dataset_image_dir,train_df,transform=transform)
         train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
 
+        #create logfile for save statistics results
+        fields = ['ModelName', 'DataSetSize','ImageSize','ParametersCount', 'ProcessTime', 'Average']
+        logfile = LogFile(fields)        
+
+        #Create timer to calculate the process time
+        proctimer = ProcessTime()
+
         for model_name in pending_models_extract:
             # Load pretrained model
             pretained_model = pretained_models.load_pretrained_model(model_name)
             pretrained_model.to(device)
+
+            proctimer.start()
+
             #put the network into train mode and do a pass over the dataset without doing any backpropagation
             pretained_model = pretained_models.tuning_batch_norm_statistics(pretained_model,train_loader) 
             #extract features
             features = pretained_models.extract_features(pretained_model,train_loader,transform) 
             #normalize features
             features = pretained_models.postprocessing_features(features) 
+
+            processtime = proctimer.stop()
+            values = {  'ModelName':model_name, 
+                        'DataSetSize':train_df.shape[0], 
+                        'ImageSize':ImageSize(train_dataset[0][0]),
+                        'ParametersCount':pretained_models.Count_Parameters(pretained_model), 
+                        'ProcessTime':processtime, 
+                        'Average':0
+                    } 
+            logfile.writeLogFile(values)
+
             #save features
             model_dir = os.path.join(work_dir, model_name)
             features_file = os.path.join(model_dir, 'features.pickle')
             pickle.dump(features , open(features_file, 'wb'))
 
+        #Print and save logfile    
+        logfile.printLogFile()
+        logfile.saveLogFile_to_csv()
 
     # Show Similarity Result
     img_ds = MyDataset(dataset_image_dir,train_df)
@@ -132,7 +162,8 @@ if __name__ == "__main__":
         "work_dir" : "/home/manager/upcschool-ai/data/FashionProduct/processed_datalab/",
         "transforms_resize" : 332,
         "batch_size" : 64,
-        "top_n_image" : 5  #multiple of 5
+        "top_n_image" : 5,  #multiple of 5
+        "log_dir" : "/home/manager/upcschool-ai/data/FashionProduct/processed_datalab/log/"
     }
 
     main(config)

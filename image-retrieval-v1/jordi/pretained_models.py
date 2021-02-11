@@ -35,8 +35,7 @@ class PretainedModels:
         if model_name == 'inception_resnet_v2':
             from torch_inception_resnet_v2.model import InceptionResNetV2
             pretrained_model = InceptionResNetV2(130) #upper to PCA
-
-
+        
         return pretrained_model
     
     def tuning_batch_norm_statistics(self,model,loader):
