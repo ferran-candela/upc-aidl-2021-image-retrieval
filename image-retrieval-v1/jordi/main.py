@@ -115,6 +115,12 @@ def main(config):
             #normalize features
             features = pretained_models.postprocessing_features(features) 
 
+            #save features
+            model_dir = os.path.join(work_dir, model_name)
+            features_file = os.path.join(model_dir, 'features.pickle')
+            pickle.dump(features , open(features_file, 'wb'))
+
+            #LOG
             processtime = proctimer.stop()
             values = {  'ModelName':model_name, 
                         'DataSetSize':train_df.shape[0], 
@@ -124,11 +130,6 @@ def main(config):
                         'Average':0
                     } 
             logfile.writeLogFile(values)
-
-            #save features
-            model_dir = os.path.join(work_dir, model_name)
-            features_file = os.path.join(model_dir, 'features.pickle')
-            pickle.dump(features , open(features_file, 'wb'))
 
         #Print and save logfile    
         logfile.printLogFile()
