@@ -17,6 +17,7 @@ from sklearn.decomposition import PCA
 from dataset import MyDataset
 from file_management import create_directory, divide_images_into_df
 from feature_extraction import extract_features
+from evaluation import make_ground_truth_matrix, create_ground_truth_entries, evaluate
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -35,10 +36,10 @@ train_dir = create_directory(base_dir, 'train')
 validation_dir = create_directory(base_dir, 'validation')
 test_dir = create_directory(base_dir, 'test')
 
-if not os.path.isfile(os.path.join(train_dir, "train_styles.csv")):
+# Divide labels in train, test and validate
+labels_df = pd.read_csv(original_labels_file, error_bad_lines=False)
 
-    # Divide labels in train, test and validate
-    labels_df = pd.read_csv(original_labels_file, error_bad_lines=False)
+if not os.path.isfile(os.path.join(train_dir, "train_styles.csv")):
 
     train_df = labels_df.sample(640)
     validate_df = labels_df.sample(128)
@@ -78,7 +79,10 @@ batch_size = 64
 train_dataset = MyDataset(train_dir,train_df,transform=transform)
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 val_dataset = MyDataset(validation_dir,validate_df,transform=transform)
-val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)        
+val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+
+initial_dataset = MyDataset(original_labels_file,labels_df,transform=transform)
+
 
 print(train_dataset [0][0].shape)
 
@@ -175,9 +179,9 @@ plt.show()
 S = train_features @ train_features.T
 print(S.shape)
 
-# queries = load_ground_truth_entries(test_dir)
-# q_indx, y_true = make_ground_truth_matrix(dataset.filenames, queries)
+queries = create_ground_truth_entries(original_labels_file, labels_df)
+q_indx, y_true = make_ground_truth_matrix(initial_dataset.filenames, queries)
 
-# #Compute mean Average Precision (mAP)
-# df = evaluate(S, y_true, q_indx)
-# print(f'mAP: {df.ap.mean():0.04f}')
+#Compute mean Average Precision (mAP)
+df = evaluate(S, y_true, q_indx)
+print(f'mAP: {df.ap.mean():0.04f}')
