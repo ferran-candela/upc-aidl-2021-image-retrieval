@@ -12,10 +12,13 @@ class MyDataset(Dataset):
         self.images_path = images_path
         #There are rows with more than 10 columns. ex:6044
         self.labels_df = labels_df
+
         self.transform = transform
+
 
     def __len__(self):
         return len(self.labels_df)
+
 
     def __getitem__(self, idx):
         

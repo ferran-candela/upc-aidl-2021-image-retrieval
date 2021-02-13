@@ -179,8 +179,10 @@ plt.show()
 S = train_features @ train_features.T
 print(S.shape)
 
-queries = create_ground_truth_entries(original_labels_file, labels_df)
-q_indx, y_true = make_ground_truth_matrix(initial_dataset.filenames, queries)
+num_evaluation = 100
+
+queries = create_ground_truth_entries(original_labels_file, labels_df, num_evaluation)
+q_indx, y_true = make_ground_truth_matrix(labels_df, queries)
 
 #Compute mean Average Precision (mAP)
 df = evaluate(S, y_true, q_indx)

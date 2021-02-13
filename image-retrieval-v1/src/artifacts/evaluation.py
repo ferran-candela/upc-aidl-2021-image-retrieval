@@ -1,47 +1,63 @@
-from pyspark.sql.functions import col
+import numpy as np
 
-def create_ground_truth_entries(path, dataframe):
-    entries = {}
+def create_ground_truth_entries(path, dataframe, N):
+    entries = []
 
-    with open(path, 'r') as f:
-        lines = [l.strip() for l in f if len(l.strip())]
+    with open(path) as myfile:
+        lines = [next(myfile) for x in range(N)]
 
+    it = 1
     for row in lines:
-        id, labels = row.rsplit(',', 1)
-        entry = entries.setdefault(id, {'query': '', 'gt': []})
-        
-        entry['query'] = labels[3]
-        entry['gt'] = dataframe \
-        .filter((col('articleType') == labels[3]) | (col('subCategory') == labels[2] & col('baseColour') == labels[4])) \
-        .select(col('id')) \
-        .to_numpy()
+        labels = row.rsplit(',')
+        i = labels[0]
+        entry = {}
+
+        entry['id'] = i
+
+        entry['query'] = labels[4]
+
+        isSameArticleType = dataframe['articleType'] == labels[4]
+        isSimilarSubCategory = dataframe['subCategory'] == labels[3]
+        isSimilarColour = dataframe['baseColour'] == labels[5]
+        similar_clothes_df = dataframe[isSameArticleType | (isSimilarSubCategory & isSimilarColour)]
+
+        entry['gt'] = similar_clothes_df['id'].to_numpy()
+
+        entries.append(entry)
+
+        print(f'\rCreating ground truth entries... {it}/{N}', end='', flush=True)
+        it += 1
         
     return entries
 
 
-def make_ground_truth_matrix(dataset, entries):
+def make_ground_truth_matrix(dataframe, entries):
     n_queries = len(entries)
     q_indx = np.zeros(shape=(n_queries, ), dtype=np.int32)
     y_true = np.zeros(shape=(n_queries, 5063), dtype=np.uint8)
 
-    for i, q in enumerate(entries):
-        entry = entries[q]
-     
-        filename = i + ".jpg"
-
+    it=0
+    for entry in entries:
+        if (entry['id'] == 'id'):
+            continue
         # lookup query index
-        q_indx[i] = dataset.index(filename)
+
+        i = int(entry['id'])
+
+        q_indx[it] = dataframe.index[dataframe['id'] == i][0]
 
         # lookup gt filenames
-        gt_filenames = entry['gt']
-        gt_filenames = [f + '.jpg' for f in gt_filenames]
+        gt = entry['gt']
+        gt_ids = [f for f in gt]
 
         # lookup gt indices
-        gt_indices = [dataset.index(f) for f in gt_filenames]
+        gt_indices = [dataframe.index[dataframe['id'] == f][0] for f in gt_ids]
         gt_indices.sort()
 
-        y_true[i][q_indx[i]] = 1
-        y_true[i][gt_indices] = 1
+        y_true[it][q_indx[it]] = 1
+        y_true[it][gt_indices] = 1
+        print(f'\rCreating ground truth matrix... {it}/{N}', end='', flush=True)
+        it += 1
 
     return q_indx, y_true
 
