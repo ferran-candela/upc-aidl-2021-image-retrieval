@@ -31,6 +31,10 @@ def Prepare_Data(original_dataset_dir, original_labels_file, process_dir, img_fo
         train_df = labels_df.sample(fixed_train_size)
         validate_df = labels_df.sample(fixed_validate_test_size)
         test_df= labels_df.sample(fixed_validate_test_size)
+    elif fixed_train_size == -1:
+        train_df = labels_df
+        validate_df = labels_df.sample(0)
+        test_df= labels_df.sample(0)
     else:
         train_df, validate_df, test_df = np.split(labels_df.sample(frac=1, random_state=42), 
                                             [int(.6*len(labels_df)), int(.8*len(labels_df))])

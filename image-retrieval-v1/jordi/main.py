@@ -58,8 +58,8 @@ def main(config):
                                                     original_labels_file=labels_file,
                                                     process_dir=work_dir,
                                                     clean_process_dir=False,
-                                                    fixed_train_size=640,
-                                                    fixed_validate_test_size=128)
+                                                    fixed_train_size=-1,
+                                                    fixed_validate_test_size=0)
     
     train_df.reset_index(drop=True, inplace=True)
     test_df.reset_index(drop=True, inplace=True)
@@ -103,15 +103,15 @@ def main(config):
 
         for model_name in pending_models_extract:
             # Load pretrained model
-            pretained_model = pretained_models.load_pretrained_model(model_name)
+            pretrained_model = pretained_models.load_pretrained_model(model_name)
             pretrained_model.to(device)
 
             proctimer.start()
 
             #put the network into train mode and do a pass over the dataset without doing any backpropagation
-            pretained_model = pretained_models.tuning_batch_norm_statistics(pretained_model,train_loader) 
+            pretrained_model = pretained_models.tuning_batch_norm_statistics(pretrained_model,train_loader) 
             #extract features
-            features = pretained_models.extract_features(pretained_model,train_loader,transform) 
+            features = pretained_models.extract_features(pretrained_model,train_loader,transform) 
             #normalize features
             features = pretained_models.postprocessing_features(features) 
 
@@ -124,8 +124,8 @@ def main(config):
             processtime = proctimer.stop()
             values = {  'ModelName':model_name, 
                         'DataSetSize':train_df.shape[0], 
-                        'ImageSize':ImageSize(train_dataset[0][0]),
-                        'ParametersCount':pretained_models.Count_Parameters(pretained_model), 
+                        #'ImageSize':ImageSize(train_dataset[0][0]),
+                        'ParametersCount':pretained_models.Count_Parameters(pretrained_model), 
                         'ProcessTime':processtime, 
                         'Average':0
                     } 
@@ -158,13 +158,13 @@ def main(config):
     
 if __name__ == "__main__":
     config = {
-        "dataset_base_dir" : "/home/manager/upcschool-ai/data/FashionProduct/",
-        "dataset_labels_file" : "/home/manager/upcschool-ai/data/FashionProduct/styles.csv",
-        "work_dir" : "/home/manager/upcschool-ai/data/FashionProduct/processed_datalab/",
+        "dataset_base_dir" : "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset/",
+        "dataset_labels_file" : "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+        "work_dir" : "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset/",
         "transforms_resize" : 332,
-        "batch_size" : 64,
+        "batch_size" : 12,
         "top_n_image" : 5,  #multiple of 5
-        "log_dir" : "/home/manager/upcschool-ai/data/FashionProduct/processed_datalab/log/"
+        "log_dir" : "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset/log/"
     }
 
     main(config)

@@ -1,0 +1,15 @@
+matplotlib==3.3.3
+numpy==1.19.4
+Pillow==8.0.1
+torch==1.7.1
+torchvision==0.8.2
+ray==1.0.1.post1
+pandas==1.2.1
+scikit-learn==0.24.1
+pickle-mixin==1.0.2
+torch-inception-resnet-v2==0.0.33
+
+# Flask Framework
+Flask==1.1.2
+Flask-RESTful==0.3.8
+flask-marshmallow==0.14.0
