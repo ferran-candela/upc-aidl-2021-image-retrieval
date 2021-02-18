@@ -13,3 +13,4 @@ torch-inception-resnet-v2==0.0.33
 Flask==1.1.2
 Flask-RESTful==0.3.8
 flask-marshmallow==0.14.0
+uvicorn
