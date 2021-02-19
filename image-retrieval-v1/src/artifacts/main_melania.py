@@ -31,6 +31,7 @@ base_dir = '/Users/melaniasanchezblanco/Documents/UPC_AIDL/Project/processed_dat
 if not os.path.exists(base_dir):
     os.mkdir(base_dir)
 
+
 # Directories for our training, validation and test splits
 train_dir = create_directory(base_dir, 'train')
 validation_dir = create_directory(base_dir, 'validation')
@@ -63,6 +64,10 @@ else:
 print('total training images:', len(os.listdir(train_dir)))
 print('total validation images:', len(os.listdir(validation_dir)))
 print('total test images:', len(os.listdir(test_dir)))
+
+# The directory where we have the small style csv with the labels
+train_dataset_dir = '/Users/melaniasanchezblanco/Documents/UPC_AIDL/Project/processed_datalab/train'
+train_labels_file = train_dataset_dir + '/train_styles.csv'
 
 #Data preprocessing
 # images = 60x80 pixels
@@ -181,8 +186,8 @@ print(S.shape)
 
 num_evaluation = 100
 
-queries = create_ground_truth_entries(original_labels_file, labels_df, num_evaluation)
-q_indx, y_true = make_ground_truth_matrix(labels_df, queries)
+queries = create_ground_truth_entries(train_labels_file, train_df, num_evaluation)
+q_indx, y_true = make_ground_truth_matrix(train_df, queries)
 
 #Compute mean Average Precision (mAP)
 df = evaluate(S, y_true, q_indx)

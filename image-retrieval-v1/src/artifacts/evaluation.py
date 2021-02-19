@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 def create_ground_truth_entries(path, dataframe, N):
     entries = []
@@ -34,17 +35,16 @@ def create_ground_truth_entries(path, dataframe, N):
 def make_ground_truth_matrix(dataframe, entries):
     n_queries = len(entries)
     q_indx = np.zeros(shape=(n_queries, ), dtype=np.int32)
-    y_true = np.zeros(shape=(n_queries, 5063), dtype=np.uint8)
+    y_true = np.zeros(shape=(n_queries, 640), dtype=np.uint8)
 
-    it=0
-    for entry in entries:
+    for it, entry in enumerate(entries):
         if (entry['id'] == 'id'):
             continue
         # lookup query index
 
-        i = int(entry['id'])
+        ident = int(entry['id'])
 
-        q_indx[it] = dataframe.index[dataframe['id'] == i][0]
+        q_indx[it] = dataframe.index[dataframe['id'] == ident][0]
 
         # lookup gt filenames
         gt = entry['gt']
@@ -56,8 +56,6 @@ def make_ground_truth_matrix(dataframe, entries):
 
         y_true[it][q_indx[it]] = 1
         y_true[it][gt_indices] = 1
-        print(f'\rCreating ground truth matrix... {it}/{N}', end='', flush=True)
-        it += 1
 
     return q_indx, y_true
 
