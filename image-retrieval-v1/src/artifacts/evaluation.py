@@ -15,8 +15,6 @@ def create_ground_truth_entries(path, dataframe, N):
 
         entry['id'] = i
 
-        entry['query'] = labels[4]
-
         isSameArticleType = dataframe['articleType'] == labels[4]
         isSimilarSubCategory = dataframe['subCategory'] == labels[3]
         isSimilarColour = dataframe['baseColour'] == labels[5]
@@ -70,3 +68,16 @@ def evaluate(S, y_true, q_indx):
         aps.append(ap)
     df = pd.DataFrame({'ap': aps}, index=q_indx)
     return df
+
+
+# D = np.zeros(shape=(44000, 512))
+# q_idx = np.zeros(shape=(640,))
+# y_true = np.zeros(shape=(640, 44000))
+# queries = D[q_idx, :] # 640x512
+# scores = D @ queries.T  # 44000x640
+# aps = []
+# for i in range(640):
+#     s = scores[:, i]
+#     ap = average_precision_score(s, y_true[i, :])
+#     aps.append(ap)
+# mAP = np.mean(aps)

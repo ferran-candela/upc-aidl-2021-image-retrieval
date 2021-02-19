@@ -184,7 +184,7 @@ plt.show()
 S = train_features @ train_features.T
 print(S.shape)
 
-num_evaluation = 100
+num_evaluation = 60
 
 queries = create_ground_truth_entries(train_labels_file, train_df, num_evaluation)
 q_indx, y_true = make_ground_truth_matrix(train_df, queries)
