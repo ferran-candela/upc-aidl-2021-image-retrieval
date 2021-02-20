@@ -66,6 +66,8 @@ def evaluate(S, y_true, q_indx):
         y_t = y_true[i]
         ap = average_precision_score(y_t, s)
         aps.append(ap)
+    
+    print(f'\nAPs {aps}')
     df = pd.DataFrame({'ap': aps}, index=q_indx)
     return df
 
