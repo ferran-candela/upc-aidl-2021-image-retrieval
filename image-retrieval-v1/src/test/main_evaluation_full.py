@@ -3,33 +3,51 @@ import pickle
 import os, shutil
 import pandas as pd
 
-#Read train images
-train_labels_path = '/Users/melaniasanchezblanco/Documents/UPC_AIDL/Project/Fashion_Product_Full'
-train_image_dir = os.path.join(train_labels_path, 'images')
-train_labels_file = train_labels_path + '/styles.csv'
+def calculate_similarity(features_path):
 
-train_df = pd.read_csv(train_labels_file, error_bad_lines=False)
+    train_features =  pickle.load( open( features_path, "rb" ) )
+    print("train features = ", train_features)
+    print("train features shape = ", train_features.shape)
 
+    #compute the similarity matrix
+    similarity_vgg16 = train_features @ train_features.T
+    print(similarity_vgg16.shape)
 
-#Get train features
-features_path = '/Users/melaniasanchezblanco/Documents/UPC_AIDL/Project/Fashion_Product_Full_features/vgg16/features.pickle'
-
-train_features =  pickle.load( open( features_path, "rb" ) )
-print("train features = ", train_features)
-print("train features shape = ", train_features.shape)
+    return similarity_vgg16
 
 
-#Run evaluation
+def main(config):
+    #Read train images
+    train_labels_path = config['home_path'] + '/Fashion_Product_Full'
+    train_image_dir = os.path.join(train_labels_path, 'images')
+    train_labels_file = train_labels_path + '/styles.csv'
 
-#compute the similarity matrix
-S = train_features @ train_features.T
-print(S.shape)
+    train_df = pd.read_csv(train_labels_file, error_bad_lines=False)
+    print("Train dataframe shape = ",train_df.shape)
 
-num_evaluation = 6000
+    #Train features paths
+    features_vgg16_path = config['home_path'] + '/Fashion_Product_Full_features/vgg16/features.pickle'
+    features_resnet50_path = config['home_path'] + '/Fashion_Product_Full_features/resnet50/features.pickle'
+    features_inception_v3_path = config['home_path'] + '/Fashion_Product_Full_features/inception_v3/features.pickle'
+    features_inception_resnet_v2_path = config['home_path'] + '/Fashion_Product_Full_features/inception_resnet_v2/features.pickle'
 
-queries = create_ground_truth_entries(train_labels_file, train_df, num_evaluation)
-q_indx, y_true = make_ground_truth_matrix(train_df, queries, num_evaluation)
+    #Run evaluation
 
-#Compute mean Average Precision (mAP)
-df = evaluate(S, y_true, q_indx)
-print(f'mAP: {df.ap.mean():0.04f}')
+    S = calculate_similarity(features_resnet50_path)
+
+    num_evaluation = 650
+
+    queries = create_ground_truth_entries(train_labels_file, train_df, num_evaluation)
+    q_indx, y_true = make_ground_truth_matrix(train_df, queries, num_evaluation)
+
+    #Compute mean Average Precision (mAP)
+    df = evaluate(S, y_true, q_indx)
+    print(f'mAP: {df.ap.mean():0.04f}')
+
+
+if __name__ == "__main__":
+    config = {
+        "home_path" : "/Users/melaniasanchezblanco/Documents/UPC_AIDL/Project"
+    }
+
+    main(config)
