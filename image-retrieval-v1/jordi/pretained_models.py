@@ -8,10 +8,11 @@ class PretainedModels:
     def __init__(self,device):
         super().__init__()
         self.models =   {  
-                            'vgg16',
-                            'resnet50',
-                            'inception_v3',  #needs : [batch_size, 3, 299, 299]
-                            'inception_resnet_v2'
+                            #'vgg16',
+                            #'resnet50',
+                            #'inception_v3',  #needs : [batch_size, 3, 299, 299]
+                            #'inception_resnet_v2',
+                            'densenet161'
                         }
                     
         self.device = device
@@ -35,6 +36,10 @@ class PretainedModels:
         if model_name == 'inception_resnet_v2':
             from torch_inception_resnet_v2.model import InceptionResNetV2
             pretrained_model = InceptionResNetV2(130) #upper to PCA
+
+        if model_name == 'densenet161':
+            from torchvision.models import densenet161
+            pretrained_model = densenet161(pretrained=True)
         
         return pretrained_model
     
