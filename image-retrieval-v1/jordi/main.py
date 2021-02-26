@@ -1,9 +1,12 @@
 import os
 import torch
+
 from dataset import MyDataset
 from data_preparation import Prepare_Data
 from pretained_models import PretainedModels
 from utils import ProcessTime, LogFile, ImageSize
+from evaluation import make_ground_truth_matrix, create_ground_truth_entries, evaluate    
+
 from torchvision import transforms
 from torch.utils.data import DataLoader
 import pickle
@@ -54,16 +57,17 @@ def main(config):
     if not os.path.exists(config["log_dir"]):
         os.mkdir(config["log_dir"])
 
-    train_df, test_df, validate_df = Prepare_Data(original_dataset_dir=dataset_image_dir,
+    train_df, test_df, validate_df = Prepare_Data(img_dir=dataset_image_dir,
                                                     original_labels_file=labels_file,
                                                     process_dir=work_dir,
                                                     clean_process_dir=False,
-                                                    fixed_train_size=640,
+                                                    fixed_train_size=64,
                                                     fixed_validate_test_size=128)
-    
+        
     train_df.reset_index(drop=True, inplace=True)
-    test_df.reset_index(drop=True, inplace=True)
-    validate_df.reset_index(drop=True, inplace=True)
+    if not test_df is None:
+        test_df.reset_index(drop=True, inplace=True)
+        validate_df.reset_index(drop=True, inplace=True)
 
     pretained_models = PretainedModels(device)    
     pretained_list_models = pretained_models.get_pretained_models_names()
@@ -85,17 +89,17 @@ def main(config):
 
     if len(pending_models_extract) > 0 :
         transform = transforms.Compose([
-            transforms.Resize((config["transforms_resize"],config["transforms_resize"])),
+            transforms.Resize((config["transforms_resize"])),
             transforms.CenterCrop(config["transforms_resize"]-32),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
         
         train_dataset = MyDataset(dataset_image_dir,train_df,transform=transform)
-        train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
+        train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=False)
 
         #create logfile for save statistics results
-        fields = ['ModelName', 'DataSetSize','ImageSize','ParametersCount', 'ProcessTime', 'Average']
+        fields = ['ModelName', 'DataSetSize','TransformsResize','ParametersCount', 'ProcessTime']
         logfile = LogFile(fields)        
 
         #Create timer to calculate the process time
@@ -104,7 +108,7 @@ def main(config):
         for model_name in pending_models_extract:
             # Load pretrained model
             pretained_model = pretained_models.load_pretrained_model(model_name)
-            pretrained_model.to(device)
+            pretained_model.to(device)
 
             proctimer.start()
 
@@ -124,10 +128,9 @@ def main(config):
             processtime = proctimer.stop()
             values = {  'ModelName':model_name, 
                         'DataSetSize':train_df.shape[0], 
-                        'ImageSize':ImageSize(train_dataset[0][0]),
+                        'TransformsResize':config["transforms_resize"],
                         'ParametersCount':pretained_models.Count_Parameters(pretained_model), 
-                        'ProcessTime':processtime, 
-                        'Average':0
+                        'ProcessTime':processtime
                     } 
             logfile.writeLogFile(values)
 
@@ -155,6 +158,20 @@ def main(config):
         #distances,ranking = pretained_models.Euclidean_Distance(features,imgidx,config["top_n_image"])
         #Print_Similarity(img_ds,imgidx,ranking,model_name + " - EUCLIDEAN DISTANCE")
 
+    #Run evaluation 
+
+    #compute the similarity matrix
+    S = train_features @ train_features.T
+    print(S.shape)
+
+    num_evaluation = 60
+
+    queries = create_ground_truth_entries(labels_file, train_df, num_evaluation)
+    q_indx, y_true = make_ground_truth_matrix(train_df, queries)
+
+    #Compute mean Average Precision (mAP)
+    df = evaluate(S, y_true, q_indx)
+    print(f'mAP: {df.ap.mean():0.04f}')
     
 if __name__ == "__main__":
     config = {
@@ -162,7 +179,7 @@ if __name__ == "__main__":
         "dataset_labels_file" : "/home/manager/upcschool-ai/data/FashionProduct/styles.csv",
         "work_dir" : "/home/manager/upcschool-ai/data/FashionProduct/processed_datalab/",
         "transforms_resize" : 332,
-        "batch_size" : 64,
+        "batch_size" : 128,
         "top_n_image" : 5,  #multiple of 5
         "log_dir" : "/home/manager/upcschool-ai/data/FashionProduct/processed_datalab/log/"
     }
