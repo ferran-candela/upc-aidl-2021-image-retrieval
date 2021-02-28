@@ -24,4 +24,11 @@ class MyDataset(Dataset):
         sample = Image.open(path).convert('RGB')
         if self.transform:
             sample = self.transform(sample)
+            # import matplotlib.pyplot as plt
+            # plt.imshow(sample)
+            # plt.grid(False)
+            # plt.xticks([])
+            # plt.yticks([])
+            # plt.show()
+
         return sample,masterCategory

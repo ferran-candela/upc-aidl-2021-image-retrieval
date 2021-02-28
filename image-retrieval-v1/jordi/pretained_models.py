@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 import numpy as np
 from sklearn.preprocessing import normalize
 from sklearn.decomposition import PCA
@@ -8,10 +9,10 @@ class PretainedModels:
     def __init__(self,device):
         super().__init__()
         self.models =   {  
-                            'vgg16',
-                            'resnet50',
-                            'inception_v3',  #needs : [batch_size, 3, 299, 299]
-                            'inception_resnet_v2'
+                            'vgg16', # Documentation says input must be 224x224
+                            # 'resnet50',
+                            # 'inception_v3', [batch_size, 3, 299, 299]
+                            # 'inception_resnet_v2' #needs : [batch_size, 3, 299, 299]
                         }
                     
         self.device = device
@@ -22,19 +23,26 @@ class PretainedModels:
     def load_pretrained_model(self,model_name):
         if model_name == 'vgg16':
             from torchvision.models import vgg16
+            # Input must be 224x224
             pretrained_model = vgg16(pretrained=True)
+            # Just use the output of feature extractor and ignore the classifier
+            pretrained_model.classifier = nn.Identity()
 
         if model_name == 'resnet50':
             from torchvision.models import resnet50
             pretrained_model = resnet50(pretrained=True)
-
+            # Remove FC layer
+            pretrained_model.fc = nn.Identity()
+            # Remove RELU
+            pretrained_model.layer4[2].relu = nn.Identity()
+            
         if model_name == 'inception_v3':
             from torchvision.models import inception_v3
             pretrained_model = inception_v3(pretrained=True)
 
         if model_name == 'inception_resnet_v2':
             from torch_inception_resnet_v2.model import InceptionResNetV2
-            pretrained_model = InceptionResNetV2(130) #upper to PCA
+            pretrained_model = InceptionResNetV2(1000) #upper to PCA
         
         return pretrained_model
     
@@ -54,7 +62,7 @@ class PretainedModels:
 
     def extract_features(self,model,dataloader,transform):
         model.eval()
-        model.to(self.device)
+        #model.to(self.device)
         n_batches = len(dataloader)
         i = 1    
         features = []
@@ -83,7 +91,7 @@ class PretainedModels:
         # PCA whitening, and L2-normalization again. 
         # Effectively this decorrelates the features and makes them unit vectors.
         features = normalize(features, norm='l2')
-        features = PCA(128, whiten=True).fit_transform(features) #The n_components of PCA must be lower than min(n_samples, n_features)
+        features = PCA(512, whiten=True).fit_transform(features) #The n_components of PCA must be lower than min(n_samples, n_features)
         features= normalize(features, norm='l2')
 
         return features

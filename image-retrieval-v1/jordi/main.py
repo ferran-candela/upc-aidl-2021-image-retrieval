@@ -58,8 +58,8 @@ def main(config):
                                                     original_labels_file=labels_file,
                                                     process_dir=work_dir,
                                                     clean_process_dir=False,
-                                                    fixed_train_size=-1,
-                                                    fixed_validate_test_size=0)
+                                                    fixed_train_size=100,
+                                                    fixed_validate_test_size=100)
     
     train_df.reset_index(drop=True, inplace=True)
     test_df.reset_index(drop=True, inplace=True)
@@ -85,14 +85,14 @@ def main(config):
 
     if len(pending_models_extract) > 0 :
         transform = transforms.Compose([
-            transforms.Resize((config["transforms_resize"],config["transforms_resize"])),
+            transforms.Resize(config["transforms_resize"]),
             transforms.CenterCrop(config["transforms_resize"]-32),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
-        
-        train_dataset = MyDataset(dataset_image_dir,train_df,transform=transform)
-        train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
+
+        train_dataset = MyDataset(dataset_image_dir, train_df, transform=transform)
+        train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=False, pin_memory=True)
 
         #create logfile for save statistics results
         fields = ['ModelName', 'DataSetSize','ImageSize','ParametersCount', 'ProcessTime', 'Average']
@@ -124,7 +124,7 @@ def main(config):
             processtime = proctimer.stop()
             values = {  'ModelName':model_name, 
                         'DataSetSize':train_df.shape[0], 
-                        #'ImageSize':ImageSize(train_dataset[0][0]),
+                        #'ImageSize': ImageSize(train_dataset[0][0]),
                         'ParametersCount':pretained_models.Count_Parameters(pretrained_model), 
                         'ProcessTime':processtime, 
                         'Average':0
@@ -133,27 +133,27 @@ def main(config):
 
         #Print and save logfile    
         logfile.printLogFile()
-        logfile.saveLogFile_to_csv()
+        logfile.saveLogFile_to_csv(config)
 
     # Show Similarity Result
     img_ds = MyDataset(dataset_image_dir,train_df)
     # change this to the index of the image to use as a query!
-    imgidx = 0
+    imgidx = 36233
     for model_name in pretained_list_models:
         model_dir = os.path.join(config["work_dir"], model_name)
         features_file = os.path.join(model_dir , 'features.pickle')
         features = pickle.load(open(features_file , 'rb'))
 
         # COSINE SIMILARITY
-        ranking = pretained_models.Cosine_Similarity(features,imgidx,config["top_n_image"])
-        Print_Similarity(img_ds,imgidx,ranking,model_name + " - COSINE SIMILARITY")
+        ranking = pretained_models.Cosine_Similarity(features, imgidx, config["top_n_image"])
+        Print_Similarity(img_ds, imgidx, ranking, model_name + " - COSINE SIMILARITY")
 
         #EUCLIDEAN DISTANCE
         # This gives the same rankings as (negative) Euclidean distance 
         # when the features are L2 normalized (as ours are)
                 
-        #distances,ranking = pretained_models.Euclidean_Distance(features,imgidx,config["top_n_image"])
-        #Print_Similarity(img_ds,imgidx,ranking,model_name + " - EUCLIDEAN DISTANCE")
+        # distances,ranking = pretained_models.Euclidean_Distance(features,imgidx,config["top_n_image"])
+        # Print_Similarity(img_ds,imgidx,ranking,model_name + " - EUCLIDEAN DISTANCE")
 
     
 if __name__ == "__main__":
@@ -161,9 +161,15 @@ if __name__ == "__main__":
         "dataset_base_dir" : "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset/",
         "dataset_labels_file" : "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
         "work_dir" : "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset/",
-        "transforms_resize" : 332,
+        # Image size dataset: 2400 height x 1800 width
+        "transforms_resize" : 299+32,
         "batch_size" : 12,
-        "top_n_image" : 5,  #multiple of 5
+
+        # Vgg16 limitation
+        # Resnet
+        #"transforms_resize" : 224+32,
+        #"batch_size" : 25,
+        "top_n_image" : 10,  #multiple of 5
         "log_dir" : "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset/log/"
     }
 
