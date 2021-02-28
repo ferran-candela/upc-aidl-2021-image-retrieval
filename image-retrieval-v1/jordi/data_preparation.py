@@ -3,7 +3,16 @@ import shutil
 import numpy as np
 import pandas as pd
 
-def Prepare_Data(original_dataset_dir, original_labels_file, process_dir, img_format = '.jpg',clean_process_dir=False, split_train_dir=False, fixed_train_size=0, fixed_validate_test_size=0):
+def Validate_Images_DataFrame(df,imgid_colname,image_dir,img_format ):
+    for index, row in df.iterrows():
+        imageid = row[imgid_colname]
+        path = os.path.join(image_dir, str(imageid ) + img_format)
+        if not os.path.isfile(path):
+            df.drop(df.index[index], inplace=True)
+            index = index - 1
+    return df
+
+def Prepare_Data(img_dir, original_labels_file, process_dir, img_format = '.jpg',clean_process_dir=False, split_train_dir=False, fixed_train_size=0, fixed_validate_test_size=0):
 
     base_dir = process_dir
 
@@ -11,6 +20,7 @@ def Prepare_Data(original_dataset_dir, original_labels_file, process_dir, img_fo
     if not os.path.isfile(original_labels_file) or not os.access(original_labels_file, os.R_OK):    
         print('Labels file is missing or not readable : ' ,original_labels_file)
         return False
+
     if fixed_train_size > 0:
         if fixed_validate_test_size == 0:
             print('fixed_validate_test_size parameter must be defined')
@@ -23,69 +33,81 @@ def Prepare_Data(original_dataset_dir, original_labels_file, process_dir, img_fo
     
     if not os.path.exists(base_dir):
         os.mkdir(base_dir)
-    
-    # Divide labels in train, test and validate
-    labels_df = pd.read_csv(original_labels_file, error_bad_lines=False)
 
-    if fixed_train_size > 0:
-        train_df = labels_df.head(fixed_train_size)
-        validate_df = labels_df.sample(0)
-        test_df = labels_df.sample(0)
-        # train_df = labels_df.sample(fixed_train_size)
-        # validate_df = labels_df.sample(fixed_validate_test_size)
-        # test_df= labels_df.sample(fixed_validate_test_size)
-    elif fixed_train_size == -1:
-        train_df = labels_df
-        validate_df = labels_df.sample(0)
-        test_df= labels_df.sample(0)
+    #If train dataset not exists, create it
+    if os.path.isfile(os.path.join(base_dir, "train_dataset.csv")):
+        train_df = pd.read_csv(os.path.join(base_dir, "train_dataset.csv"), error_bad_lines=False)     
+        if fixed_train_size > 0:
+            test_df = pd.read_csv(os.path.join(base_dir, "test_dataset.csv"), error_bad_lines=False)     
+            validate_df = pd.read_csv(os.path.join(base_dir, "val_dataset.csv"), error_bad_lines=False)     
     else:
-        train_df, validate_df, test_df = np.split(labels_df.sample(frac=1, random_state=42), 
+        labels_df = pd.read_csv(original_labels_file, error_bad_lines=False)
+
+        # Divide labels in train, test and validate
+        if fixed_train_size > 0:
+            train_df = labels_df.sample(fixed_train_size)
+            validate_df = labels_df.sample(fixed_validate_test_size)
+            test_df= labels_df.sample(fixed_validate_test_size)
+        elif fixed_train_size == -1:
+            train_df = labels_df
+        else:
+            #Divide 60% - 20% - 20%
+            train_df, validate_df, test_df = np.split(labels_df.sample(frac=1, random_state=42), 
                                             [int(.6*len(labels_df)), int(.8*len(labels_df))])
 
-    # Save datasets
-    train_df.to_csv(os.path.join(base_dir, "train_dataset.csv"),index=False)
-    validate_df.to_csv(os.path.join(base_dir, "val_dataset.csv"),index=False)
-    test_df.to_csv(os.path.join(base_dir, "test_dataset.csv"),index=False)
+        #Validate images exists
+        train_df = Validate_Images_DataFrame(train_df,"id",img_dir,img_format = '.jpg')
 
-    if split_train_dir:
-        # Directories for our training, validation and test splits
-        train_dir = os.path.join(base_dir, 'train')
-        if not os.path.exists(train_dir):
-            os.mkdir(train_dir)
-        validation_dir = os.path.join(base_dir, 'validation')
-        if not os.path.exists(validation_dir):
-            os.mkdir(validation_dir)
-        test_dir = os.path.join(base_dir, 'test')
-        if not os.path.exists(test_dir):
-            os.mkdir(test_dir)    
+        # Save datasets
+        train_df.to_csv(os.path.join(base_dir, "train_dataset.csv"),index=False)
+        if not fixed_train_size == -1:
+            validate_df = Validate_Images_DataFrame(validate_df,"id",img_dir,img_format = '.jpg')
+            test_df = Validate_Images_DataFrame(test_df,"id",img_dir,img_format = '.jpg')
 
-        # Divide images for train, test and validate and copy in destination folder
-        for index, row in train_df.iterrows():
-            src = os.path.join(original_image_dir, str(row['id']) + img_format)
-            if os.path.isfile(src):
-                dst = os.path.join(train_dir, str(row['id']) + img_format)
-                shutil.copyfile(src, dst)
-            else:        
-                train_df.drop(index, inplace=True)
+            validate_df.to_csv(os.path.join(base_dir, "val_dataset.csv"),index=False)
+            test_df.to_csv(os.path.join(base_dir, "test_dataset.csv"),index=False)
 
-        for index, row in validate_df.iterrows():
-            src = os.path.join(original_image_dir, str(row['id']) + img_format)
-            if os.path.isfile(src):
-                dst = os.path.join(validation_dir, str(row['id']) + img_format)
-                shutil.copyfile(src, dst)        
-            else:        
-                validate_df.drop(index, inplace=True)
+        if split_train_dir:
+            # Directories for our training, validation and test splits
+            train_dir = os.path.join(base_dir, 'train')
+            if not os.path.exists(train_dir):
+                os.mkdir(train_dir)
+            validation_dir = os.path.join(base_dir, 'validation')
+            if not os.path.exists(validation_dir):
+                os.mkdir(validation_dir)
+            test_dir = os.path.join(base_dir, 'test')
+            if not os.path.exists(test_dir):
+                os.mkdir(test_dir)    
 
-        for index, row in test_df.iterrows():
-            src = os.path.join(original_image_dir, str(row['id']) + img_format)
-            if os.path.isfile(src):
-                dst = os.path.join(test_dir, str(row['id']) + img_format)
-                shutil.copyfile(src, dst)        
-            else:        
-                test_df.drop(index, inplace=True)
+            # Divide images for train, test and validate and copy in destination folder
+            for index, row in train_df.iterrows():
+                src = os.path.join(original_image_dir, str(row['id']) + img_format)
+                if os.path.isfile(src):
+                    dst = os.path.join(train_dir, str(row['id']) + img_format)
+                    shutil.copyfile(src, dst)
+                else:        
+                    train_df.drop(index, inplace=True)
+
+            for index, row in validate_df.iterrows():
+                src = os.path.join(original_image_dir, str(row['id']) + img_format)
+                if os.path.isfile(src):
+                    dst = os.path.join(validation_dir, str(row['id']) + img_format)
+                    shutil.copyfile(src, dst)        
+                else:        
+                    validate_df.drop(index, inplace=True)
+
+            for index, row in test_df.iterrows():
+                src = os.path.join(original_image_dir, str(row['id']) + img_format)
+                if os.path.isfile(src):
+                    dst = os.path.join(test_dir, str(row['id']) + img_format)
+                    shutil.copyfile(src, dst)        
+                else:        
+                    test_df.drop(index, inplace=True)
 
     print('Total training images:', train_df.shape[0])
-    print('Total test images:', test_df.shape[0])
-    print('Total validation images:', validate_df.shape[0])    
-
-    return train_df, test_df, validate_df
+    if not fixed_train_size == -1:
+        print('Total test images:', test_df.shape[0])
+        print('Total validation images:', validate_df.shape[0])
+        return train_df, test_df, validate_df
+    else:
+        return train_df, None, None

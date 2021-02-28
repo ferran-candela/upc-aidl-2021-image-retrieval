@@ -26,14 +26,15 @@ def create_ground_truth_entries(path, dataframe, N):
 
         print(f'\rCreating ground truth entries... {it}/{N}', end='', flush=True)
         it += 1
-        
+    print("\n")
+
     return entries
 
 
-def make_ground_truth_matrix(dataframe, entries):
+def make_ground_truth_matrix(dataframe, entries, N):
     n_queries = len(entries)
     q_indx = np.zeros(shape=(n_queries, ), dtype=np.int32)
-    y_true = np.zeros(shape=(n_queries, 640), dtype=np.uint8)
+    y_true = np.zeros(shape=(n_queries, 44419), dtype=np.uint8)
 
     for it, entry in enumerate(entries):
         if (entry['id'] == 'id'):
@@ -52,9 +53,14 @@ def make_ground_truth_matrix(dataframe, entries):
         gt_indices = [dataframe.index[dataframe['id'] == f][0] for f in gt_ids]
         gt_indices.sort()
 
+        if any(elem >= 44419 for elem in gt_indices):
+            print("Skipping ground truth indice: ")
+            continue
+
         y_true[it][q_indx[it]] = 1
         y_true[it][gt_indices] = 1
-
+        print(f'\rCreating ground truth matrix... {it}/{N}', end='', flush=True)
+    print("\n")
     return q_indx, y_true
 
 from sklearn.metrics import average_precision_score
@@ -66,8 +72,10 @@ def evaluate(S, y_true, q_indx):
         y_t = y_true[i]
         ap = average_precision_score(y_t, s)
         aps.append(ap)
-    
+        print(f'\rEvaluation... {i}/{6000}', end='', flush=True)
+    print("\n")
     print(f'\nAPs {aps}')
+    print("\n")
     df = pd.DataFrame({'ap': aps}, index=q_indx)
     return df
 

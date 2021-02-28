@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
+import torch.nn as nn
 from sklearn.preprocessing import normalize
 from sklearn.decomposition import PCA
 from sklearn.neighbors import NearestNeighbors
@@ -39,10 +40,20 @@ class PretainedModels:
         if model_name == 'inception_v3':
             from torchvision.models import inception_v3
             pretrained_model = inception_v3(pretrained=True)
+            # Remove FC Layer
+            pretrained_model.fc = nn.Identity()
 
         if model_name == 'inception_resnet_v2':
             from torch_inception_resnet_v2.model import InceptionResNetV2
             pretrained_model = InceptionResNetV2(1000) #upper to PCA
+            # Remove FC Layer
+            pretrained_model.fc = nn.Identity()
+
+        if model_name == 'densenet161':
+            from torchvision.models import densenet161
+            pretrained_model = densenet161(pretrained=True)
+            #Just use the output of feature extractor and ignore the classifier
+            pretrained_model.classifier = nn.Identity()
         
         return pretrained_model
     
