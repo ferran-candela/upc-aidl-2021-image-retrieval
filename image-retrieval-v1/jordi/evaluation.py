@@ -10,10 +10,12 @@ def create_ground_truth_entries(path, dataframe, N):
     it = 1
     for row in lines:
         labels = row.rsplit(',')
-        i = labels[0]
+        id = labels[0]
+        if (id == 'id'):
+            continue
         entry = {}
 
-        entry['id'] = i
+        entry['id'] = id
 
         isSameArticleType = dataframe['articleType'] == labels[4]
         isSimilarSubCategory = dataframe['subCategory'] == labels[3]
@@ -24,7 +26,35 @@ def create_ground_truth_entries(path, dataframe, N):
 
         entries.append(entry)
 
-        print(f'\rCreating ground truth entries... {it}/{N}', end='', flush=True)
+        print(f'\rCreating ground truth queries... {it}/{N}', end='', flush=True)
+        it += 1
+        
+    return entries
+
+def create_ground_truth_entries_random(dataframe, N):
+    entries = []
+
+    query_df = dataframe.sample(N)
+
+    it = 1
+    for index, row in query_df.iterrows():
+        id = row[0]
+        if (id == 'id'):
+            continue
+        entry = {}
+
+        entry['id'] = id
+
+        isSameArticleType = dataframe['articleType'] == row[4]
+        isSimilarSubCategory = dataframe['subCategory'] == row[3]
+        isSimilarColour = dataframe['baseColour'] == row[5]
+        similar_clothes_df = dataframe[isSameArticleType | (isSimilarSubCategory & isSimilarColour)]
+
+        entry['gt'] = similar_clothes_df['id'].to_numpy()
+
+        entries.append(entry)
+
+        print(f'\rCreating ground truth queries... {it}/{N}', end='', flush=True)
         it += 1
         
     return entries
@@ -33,7 +63,7 @@ def create_ground_truth_entries(path, dataframe, N):
 def make_ground_truth_matrix(dataframe, entries):
     n_queries = len(entries)
     q_indx = np.zeros(shape=(n_queries, ), dtype=np.int32)
-    y_true = np.zeros(shape=(n_queries, 640), dtype=np.uint8)
+    y_true = np.zeros(shape=(n_queries, dataframe.shape[0]), dtype=np.uint8)
 
     for it, entry in enumerate(entries):
         if (entry['id'] == 'id'):
@@ -44,7 +74,7 @@ def make_ground_truth_matrix(dataframe, entries):
 
         q_indx[it] = dataframe.index[dataframe['id'] == ident][0]
 
-        # lookup gt filenames
+        # lookup gt imagesId
         gt = entry['gt']
         gt_ids = [f for f in gt]
 
@@ -67,19 +97,6 @@ def evaluate(S, y_true, q_indx):
         ap = average_precision_score(y_t, s)
         aps.append(ap)
     
-    print(f'\nAPs {aps}')
+    #print(f'\nAPs {aps}')
     df = pd.DataFrame({'ap': aps}, index=q_indx)
     return df
-
-
-# D = np.zeros(shape=(44000, 512))
-# q_idx = np.zeros(shape=(640,))
-# y_true = np.zeros(shape=(640, 44000))
-# queries = D[q_idx, :] # 640x512
-# scores = D @ queries.T  # 44000x640
-# aps = []
-# for i in range(640):
-#     s = scores[:, i]
-#     ap = average_precision_score(s, y_true[i, :])
-#     aps.append(ap)
-# mAP = np.mean(aps)

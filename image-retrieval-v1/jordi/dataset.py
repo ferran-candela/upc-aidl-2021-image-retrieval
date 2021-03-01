@@ -24,4 +24,4 @@ class MyDataset(Dataset):
         sample = Image.open(path).convert('RGB')
         if self.transform:
             sample = self.transform(sample)
-        return sample,masterCategory
+        return sample,imageid
