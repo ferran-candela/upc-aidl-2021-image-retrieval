@@ -39,8 +39,8 @@ class LogFile:
     def getLogFile(self):
         return self._log_df
 
-    def saveLogFile_to_csv(self,config):
-        self._log_df.to_csv(config["log_dir"] + 'log_' + time.strftime("%Y%m%d-%H%M%S") + '.csv',index=False)
+    def saveLogFile_to_csv(self,processname,config):
+        self._log_df.to_csv(config["log_dir"] + processname + '_log_' + time.strftime("%Y%m%d-%H%M%S") + '.csv',index=False)
 
     def printLogFile(self):
         print(self._log_df)

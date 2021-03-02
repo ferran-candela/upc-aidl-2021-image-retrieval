@@ -14,6 +14,8 @@ class PretainedModels:
                             # 'resnet50',
                             # 'inception_v3', [batch_size, 3, 299, 299]
                             # 'inception_resnet_v2' #needs : [batch_size, 3, 299, 299]
+                            #'densenet161'
+
                         }
                     
         self.device = device
@@ -47,7 +49,9 @@ class PretainedModels:
             from torch_inception_resnet_v2.model import InceptionResNetV2
             pretrained_model = InceptionResNetV2(1000) #upper to PCA
             # Remove FC Layer
+            pretrained_model.dropout = nn.Identity()
             pretrained_model.fc = nn.Identity()
+            pretrained_model.softmax = nn.Identity()
 
         if model_name == 'densenet161':
             from torchvision.models import densenet161
@@ -64,7 +68,7 @@ class PretainedModels:
         model.train()
         n_batches = len(loader)
         i = 1
-        for image_batch, label_batch in loader:
+        for image_batch, image_id in loader:
             # move batch to device and forward pass through network
             model(image_batch.to(self.device))
             print(f'\rTuning batch norm statistics {i}/{n_batches}', end='', flush=True)
@@ -75,10 +79,10 @@ class PretainedModels:
         model.eval()
         #model.to(self.device)
         n_batches = len(dataloader)
-        i = 1    
+        i = 1
         features = []
         with torch.no_grad():
-            for image_batch, label_batch in dataloader:
+            for image_batch, image_id in dataloader:
                 image_batch = image_batch.to(self.device)
 
                 batch_features = model(image_batch)
@@ -94,7 +98,7 @@ class PretainedModels:
 
         # stack the features into a N x D matrix            
         features = np.vstack(features)
-        return features
+        return features 
 
     def postprocessing_features(self,features):
         #Postprocessing

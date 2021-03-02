@@ -4,15 +4,16 @@ import numpy as np
 import pandas as pd
 
 def Validate_Images_DataFrame(df,imgid_colname,image_dir,img_format ):
+    delete_index = []
     for index, row in df.iterrows():
         imageid = row[imgid_colname]
         path = os.path.join(image_dir, str(imageid ) + img_format)
         if not os.path.isfile(path):
-            df.drop(df.index[index], inplace=True)
-            index = index - 1
+            delete_index.append(index)
+    df.drop(df.index[delete_index],inplace=True)
     return df
 
-def Prepare_Data(img_dir, original_labels_file, process_dir, img_format = '.jpg',clean_process_dir=False, split_train_dir=False, fixed_train_size=0, fixed_validate_test_size=0):
+def Prepare_Data(img_dir, original_labels_file, process_dir, img_format = '.jpg',clean_process_dir=False, split_train_dir=False, fixed_train_size=0, fixed_validate_test_size=0, debug=False):
 
     base_dir = process_dir
 
@@ -34,18 +35,19 @@ def Prepare_Data(img_dir, original_labels_file, process_dir, img_format = '.jpg'
     if not os.path.exists(base_dir):
         os.mkdir(base_dir)
 
-    #If train dataset not exists, create it
+    #If train dataset exists -> load else create it
     if os.path.isfile(os.path.join(base_dir, "train_dataset.csv")):
         train_df = pd.read_csv(os.path.join(base_dir, "train_dataset.csv"), error_bad_lines=False)     
         if fixed_train_size > 0:
             test_df = pd.read_csv(os.path.join(base_dir, "test_dataset.csv"), error_bad_lines=False)     
             validate_df = pd.read_csv(os.path.join(base_dir, "val_dataset.csv"), error_bad_lines=False)     
     else:
-        labels_df = pd.read_csv(original_labels_file, error_bad_lines=False)
+        labels_df = pd.read_csv(original_labels_file, error_bad_lines=False) # header=None, skiprows = 1
 
         # Divide labels in train, test and validate
         if fixed_train_size > 0:
             train_df = labels_df.sample(fixed_train_size)
+            #train_df = labels_df[:fixed_train_size]
             validate_df = labels_df.sample(fixed_validate_test_size)
             test_df= labels_df.sample(fixed_validate_test_size)
         elif fixed_train_size == -1:
@@ -104,10 +106,10 @@ def Prepare_Data(img_dir, original_labels_file, process_dir, img_format = '.jpg'
                 else:        
                     test_df.drop(index, inplace=True)
 
-    print('Total training images:', train_df.shape[0])
+    if debug: print('Total training images:', train_df.shape[0])
     if not fixed_train_size == -1:
-        print('Total test images:', test_df.shape[0])
-        print('Total validation images:', validate_df.shape[0])
+        if debug: print('Total test images:', test_df.shape[0])
+        if debug: print('Total validation images:', validate_df.shape[0])
         return train_df, test_df, validate_df
     else:
         return train_df, None, None

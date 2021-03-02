@@ -31,4 +31,4 @@ class MyDataset(Dataset):
             # plt.yticks([])
             # plt.show()
 
-        return sample,masterCategory
+        return sample,imageid
