@@ -1,6 +1,6 @@
 import os
 import uvicorn
-from app import create_app
+from retrievalapi.src.app import create_app
 
 settings_module = os.getenv('APP_SETTINGS_MODULE')
 

@@ -2,7 +2,7 @@ import os
 from flask import request, Blueprint, jsonify
 from flask_restful import Api, Resource, reqparse
 from werkzeug.utils import secure_filename
-from app.api.schemas import SearchSchema
+from .schemas import SearchSchema
 
 UPLOAD_FOLDER = '/tmp'
 ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])

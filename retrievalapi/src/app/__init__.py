@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
 from flask_restful import Api
-from app.common.error_handling import AppErrorBaseClass
-from app.api.controller import api_bp
+from .common.error_handling import AppErrorBaseClass
+from .api.controller import api_bp
 from .ext import ma
 
 def create_app(settings_module):
