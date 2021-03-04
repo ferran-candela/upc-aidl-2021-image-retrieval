@@ -98,13 +98,13 @@ class PretainedModels:
         features = np.vstack(features)
         return features 
 
-    def postprocessing_features(self,features):
+    def postprocessing_features(self,features,PCAdimension):
         #Postprocessing
         # A standard postprocessing pipeline used in retrieval applications is to do L2-normalization,
         # PCA whitening, and L2-normalization again. 
         # Effectively this decorrelates the features and makes them unit vectors.
         features = normalize(features, norm='l2')
-        features = PCA(512, whiten=True).fit_transform(features) #The n_components of PCA must be lower than min(n_samples, n_features)
+        features = PCA(PCAdimension, whiten=True).fit_transform(features) #The n_components of PCA must be lower than min(n_samples, n_features)
         features= normalize(features, norm='l2')
 
         return features

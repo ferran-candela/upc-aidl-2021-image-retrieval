@@ -31,11 +31,15 @@ def create_ground_truth_entries(path, dataframe, N):
         
     return entries
 
-def create_ground_truth_entries_random(dataframe, N):
+def create_ground_truth_queries(dataframe, type, N):
+    #type = "Random", "Fixed"
     entries = []
 
-    query_df = dataframe.sample(N)
-
+    if type=="Fixed":
+        query_df = dataframe[0:N-1]
+    else:
+        query_df = dataframe.sample(N)
+        
     it = 1
     for index, row in query_df.iterrows():
         id = row[0]
@@ -58,7 +62,6 @@ def create_ground_truth_entries_random(dataframe, N):
         it += 1
         
     return entries
-
 
 def make_ground_truth_matrix(dataframe, entries):
     n_queries = len(entries)

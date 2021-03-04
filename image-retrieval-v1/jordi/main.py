@@ -6,7 +6,8 @@ from dataset import MyDataset
 from data_preparation import Prepare_Data
 from pretained_models import PretainedModels
 from utils import ProcessTime, LogFile, ImageSize
-from evaluation import make_ground_truth_matrix, create_ground_truth_entries, create_ground_truth_entries_random, evaluate    
+from evaluation import make_ground_truth_matrix, create_ground_truth_queries, evaluate    
+from sklearn.neighbors import NearestNeighbors
 
 from torchvision import transforms
 from torch.utils.data import DataLoader
@@ -96,6 +97,7 @@ def main(config):
             os.mkdir(model_dir)
 
 
+    ########### EXTRACT FEATURES IF NOT EXTRACTED PREVIUS #####################
     #extract image features for any model only if not previously extracted
     pending_models_extract = []
     for model_name in pretained_list_models:
@@ -123,6 +125,9 @@ def main(config):
         proctimer = ProcessTime()
 
         for model_name in pending_models_extract:
+            #PATH to save features
+            model_dir = os.path.join(work_dir, model_name)
+
             # Load pretrained model
             pretained_model = pretained_models.load_pretrained_model(model_name)
             if debug:print(pretained_model)
@@ -135,12 +140,15 @@ def main(config):
             #extract features
             features = pretained_models.extract_features(pretained_model,train_loader,transform) 
             features_size = features[0].shape[0]
+            #save complete features
+            features_file = os.path.join(model_dir, 'features_full.pickle')
+            pickle.dump(features , open(features_file, 'wb'))
+
             #normalize features            
-            features = pretained_models.postprocessing_features(features) 
+            features = pretained_models.postprocessing_features(features,config["PCAdimension"]) 
             postproc_features_size = features[0].shape[0]
 
             #save features
-            model_dir = os.path.join(work_dir, model_name)
             features_file = os.path.join(model_dir, 'features.pickle')
             pickle.dump(features , open(features_file, 'wb'))
 
@@ -199,7 +207,7 @@ def main(config):
 
             num_queries = config["mAP_n_queries"]
 
-            queries = create_ground_truth_entries_random( train_df, num_queries)
+            queries = create_ground_truth_queries( train_df, "Random", num_queries)
             q_indx, y_true = make_ground_truth_matrix(train_df, queries)
 
             #Compute mean Average Precision (mAP)
@@ -221,6 +229,8 @@ def main(config):
     logfile.printLogFile()
     logfile.saveLogFile_to_csv("imageretrieval",config)
     ##### END IMAGE RETRIEVAL TEST #############
+
+
     
 if __name__ == "__main__":
     config = {
@@ -228,6 +238,7 @@ if __name__ == "__main__":
         "dataset_labels_file" : "/home/manager/upcschool-ai/data/FashionProduct/styles.csv",
         "work_dir" : "/home/manager/upcschool-ai/data/FashionProduct/processed_datalab/",
         "transforms_resize" : 332,
+        "PCAdimension" : 512,
         "train_size" : "all",  # "all" / "divide"=train(60%), Eval and test (20%) / number=fixed size
         "test_validate_size": 1, #used only for train_size = fixed zize
         "batch_size" : 8,
