@@ -45,7 +45,7 @@ def PCA_Tune(PretainedModelClass,model_name,features,dataframe,num_queries):
     plt.plot(pca_time, pca_accuracy,'o--', markersize=4)
     for label, x, y in zip(pca_dimensions, pca_time,pca_accuracy):
         plt.annotate(label, xy=(x, y), ha='right', va='bottom')
-    plt.title (model_name + ': Test Time vs Accuracy for each PCA dimension')
+    plt.title (model_name + ': Test Time vs Accuracy for each PCA dimension')    
     plt.xlabel('Test Time')
     plt.ylabel('Accuracy')
     plt.grid(True)
@@ -61,7 +61,7 @@ def accuracy_mAP_calc(features,dataframe,num_queries):
     #compute the similarity matrix
     S = features @ features.T
 
-    queries = create_ground_truth_queries( dataframe, "Fixed", num_queries)
+    queries = create_ground_truth_queries( dataframe, "Fixed", num_queries, [])
     q_indx, y_true = make_ground_truth_matrix(dataframe, queries)
 
     #Compute mean Average Precision (mAP)

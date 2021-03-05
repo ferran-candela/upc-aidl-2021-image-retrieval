@@ -6,7 +6,7 @@ from dataset import MyDataset
 from data_preparation import Prepare_Data
 from pretained_models import PretainedModels
 from utils import ProcessTime, LogFile, ImageSize
-from evaluation import make_ground_truth_matrix, create_ground_truth_queries, evaluate    
+from evaluation import make_ground_truth_matrix, create_ground_truth_queries, evaluate, evaluation_hits    
 from sklearn.neighbors import NearestNeighbors
 
 from torchvision import transforms
@@ -172,7 +172,7 @@ def main(config):
     ##### IMAGE RETRIEVAL TEST #############
 
     #create logfile for image retrieval
-    fields = ['ModelName', 'ImageID', 'DataSetSize','FeaturesSize', 'ProcessTime', 'mAPqueries', 'mAP']
+    fields = ['ModelName', 'DataSetSize','FeaturesSize', 'ProcessTime', 'mAPqueries', 'mAP', 'Precision']
     logfile = LogFile(fields)        
     #Create timer to calculate the process time
     proctimer = ProcessTime()
@@ -200,29 +200,36 @@ def main(config):
             #LOG
             processtime = proctimer.stop()
 
-            #Run evaluation 
+            if  config["evaluate"] == "True":
+                #Run evaluation 
 
-            #compute the similarity matrix
-            S = features @ features.T
+                #compute the similarity matrix
+                S = features @ features.T
 
-            num_queries = config["mAP_n_queries"]
+                num_queries = config["mAP_n_queries"]
 
-            queries = create_ground_truth_queries( train_df, "Random", num_queries)
-            q_indx, y_true = make_ground_truth_matrix(train_df, queries)
+                queries = create_ground_truth_queries( train_df, "Random", num_queries,[])
+                q_indx, y_true = make_ground_truth_matrix(train_df, queries)
 
-            #Compute mean Average Precision (mAP)
-            df = evaluate(S, y_true, q_indx)
-            if debug:print(df)
-            print(f'\rmAP: {df.ap.mean():0.04f}')
-            values = {  'ModelName':model_name, 
-                        'ImageID':imgidx,
-                        'DataSetSize':train_df.shape[0], 
-                        'FeaturesSize': features[0].shape[0],
-                        'ProcessTime': processtime,
-                        'mAPqueries': num_queries,
-                        'mAP': f'mAP: {df.ap.mean():0.04f}'
-                    } 
-            logfile.writeLogFile(values)
+                #Compute mean Average Precision (mAP)
+                df = evaluate(S, y_true, q_indx)
+                if debug:print(df)
+                print(f'\rmAP: {df.ap.mean():0.04f}')
+
+                #Compute evaluation Hits
+                precision = evaluation_hits(train_df,imgidx,ranking)
+                print(f'\rPrecision hits: {precision:0.04f}')
+
+                values = {  'ModelName':model_name, 
+                            'DataSetSize':train_df.shape[0], 
+                            'FeaturesSize': features[0].shape[0],
+                            'ProcessTime': processtime,
+                            'mAPqueries': num_queries,
+                            'mAP': f'mAP: {df.ap.mean():0.04f}',
+                            'Precision:' : precision
+                        } 
+                logfile.writeLogFile(values)
+
             it += 1
 
     #Print and save logfile    
@@ -243,9 +250,10 @@ if __name__ == "__main__":
         "test_validate_size": 1, #used only for train_size = fixed zize
         "batch_size" : 8,
         "top_n_image" : 10,  #multiple of 5
-        "mAP_n_queries": 60,
+        "mAP_n_queries": 1,
         "log_dir" : "/home/manager/upcschool-ai/data/FashionProduct/processed_datalab/log/",
-        "debug" : "False" # True/False
+        "debug" : "False",
+        "evaluate" : "True" # True/False  Process Evaluation
     }
 
     main(config)
