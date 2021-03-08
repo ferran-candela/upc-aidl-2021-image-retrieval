@@ -14,7 +14,7 @@ if __name__ == "__main__":
         "dataset_labels_file" : "/home/manager/upcschool-ai/data/FashionProduct/styles.csv",
         "work_dir" : "/home/manager/upcschool-ai/data/FashionProduct/processed_datalab/",
         "transforms_resize" : 332,
-        "PCAdimension" : 512,
+        "PCAdimension" : 13,
         "train_size" : "all",  # "all" / "divide"=train(60%), Eval and test (20%) / number=fixed size
         "test_validate_size": 1, #used only for train_size = fixed zize
         "batch_size" : 8,
