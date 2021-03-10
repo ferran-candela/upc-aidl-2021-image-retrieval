@@ -26,7 +26,8 @@ def PCA_VarianceDimension(model_name,features,PCAdimension):
 
 
 def PCA_Tune(PretainedModelClass,model_name,features,dataframe,num_queries):
-    pca_dimensions = [10,11,12,13,14,15,16,17,18,19,20,22,24,26,28,30,32,34,36,38,40,42,44]
+    pca_dimensions = [7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+    #pca_dimensions = [10,20,30,40,50,60,70,80,90,100,120,130,140,150,160,170,180,190,200,210,220,230,240]
 
     pca_accuracy = []
     pca_time = []
@@ -61,7 +62,7 @@ def accuracy_mAP_calc(features,dataframe,num_queries):
     #compute the similarity matrix
     S = features @ features.T
 
-    queries = create_ground_truth_queries( dataframe, "Fixed", num_queries, [])
+    queries = create_ground_truth_queries( dataframe, "FirstN", num_queries, [])
     q_indx, y_true = make_ground_truth_matrix(dataframe, queries)
 
     #Compute mean Average Precision (mAP)
