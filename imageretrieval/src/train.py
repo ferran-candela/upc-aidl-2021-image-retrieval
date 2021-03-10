@@ -1,54 +1,28 @@
-import os
 import torch
-import numpy as np
 
-from dataset import MyDataset
-from data_preparation import Prepare_Data
-from pretained_models import PretainedModels
-from utils import ProcessTime, LogFile, ImageSize
-from evaluation import make_ground_truth_matrix, create_ground_truth_queries, evaluate, evaluation_hits    
-from sklearn.neighbors import NearestNeighbors
-
-from torchvision import transforms
-from torch.utils.data import DataLoader
-import pickle
-import matplotlib.pyplot as plt
-import pandas as pd
-import time
+from .dataset import DatasetManager
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-def Print_Similarity(dataset_img, imgidx, ranking, description,debug=False):
-    # show the query image
-    print(f'\rImage Query id: ', str(dataset_img[imgidx][1]),' - ',description)
-    plt.figure(figsize=(2.8,2.8))
-    plt.imshow(dataset_img[imgidx][0])
-    plt.grid(False)
-    plt.xticks([])
-    plt.yticks([])
-    plt.show()
+def tuning_batch_norm_statistics(model, loader):
+    # The batch norm statistics for this network match those of the ImageNet dataset. 
+    # We can use a trick to get them to match our dataset. The idea is to put the network into train mode and do a pass over the dataset without doing any backpropagation. 
+    # This will cause the network to update the batch norm statistics for the model without modifying the weights. This can sometimes improve results.        
+    model.train()
+    n_batches = len(loader)
+    i = 1
+    for image_batch, image_id in loader:
+        # move batch to device and forward pass through network
+        model(image_batch.to(self.device))
+        print(f'\rTuning batch norm statistics {i}/{n_batches}', end='', flush=True)
+        i += 1
 
-    print(f'\rTop 10 Similarity: ', description)
-    fig, ax = plt.subplots(nrows=int(ranking.size/5), ncols=5, figsize=(18, 6))
-    ax = ax.ravel()
-
-    if debug: print(ranking)
-    for i in range(ranking.size):
-        img = dataset_img[ranking[i]][0]
-        # show the images
-        ax[i].imshow(img)
-        ax[i].grid(False) 
-        ax[i].set_xticks([])
-        ax[i].set_yticks([])
-        ax[i].set_title(str(i) + " - id:" + str(dataset_img[ranking[i]][1]) )
-    plt.show()
-
-
-def main(config):
+def train(config):
     # The path of original dataset
     dataset_base_dir = config["dataset_base_dir"]
-    dataset_image_dir = os.path.join(dataset_base_dir, 'images')
+    
     labels_file = config["dataset_labels_file"]
+
     if config["debug"]=='True':
         debug = True
     else:
@@ -57,24 +31,14 @@ def main(config):
     # Work directory
     work_dir = config["work_dir"]
 
-    #Log directory
-    if not os.path.exists(config["log_dir"]):
-        os.mkdir(config["log_dir"])
+    dataset_manager = DatasetManager()      
 
-    if config["train_size"] == 'all':
-        train_size = -1
-    elif config["train_size"] == 'divide':
-        train_size = 0
-    else:
-        train_size = config["train_size"]
-    validate_test_size = config["test_validate_size"]                
-
-    train_df, test_df, validate_df = Prepare_Data(img_dir=dataset_image_dir,
+    train_df, test_df, validate_df = dataset_manager.Prepare_Data(img_dir=dataset_image_dir,
                                                     original_labels_file=labels_file,
                                                     process_dir=work_dir,
                                                     clean_process_dir=False,
-                                                    fixed_train_size=train_size,
-                                                    fixed_validate_test_size=validate_test_size,
+                                                    fixed_train_size=config["train_size"],
+                                                    fixed_validate_test_size=config["test_validate_size"],
                                                     debug=debug
                                                     )
         
@@ -87,15 +51,7 @@ def main(config):
     pretrained_models = PretainedModels(device)    
     pretrained_list_models = pretrained_models.get_pretained_models_names()
 
-    #Create folder for each model
-    for model_name in pretrained_list_models:
-        model_dir = os.path.join(work_dir, model_name)
-        if not os.path.exists(model_dir):
-            os.mkdir(model_dir)
-
-
-    ########### EXTRACT FEATURES IF NOT EXTRACTED PREVIUS #####################
-    #extract image features for any model only if not previously extracted
+    ########### TRAIN MODEL IF NOT TRAINED PREVIOUSLY #####################
     pending_models_extract = []
     for model_name in pretrained_list_models:
         model_dir = os.path.join(work_dir, model_name)
@@ -166,77 +122,8 @@ def main(config):
         logfile.saveLogFile_to_csv("extractfeatures", config)
 
 
-    ##### IMAGE RETRIEVAL TEST #############
-
-    #create logfile for image retrieval
-    fields = ['ModelName', 'DataSetSize','FeaturesSize', 'ProcessTime', 'mAPqueries', 'mAP', 'Precision']
-    logfile = LogFile(fields)        
-    #Create timer to calculate the process time
-    proctimer = ProcessTime()
-
-    img_ds = MyDataset(dataset_image_dir,train_df)
-
-    Test_size = 5  #number images to test
-    testid = np.random.randint(train_df.shape[0], size=Test_size)
-    it = 0
-    for index in testid:
-        # change this to the index of the image to use as a query!
-        imgidx = index
-        for model_name in pretrained_list_models:
-            print(f'\rTest image ... {it}/{Test_size }', end='', flush=True)
-            proctimer.start()
-
-            model_dir = os.path.join(config["work_dir"], model_name)
-            features_file = os.path.join(model_dir , 'features.pickle')
-            features = pickle.load(open(features_file , 'rb'))
-
-            # COSINE SIMILARITY
-            ranking = pretrained_models.Cosine_Similarity(features,imgidx,config["top_n_image"])
-            Print_Similarity(img_ds,imgidx,ranking,model_name + " - COSINE SIMILARITY",debug)
-
-            #LOG
-            processtime = proctimer.stop()
-
-            if  config["evaluate"] == "True":
-                #Run evaluation 
-
-                #compute the similarity matrix
-                S = features @ features.T
-
-                num_queries = config["mAP_n_queries"]
-
-                queries = create_ground_truth_queries( train_df, "Random", num_queries,[])
-                q_indx, y_true = make_ground_truth_matrix(train_df, queries)
-
-                #Compute mean Average Precision (mAP)
-                df = evaluate(S, y_true, q_indx)
-                if debug:print(df)
-                print(f'\rmAP: {df.ap.mean():0.04f}')
-
-                #Compute evaluation Hits
-                precision = evaluation_hits(train_df,imgidx,ranking)
-                print(f'\rPrecision hits: {precision:0.04f}')
-
-                values = {  'ModelName':model_name, 
-                            'DataSetSize':train_df.shape[0], 
-                            'FeaturesSize': features[0].shape[0],
-                            'ProcessTime': processtime,
-                            'mAPqueries': num_queries,
-                            'mAP': f'mAP: {df.ap.mean():0.04f}',
-                            'Precision:' : precision
-                        } 
-                logfile.writeLogFile(values)
-
-            it += 1
-
-    #Print and save logfile    
-    logfile.printLogFile()
-    logfile.saveLogFile_to_csv("imageretrieval",config)
-    ##### END IMAGE RETRIEVAL TEST #############
-
-
-    
 if __name__ == "__main__":
+
     config = {
         "dataset_base_dir" : "/home/manager/upcschool-ai/data/FashionProduct/",
         "dataset_labels_file" : "/home/manager/upcschool-ai/data/FashionProduct/styles.csv",
@@ -252,5 +139,5 @@ if __name__ == "__main__":
         "debug" : "False",
         "evaluate" : "True" # True/False  Process Evaluation
     }
-
-    main(config)
+    
+    train(config)
