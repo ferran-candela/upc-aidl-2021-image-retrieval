@@ -8,3 +8,4 @@ pandas==1.2.1
 scikit-learn==0.24.1
 pickle-mixin==1.0.2
 torch-inception-resnet-v2==0.0.33
+efficientnet-pytorch==0.7.0

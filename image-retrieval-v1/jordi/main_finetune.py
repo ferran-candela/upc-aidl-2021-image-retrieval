@@ -14,12 +14,12 @@ if __name__ == "__main__":
         "dataset_labels_file" : "/home/manager/upcschool-ai/data/FashionProduct/styles.csv",
         "work_dir" : "/home/manager/upcschool-ai/data/FashionProduct/processed_datalab/",
         "transforms_resize" : 332,
-        "PCAdimension" : 13,
+        "PCAdimension" : 50,
         "train_size" : "all",  # "all" / "divide"=train(60%), Eval and test (20%) / number=fixed size
         "test_validate_size": 1, #used only for train_size = fixed zize
         "batch_size" : 8,
-        "top_n_image" : 10,  #multiple of 5
-        "mAP_n_queries": 60,
+        "top_n_image" : 15,  #multiple of 5
+        "mAP_n_queries": 100,
         "log_dir" : "/home/manager/upcschool-ai/data/FashionProduct/processed_datalab/log/",
         "debug" : "False" # True/False
     }
