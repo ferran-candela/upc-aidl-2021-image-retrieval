@@ -299,7 +299,7 @@ def main(config):
 
                 num_queries = config["mAP_n_queries"]
 
-                queries = create_ground_truth_queries( train_df, "Random", num_queries,[])
+                queries = create_ground_truth_queries( train_df, "FirstN", num_queries,[])
                 q_indx, y_true = make_ground_truth_matrix(train_df, queries)
 
                 #Compute mean Average Precision (mAP)
