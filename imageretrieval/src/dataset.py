@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import pandas as pd
 from torch.utils.data import Dataset
@@ -55,7 +56,7 @@ class DatasetManager():
         df.drop(df.index[delete_index],inplace=True)
         return df
 
-    def Prepare_Data(self, img_dir, original_labels_file, process_dir, img_format = '.jpg', clean_process_dir=False, split_train_dir=False, train_size='divide', fixed_validate_test_size=0, debug=False):
+    def split_dataset(self, img_dir, original_labels_file, process_dir, img_format = '.jpg', clean_process_dir=False, split_train_dir=False, train_size='divide', fixed_validate_test_size=0, debug=False):
 
         if train_size == 'all':
             fixed_train_size = -1
