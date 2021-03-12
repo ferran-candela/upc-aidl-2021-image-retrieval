@@ -118,22 +118,3 @@ def evaluation_hits(labels_df, imgindex,ranking):
     imagesIdx = ranking.tolist()
     return round(np.mean(y_true[0][imagesIdx]),4)
 
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-    # imagesIdx = ranking.tolist()
-    # imagesIdx.insert(0,imgindex)
-
-    # images_df = labels_df[labels_df.index.isin(imagesIdx)]
-    # print(images_df)
-    # queries = create_ground_truth_queries( images_df, "List", 0, [imgindex])
-    # print(queries)
-    # q_indx, y_true = make_ground_truth_matrix(images_df, queries)
-    # return round(np.mean(y_true),4)

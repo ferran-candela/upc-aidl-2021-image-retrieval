@@ -14,8 +14,8 @@ class PretainedModels:
                             # 'resnet50',
                             # 'inception_v3', [batch_size, 3, 299, 299]
                             # 'inception_resnet_v2' #needs : [batch_size, 3, 299, 299]
-                            #'densenet161'
-
+                            #'densenet161',
+                            #'efficient_net_b4'
                         }
                     
         self.device = device
@@ -52,12 +52,22 @@ class PretainedModels:
             pretrained_model.dropout = nn.Identity()
             pretrained_model.fc = nn.Identity()
             pretrained_model.softmax = nn.Identity()
-
+        
         if model_name == 'densenet161':
             from torchvision.models import densenet161
             pretrained_model = densenet161(pretrained=True)
             #Just use the output of feature extractor and ignore the classifier
             pretrained_model.classifier = nn.Identity()
+
+        if model_name == 'efficient_net_b4':
+
+            from efficientnet_pytorch import EfficientNet
+            pretrained_model = EfficientNet.from_pretrained('efficientnet-b4')
+
+            pretrained_model._dropout = nn.Identity()
+            pretrained_model._fc = nn.Identity()
+            pretrained_model._swish = nn.Identity() #Swish activation function 
+            #pretrained_model.set_swish(memory_efficient=False)
         
         return pretrained_model
     
@@ -111,7 +121,7 @@ class PretainedModels:
 
         return features
 
-    def Cosine_Similarity(self,features,imgidx,n_top):
+    def Cosine_Similarity(self,features,imgidx,top_k):
         # This gives the same rankings as (negative) Euclidean distance 
         # when the features are L2 normalized (as ours are).
         # The cosine similarity can be efficiently computed for all images 
@@ -120,22 +130,26 @@ class PretainedModels:
         scores = features @ query 
 
         # rank by score, descending, and skip the top match (because it will be the query)
-        ranking = (-scores).argsort()[1:n_top + 1]
+        ranking = (-scores).argsort()[1:top_k + 1]
         return ranking
 
-    def Euclidean_Distance(self,features,imgidx,n_top):
-        neighbors = NearestNeighbors(n_neighbors=n_top + 1, algorithm='brute',
+    def Euclidean_Distance(self,features,imgidx,top_k):
+        neighbors = NearestNeighbors(n_neighbors=top_k + 1, algorithm='brute',
                                     metric='euclidean').fit(features)
         distances, indices = neighbors.kneighbors([features[imgidx]])
         #the nearest index will be the image itself. Remove the first
         return distances[0][1:], indices[0][1:]
 
+
+    def Average_Query_Expansion(self,features, q_indx, top_k=5):
+        new_features = features.copy()
+        for index in q_indx:
+            query = features[index]
+            scores = features @ query
+            ranking = (-scores).argsort()
+            indices = ranking[:top_k+1]
+            new_features[index] = features[indices].mean(axis=0)
+        return new_features
+
     def Count_Parameters(self,model):
         return sum(p.numel() for p in model.parameters() if p.requires_grad)        
-
-#from sklearn.metrics import confusion_matrix, accuracy_score
-#preds = np.argmax(model_transfer.predict(test_features), axis=1)
-# print("\nAccuracy on Test Data: ", accuracy_score(test_y, preds))
-# print("\nNumber of correctly identified imgaes: ",
-#       accuracy_score(test_y, preds, normalize=False),"\n")
-# confusion_matrix(test_y, preds, labels=range(0,11))        

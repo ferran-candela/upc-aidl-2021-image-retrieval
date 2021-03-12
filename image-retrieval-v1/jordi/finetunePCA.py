@@ -6,7 +6,7 @@ from utils import ProcessTime
 def PCA_VarianceDimension(model_name,features,PCAdimension):
     #https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
     #The individual variance will tell us how important the newly added features are
-    pca = PCA(PCAdimension)
+    pca = PCA(PCAdimension,whiten=True)
     pca.fit(features)
     plt.style.use('seaborn')
     plt.plot(range(1,PCAdimension + 1),pca.explained_variance_ratio_,'o--', markersize=4)
