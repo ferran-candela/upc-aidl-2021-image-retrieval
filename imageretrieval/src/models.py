@@ -5,7 +5,7 @@ import torch.nn as nn
 class Model:
     TRAIN_FILE_NAME = 'trained_model.pt'
 
-    def __init__(self, device, model_name, models_dir, model, optimizer=None, is_pretrained=True, input_resize=224):
+    def __init__(self, device, model_name, models_dir, model, optimizer=None, is_pretrained=True, input_resize=224, output_features=0):
         self.device = device
         self.model_name = model_name
         self.models_dir = models_dir
@@ -13,6 +13,7 @@ class Model:
         self.optimizer = optimizer
         self.is_pretrained = is_pretrained
         self.input_resize = input_resize
+        self.output_features = output_features
     
     def get_model_name(self):
         return self.model_name
@@ -22,6 +23,9 @@ class Model:
 
     def get_input_resize(self):
         return self.input_resize
+    
+    def get_output_features(self):
+        return self.output_features
     
     def get_device(self):
         return self.device
@@ -66,7 +70,7 @@ class Model:
 class ModelManager:
     def __init__(self, device, models_dir):
         self.models =   {  
-                            # 'vgg16', # Documentation says input must be 224x224
+                            'vgg16', # Documentation says input must be 224x224
                             'resnet50',
                             # 'inception_v3', # [batch_size, 3, 299, 299]
                             # 'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
@@ -85,15 +89,21 @@ class ModelManager:
         device = self.device
         input_resize = 299
         is_pretrained = True
+        output_features = 0
 
         if model_name == 'vgg16':
             from torchvision.models import vgg16
             # Input must be 224x224
-            model = vgg16(pretrained=True)
-            # Just use the output of feature extractor and ignore the classifier
-            model.classifier = nn.Identity()
-
+            pretrained_model = vgg16(pretrained=True)
+            # Just use the output of feature extractor and a globalAveragePooling
+            model = nn.Sequential(
+                pretrained_model.features,
+                nn.AdaptiveAvgPool2d((1,1)),
+                nn.Flatten()
+            )
+            
             input_resize = 224
+            output_features = 512
 
         if model_name == 'resnet50':
             from torchvision.models import resnet50
@@ -102,6 +112,8 @@ class ModelManager:
             model.fc = nn.Identity()
             # Remove RELU
             model.layer4[2].relu = nn.Identity()
+
+            output_features = 2048
             
         if model_name == 'inception_v3':
             from torchvision.models import inception_v3
@@ -133,10 +145,11 @@ class ModelManager:
             pretrained_model._swish = nn.Identity() #Swish activation function 
             #pretrained_model.set_swish(memory_efficient=False)
         
-        return Model(device=self.device, model_name=model_name, models_dir=self.models_dir, model=model, is_pretrained=is_pretrained, input_resize=input_resize)
+        return Model(device=self.device, model_name=model_name, models_dir=self.models_dir, model=model, is_pretrained=is_pretrained, input_resize=input_resize, output_features=output_features)
         
     def is_model_saved(self, model_name):
         return os.path.isfile(Model.get_model_file_path(self.models_dir, model_name))
     
     def load_pretrained_model(self, model_name):
+        # TODO: Implement load model from checkpoint
         pass

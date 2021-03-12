@@ -4,6 +4,8 @@ import pandas as pd
 from datetime import timedelta
 from PIL import Image
 
+from config import FoldersConfig
+
 class ProcessTime:
     def __init__(self):
         super().__init__()
@@ -40,11 +42,12 @@ class LogFile:
     def getLogFile(self):
         return self._log_df
 
-    def saveLogFile_to_csv(self, processname, config):
+    def saveLogFile_to_csv(self, processname):
         #Log directory
-        if not os.path.exists(config["log_dir"]):
-            os.mkdir(config["log_dir"])
-        self._log_df.to_csv(config["log_dir"] + processname + '_log_' + time.strftime("%Y%m%d-%H%M%S") + '.csv',index=False)
+        log_dir = FoldersConfig.LOG_DIR
+        if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
+        self._log_df.to_csv(log_dir + processname + '_log_' + time.strftime("%Y%m%d-%H%M%S") + '.csv',index=False)
 
     def printLogFile(self):
         print(self._log_df)

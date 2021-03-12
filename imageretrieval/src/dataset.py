@@ -6,13 +6,18 @@ from torch.utils.data import Dataset
 from PIL import Image
 import numpy as np
 
+from config import DebugConfig
+
+DEBUG = DebugConfig.DEBUG
 
 class FashionProductDataset(Dataset):
+    IMAGE_DIR_NAME = 'images'
+    IMAGE_FORMAT = '.jpg'
 
     def __init__(self, base_dir, labels_df, transform=None):
         super().__init__()
         self.base_dir = base_dir
-        self.images_path = os.path.join(base_dir, 'images')
+        self.images_path = os.path.join(base_dir, self.IMAGE_DIR_NAME)
         #There are rows with more than 10 columns. ex:6044
         self.labels_df = labels_df
         self.transform = transform
@@ -22,7 +27,7 @@ class FashionProductDataset(Dataset):
 
     def __getitem__(self, idx):
         imageid,gender,masterCategory,subCategory,articleType,baseColour,season,year,usage,productDisplayName = self.labels_df.loc[idx, :]
-        path = os.path.join(self.images_path, f"{imageid}.jpg")
+        path = os.path.join(self.images_path, f"{imageid}{self.IMAGE_FORMAT}")
         sample = Image.open(path).convert('RGB')
         if self.transform:
             sample = self.transform(sample)
@@ -41,7 +46,6 @@ class FashionProductDataset(Dataset):
     def get_base_path(self):
         self.images_path
 
-
 class DatasetManager():
     def __init__(self):
         pass
@@ -56,16 +60,19 @@ class DatasetManager():
         df.drop(df.index[delete_index],inplace=True)
         return df
 
-    def split_dataset(self, img_dir, original_labels_file, process_dir, img_format = '.jpg', clean_process_dir=False, split_train_dir=False, train_size='divide', fixed_validate_test_size=0, debug=False):
+    def split_dataset(self, dataset_base_dir, original_labels_file, process_dir, clean_process_dir=False, split_train_dir=False, train_size='divide', fixed_validate_test_size=0):
 
         if train_size == 'all':
             fixed_train_size = -1
         elif train_size == 'divide':
             fixed_train_size = 0
         else:
-            fixed_train_size = train_size
+            fixed_train_size = int(train_size)
+            fixed_validate_test_size = int(fixed_validate_test_size)
 
         base_dir = process_dir
+        img_dir = os.path.join(dataset_base_dir, FashionProductDataset.IMAGE_DIR_NAME)
+        img_format = FashionProductDataset.IMAGE_FORMAT
 
         #Validation    
         if not os.path.isfile(original_labels_file) or not os.access(original_labels_file, os.R_OK):    
@@ -108,16 +115,16 @@ class DatasetManager():
                                                 [int(.6*len(labels_df)), int(.8*len(labels_df))])
 
             #Validate images exists
-            train_df = self.Validate_Images_DataFrame(train_df,"id",img_dir,img_format = '.jpg')
+            train_df = self.Validate_Images_DataFrame(train_df, "id", img_dir, img_format = img_format)
 
             # Save datasets
             train_df.to_csv(os.path.join(base_dir, "train_dataset.csv"),index=False)
             if not fixed_train_size == -1:
-                validate_df = self.Validate_Images_DataFrame(validate_df,"id",img_dir,img_format = '.jpg')
-                test_df = self.Validate_Images_DataFrame(test_df,"id",img_dir,img_format = '.jpg')
+                validate_df = self.Validate_Images_DataFrame(validate_df, "id", img_dir, img_format = img_format)
+                test_df = self.Validate_Images_DataFrame(test_df,"id", img_dir, img_format = img_format)
 
-                validate_df.to_csv(os.path.join(base_dir, "val_dataset.csv"),index=False)
-                test_df.to_csv(os.path.join(base_dir, "test_dataset.csv"),index=False)
+                validate_df.to_csv(os.path.join(base_dir, "val_dataset.csv"), index=False)
+                test_df.to_csv(os.path.join(base_dir, "test_dataset.csv"), index=False)
 
             if split_train_dir:
                 # Directories for our training, validation and test splits
@@ -156,10 +163,10 @@ class DatasetManager():
                     else:        
                         test_df.drop(index, inplace=True)
 
-        if debug: print('Total training images:', train_df.shape[0])
+        if DEBUG: print('Total training images:', train_df.shape[0])
         if not fixed_train_size == -1:
-            if debug: print('Total test images:', test_df.shape[0])
-            if debug: print('Total validation images:', validate_df.shape[0])
+            if DEBUG: print('Total test images:', test_df.shape[0])
+            if DEBUG: print('Total validation images:', validate_df.shape[0])
             return train_df, test_df, validate_df
         else:
             return train_df, None, None
