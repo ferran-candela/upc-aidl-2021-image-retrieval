@@ -73,9 +73,9 @@ class ModelManager:
                             'vgg16', # Documentation says input must be 224x224
                             'resnet50',
                             # 'inception_v3', # [batch_size, 3, 299, 299]
-                            # 'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
-                            # 'densenet161',
-                            # 'efficient_net_b4'
+                            'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
+                            'densenet161',
+                            'efficient_net_b4'
                         }
                     
         self.device = device
@@ -110,9 +110,10 @@ class ModelManager:
             model = resnet50(pretrained=True)
             # Remove FC layer
             model.fc = nn.Identity()
-            # Remove RELU
+            # Remove RELU in order to not lose negative features information
             model.layer4[2].relu = nn.Identity()
 
+            input_resize = 299
             output_features = 2048
             
         if model_name == 'inception_v3':
@@ -120,6 +121,8 @@ class ModelManager:
             model = inception_v3(pretrained=True)
             # Remove FC Layer
             model.fc = nn.Identity()
+
+            input_resize = 299
 
         if model_name == 'inception_resnet_v2':
             from torch_inception_resnet_v2.model import InceptionResNetV2
@@ -129,21 +132,34 @@ class ModelManager:
             model.fc = nn.Identity()
             model.softmax = nn.Identity()
 
+            input_resize = 299
+            output_features = 1888
+
+
         if model_name == 'densenet161':
+            # All pre-trained models expect input images normalized in the same way, i.e. mini-batches of 3-channel 
+            # RGB images of shape (3 x H x W), where H and W are expected to be at least 224. The images have to be 
+            # loaded in to a range of [0, 1] and then normalized using mean = [0.485, 0.456, 0.406] and std = [0.229, 0.224, 0.225].
             from torchvision.models import densenet161
             model = densenet161(pretrained=True)
             #Just use the output of feature extractor and ignore the classifier
             model.classifier = nn.Identity()
+
+            input_resize = 224
+            output_features = 2208
         
         if model_name == 'efficient_net_b4':
 
             from efficientnet_pytorch import EfficientNet
-            pretrained_model = EfficientNet.from_pretrained('efficientnet-b4')
+            model = EfficientNet.from_pretrained('efficientnet-b4')
 
-            pretrained_model._dropout = nn.Identity()
-            pretrained_model._fc = nn.Identity()
-            pretrained_model._swish = nn.Identity() #Swish activation function 
-            #pretrained_model.set_swish(memory_efficient=False)
+            model._dropout = nn.Identity()
+            model._fc = nn.Identity()
+            model._swish = nn.Identity() #Swish activation function 
+            #model.set_swish(memory_efficient=False)
+
+            input_resize = 224
+            output_features = 1792
         
         return Model(device=self.device, model_name=model_name, models_dir=self.models_dir, model=model, is_pretrained=is_pretrained, input_resize=input_resize, output_features=output_features)
         

@@ -92,10 +92,11 @@ def train():
             # Load raw model
             model = model_manager.get_raw_model(model_name)
 
+            image_resized_size = model.get_input_resize() + 32
             # Define input transformations
             transform = transforms.Compose([
-                transforms.Resize(model.get_input_resize() + 32),
-                transforms.CenterCrop(model.get_input_resize() - 32),
+                transforms.Resize(image_resized_size),
+                transforms.CenterCrop(image_resized_size - 32),
                 transforms.ToTensor(),
                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ])

@@ -32,7 +32,7 @@ export DATASET_BASE_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_
 export DATASET_LABELS_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
 export WORK_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset &&
 export LOG_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset/log/ &&
-export TRAIN_SIZE=300 &&
-export TEST_VALIDATE_SIZE=500 &&
+export TRAIN_SIZE=all &&
+export TEST_VALIDATE_SIZE=0 &&
 python /home/fcandela/src/upc/upc-jmc-project/imageretrieval/src/train.py
 ```

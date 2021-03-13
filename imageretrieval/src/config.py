@@ -21,7 +21,7 @@ class ModelBatchSizeConfig:
         batch_size = 8
         
         if model_name == 'vgg16':
-            batch_size = 36
+            batch_size = 28
 
         if model_name == 'resnet50':
             batch_size = 12
@@ -31,16 +31,13 @@ class ModelBatchSizeConfig:
             pass
 
         if model_name == 'inception_resnet_v2':
-            # TODO: To be defined
-            pass
+            batch_size = 12
 
         if model_name == 'densenet161':
-            # TODO: To be defined
-            pass
+            batch_size = 8
 
         if model_name == 'efficient_net_b4':
-            # TODO: To be defined
-            pass
+            batch_size = 8
 
         return batch_size
 
