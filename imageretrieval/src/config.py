@@ -21,7 +21,7 @@ class ModelBatchSizeConfig:
         batch_size = 8
         
         if model_name == 'vgg16':
-            batch_size = 28
+            batch_size = 24
 
         if model_name == 'resnet50':
             batch_size = 12
@@ -34,7 +34,7 @@ class ModelBatchSizeConfig:
             batch_size = 12
 
         if model_name == 'densenet161':
-            batch_size = 8
+            batch_size = 6
 
         if model_name == 'efficient_net_b4':
             batch_size = 8
