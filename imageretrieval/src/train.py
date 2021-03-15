@@ -76,7 +76,11 @@ def train():
     pending_models_train = []
     for model_name in models_list:        
         if not model_manager.is_model_saved(model_name):
-            pending_models_train.append(model_name)
+            # Get raw model
+            pending_models_train.append(model_manager.get_raw_model(model_name))
+        else:
+            # Test model can be loaded from checkpoint
+            loaded_model = model_manager.load_from_checkpoint(model_name)
 
     if len(pending_models_train) > 0 :
         #create logfile for save statistics - extract features
@@ -86,11 +90,9 @@ def train():
         #Create timer to calculate the process time
         proctimer = ProcessTime()
 
-        for model_name in pending_models_train:
+        for model in pending_models_train:
+            model_name = model.get_model_name()
             if DEBUG:print(f'Training model {model_name} ....')
-
-            # Load raw model
-            model = model_manager.get_raw_model(model_name)
 
             image_resized_size = model.get_input_resize() + 32
             # Define input transformations
