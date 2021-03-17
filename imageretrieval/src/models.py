@@ -1,6 +1,8 @@
 import os
 import torch
 import torch.nn as nn
+from torchvision import transforms
+
 
 class Model:
     TRAIN_FILE_NAME = 'trained_model.pt'
@@ -15,7 +17,7 @@ class Model:
         self.input_resize = input_resize
         self.output_features = output_features
     
-    def get_model_name(self):
+    def get_name(self):
         return self.model_name
     
     def get_model(self):
@@ -33,6 +35,20 @@ class Model:
     def to_device(self):
         return self.model.to(self.device)
     
+    def get_checkpoint(self):
+        optimizer_state_dict = None
+
+        if(self.optimizer != None):
+            optimizer_state_dict = self.optimizer.cpu().state_dict()
+
+        return {
+            "model_name": self.model_name,
+            "model_state_dict": self.model.cpu().state_dict(),
+            "optimizer_state_dict": optimizer_state_dict,
+            "is_pretrained": self.is_pretrained,
+            "input_resize": self.input_resize
+        }
+    
     def save_model(self):
         model_dir = self.get_model_dir(self.models_dir, self.model_name)
 
@@ -40,19 +56,7 @@ class Model:
             os.mkdir(model_dir)
 
         model_file_path = self.get_model_file_path(self.models_dir, self.model_name)
-
-        optimizer_state_dict = None
-
-        if(self.optimizer != None):
-            optimizer_state_dict = self.optimizer.cpu().state_dict()
-
-        model_checkpoint = {
-            "model_name": self.model_name,
-            "model_state_dict": self.model.cpu().state_dict(),
-            "optimizer_state_dict": optimizer_state_dict,
-            "is_pretrained": self.is_pretrained,
-            "input_resize": self.input_resize
-        }
+        model_checkpoint = self.get_checkpoint()
 
         torch.save(model_checkpoint, model_file_path)
     
@@ -73,7 +77,16 @@ class Model:
             optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     
     def count_parameters(self):
-        return sum(p.numel() for p in self.model.parameters() if p.requires_grad) 
+        return sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+    
+    def get_input_transform(self):
+        image_resized_size = self.get_input_resize() + 32
+        return transforms.Compose([
+                transforms.Resize(image_resized_size),
+                transforms.CenterCrop(image_resized_size - 32),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ])
 
     @staticmethod
     def get_model_dir(models_dir, model_name):
@@ -87,11 +100,11 @@ class ModelManager:
     def __init__(self, device, models_dir):
         self.models =   {  
                             'vgg16', # Documentation says input must be 224x224
-                            'resnet50',
+                            # 'resnet50',
                             # 'inception_v3', # [batch_size, 3, 299, 299]
-                            'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
-                            'densenet161',
-                            'efficient_net_b4'
+                            # 'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
+                            # 'densenet161',
+                            # 'efficient_net_b4'
                         }
                     
         self.device = device
@@ -181,6 +194,9 @@ class ModelManager:
         
     def is_model_saved(self, model_name):
         return os.path.isfile(Model.get_model_file_path(self.models_dir, model_name))
+
+    def get_model_dir(self, model_name):
+        return Model.get_model_dir(self.models_dir, model_name)
     
     def load_from_checkpoint(self, model_name):
         if not self.is_model_saved(model_name):
