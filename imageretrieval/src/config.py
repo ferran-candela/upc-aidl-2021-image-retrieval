@@ -24,7 +24,7 @@ class ModelBatchSizeConfig:
             batch_size = 24
 
         if model_name == 'resnet50':
-            batch_size = 12
+            batch_size = 10
             
         if model_name == 'inception_v3':
             # TODO: To be defined
@@ -37,9 +37,60 @@ class ModelBatchSizeConfig:
             batch_size = 6
 
         if model_name == 'efficient_net_b4':
-            batch_size = 8
+            batch_size = 6
 
         return batch_size
+    
+    @staticmethod
+    def get_feature_extraction_batch_size(model_name):
+        batch_size = 8
+        
+        if model_name == 'vgg16':
+            batch_size = 24
+
+        if model_name == 'resnet50':
+            batch_size = 10
+            
+        if model_name == 'inception_v3':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'inception_resnet_v2':
+            batch_size = 12
+
+        if model_name == 'densenet161':
+            batch_size = 6
+
+        if model_name == 'efficient_net_b4':
+            batch_size = 6
+
+        return batch_size
+
+class FeaturesConfig:
+    @staticmethod
+    def get_PCA_size(model_name):
+        PCA = 128
+        
+        if model_name == 'vgg16':
+            pass
+
+        if model_name == 'resnet50':
+            pass
+            
+        if model_name == 'inception_v3':
+            pass
+
+        if model_name == 'inception_resnet_v2':
+            pass
+
+        if model_name == 'densenet161':
+            pass
+
+        if model_name == 'efficient_net_b4':
+            pass
+
+        return PCA
+
 
 class ModelTrainConfig:
     TRAIN_SIZE = os.environ.get("TRAIN_SIZE") # "all" / "divide"=train(60%), Eval and test (20%) / number=fixed size

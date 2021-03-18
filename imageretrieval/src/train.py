@@ -1,12 +1,10 @@
 import os
 import torch
 from torch.utils.data import DataLoader
-from torchvision import transforms
 
-from dataset import DatasetManager
-from dataset import FashionProductDataset
+from dataset import DatasetManager, FashionProductDataset
 from models import ModelManager
-from utils import ProcessTime, LogFile, ImageSize
+from utils import ProcessTime, LogFile
 
 from config import DebugConfig, DeviceConfig, FoldersConfig, ModelBatchSizeConfig, ModelTrainConfig
 
@@ -76,7 +74,11 @@ def train():
     pending_models_train = []
     for model_name in models_list:        
         if not model_manager.is_model_saved(model_name):
-            pending_models_train.append(model_name)
+            # Get raw model
+            pending_models_train.append(model_manager.get_raw_model(model_name))
+        else:
+            # Test model can be loaded from checkpoint
+            loaded_model = model_manager.load_from_checkpoint(model_name)
 
     if len(pending_models_train) > 0 :
         #create logfile for save statistics - extract features
@@ -86,21 +88,12 @@ def train():
         #Create timer to calculate the process time
         proctimer = ProcessTime()
 
-        for model_name in pending_models_train:
+        for model in pending_models_train:
+            model_name = model.get_name()
             if DEBUG:print(f'Training model {model_name} ....')
 
-            # Load raw model
-            model = model_manager.get_raw_model(model_name)
-
-            image_resized_size = model.get_input_resize() + 32
             # Define input transformations
-            transform = transforms.Compose([
-                transforms.Resize(image_resized_size),
-                transforms.CenterCrop(image_resized_size - 32),
-                transforms.ToTensor(),
-                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-            ])
-
+            transform = model.get_input_transform()
             batch_size = ModelBatchSizeConfig.get_batch_size(model_name)
             train_dataset = FashionProductDataset(dataset_base_dir, train_df, transform=transform)
             train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
