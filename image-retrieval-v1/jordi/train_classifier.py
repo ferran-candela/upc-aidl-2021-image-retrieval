@@ -4,6 +4,7 @@ import numpy as np
 import torch.nn as nn
 import torch.optim as optim
 import pandas as pd 
+import matplotlib.pyplot as plt
 from utils import ProcessTime, LogFile
 from train_dataset import MyTrainDataset
 from data_preparation import Prepare_Data
@@ -32,7 +33,6 @@ def train_model(train_loader, model, criterion, optimizer, num_epochs, device):
         batch_corrects = 0
         total_train_images = 0
         for batch_idx, (images_batch, labels_batch) in enumerate(train_loader):
-
             # move images to gpu
             images_batch = images_batch.to(device)
             labels_batch = labels_batch.to(device)
@@ -44,7 +44,7 @@ def train_model(train_loader, model, criterion, optimizer, num_epochs, device):
             outputs = model(images_batch)
 
             # loss            
-            loss = criterion(outputs, torch.tensor(labels_batch))
+            loss = criterion(outputs, labels_batch)
 
             loss.backward()
             optimizer.step()
@@ -65,7 +65,7 @@ def train_model(train_loader, model, criterion, optimizer, num_epochs, device):
         train_acc.append(epoch_acc)
 
         print ('Train Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}' 
-                .format(epoch, num_epochs, batch_idx, loader_len, np.mean(train_loss), np.mean(train_acc))
+                .format(epoch, num_epochs, batch_idx, loader_len, np.mean(train_loss), np.mean(train_acc)))
 
 def validate_model(validate_loader, model, criterion, num_epochs, save_path, device):        
     # switch to eval mode
@@ -109,7 +109,7 @@ def validate_model(validate_loader, model, criterion, num_epochs, save_path, dev
             #network_learned = epoch_acc > best_acc
 
             print ('Validate Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}' 
-                .format(epoch, num_epochs, batch_idx, loader_len, np.mean(val_loss), np.mean(val_acc))
+                .format(epoch, num_epochs, batch_idx, loader_len, np.mean(val_loss), np.mean(val_acc)))
 
             if network_learned:
                 loss_min = epoch_loss
@@ -178,6 +178,15 @@ if __name__ == "__main__":
         
     train_df.reset_index(drop=True, inplace=True)
 
+    #Show classes graphic
+    # plt.figure(figsize=(7,20))
+    # train_df.articleType.value_counts().sort_values().plot(kind='barh')
+    # #How many classes have minimum 100 images
+    # N_Pictures = 100
+    # N_Classes = np.sum(train_df.articleType.value_counts().to_numpy() > N_Pictures)
+    # temp = train_df.articleType.value_counts().sort_values(ascending=False)[:N_Classes]
+    # temp[-5:]
+
     transform = transforms.Compose([
             transforms.Resize(config["transforms_resize"]),
             transforms.CenterCrop(config["transforms_resize"]-32),
@@ -186,16 +195,16 @@ if __name__ == "__main__":
     ])
 
     train_dataset = MyTrainDataset(dataset_image_dir, train_df, transform=transform)
-    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True, pin_memory=True)
+    train_loader = DataLoader(train_dataset, batch_size=config["batch_size"], shuffle=True)
 
     from torchvision.models import resnet50
 
     model = resnet50(pretrained=True)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.0001, momentum=0.9)
+    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
     #num classes
-    class_names=pd.unique(train_df['articleType'])
+    class_names=pd.unique(train_df['articleTypeEncoded'])
     num_features = model.fc.in_features
     model.fc = nn.Linear(num_features, len(class_names))
     #model.fc = model.fc.cuda() if torch.cuda.is_available() else model.fc
@@ -204,3 +213,8 @@ if __name__ == "__main__":
     model_dir = os.path.join(work_dir, model_name)
 
     train_model(train_loader, model, criterion, optimizer, 1, device)
+
+    #Validation
+    #val_dataset = 
+    #val_loader = DataLoader(val_dataset, batch_size=config["batchsize"], shuffle=False)
+    #validate_model(val_loader,model, criterion, optimizer, 1,model_dir,device)
