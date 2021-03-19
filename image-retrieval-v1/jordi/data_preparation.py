@@ -2,6 +2,7 @@ import os
 import shutil
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
 
 def Validate_Images_DataFrame(df,imgid_colname,image_dir,img_format ):
     delete_index = []
@@ -11,6 +12,19 @@ def Validate_Images_DataFrame(df,imgid_colname,image_dir,img_format ):
         if not os.path.isfile(path):
             delete_index.append(index)
     df.drop(df.index[delete_index],inplace=True)
+    return df
+
+def EncodeColumns(df):
+    #Encode any string columns: Need for training and convert to tensor
+    le = LabelEncoder()
+    df["masterCategoryEncoded"] =  le.fit_transform(df['masterCategory'])
+    df["masterCategoryEncoded"] = df["masterCategoryEncoded"].astype('int64')
+    df["subCategoryEncoded"] =  le.fit_transform(df['subCategory'])
+    df["subCategoryEncoded"] = df["subCategoryEncoded"].astype('int64')
+    df['articleTypeEncoded'] = le.fit_transform(df['articleType'])
+    df["articleTypeEncoded"] = df["articleTypeEncoded"].astype('int64')
+    df["baseColourEncoded"] =  le.fit_transform(df['baseColour'])
+    df["baseColourEncoded"] = df["baseColourEncoded"].astype('int64')
     return df
 
 def Prepare_Data(img_dir, original_labels_file, process_dir, img_format = '.jpg',clean_process_dir=False, split_train_dir=False, fixed_train_size=0, fixed_validate_test_size=0, debug=False):
@@ -60,11 +74,17 @@ def Prepare_Data(img_dir, original_labels_file, process_dir, img_format = '.jpg'
         #Validate images exists
         train_df = Validate_Images_DataFrame(train_df,"id",img_dir,img_format = '.jpg')
 
+        #Encode any string columns: Need for training and convert to tensor
+        train_df = EncodeColumns(train_df)
+
         # Save datasets
         train_df.to_csv(os.path.join(base_dir, "train_dataset.csv"),index=False)
         if not fixed_train_size == -1:
             validate_df = Validate_Images_DataFrame(validate_df,"id",img_dir,img_format = '.jpg')
             test_df = Validate_Images_DataFrame(test_df,"id",img_dir,img_format = '.jpg')
+            #Encode any string columns: Need for training and convert to tensor
+            validate_df  = EncodeColumns(validate_df )
+            test_df = EncodeColumns(test_df)
 
             validate_df.to_csv(os.path.join(base_dir, "val_dataset.csv"),index=False)
             test_df.to_csv(os.path.join(base_dir, "test_dataset.csv"),index=False)
