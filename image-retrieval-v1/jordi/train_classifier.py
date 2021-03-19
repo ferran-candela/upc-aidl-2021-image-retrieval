@@ -24,18 +24,18 @@ def train_model(train_loader, model, criterion, optimizer, num_epochs, device):
     train_loss = []
     train_acc = []
 
-    total_step = len(train_loader)
+    loader_len = len(train_loader)
     log_interval = 50
 
     for epoch in range(1, num_epochs+1):
         batch_loss = 0.0
         batch_corrects = 0
-        total = 0
+        total_train_images = 0
         for batch_idx, (images_batch, labels_batch) in enumerate(train_loader):
 
             # move images to gpu
             images_batch = images_batch.to(device)
-            #labels_batch = labels_batch.to(device)
+            labels_batch = labels_batch.to(device)
 
             # zero the parameter gradients
             optimizer.zero_grad()
@@ -52,62 +52,73 @@ def train_model(train_loader, model, criterion, optimizer, num_epochs, device):
             # statistics
             batch_loss += loss.item() #* images.size(0)
             batch_corrects += accuracy(outputs,labels_batch)
-            total += images_batch.size(0)
+            total_train_images += images_batch.size(0)
 
             if (batch_idx) % log_interval == 0:
-                print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Corrects: {:.4f}' 
-                    .format(epoch, num_epochs, batch_idx, total_step, batch_loss, batch_corrects))
+                print ('Batch Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Corrects: {:.4f}' 
+                    .format(epoch, num_epochs, batch_idx, loader_len, batch_loss, batch_corrects))
 
         
-        epoch_loss = batch_loss / total_step
-        epoch_acc = 100 * batch_corrects / total
+        epoch_loss = batch_loss / loader_len
+        epoch_acc = batch_corrects / total_train_images
         train_loss.append(epoch_loss)
         train_acc.append(epoch_acc)
 
         print ('Train Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}' 
-                .format(epoch, num_epochs, batch_idx, total_step, epoch_loss, epoch_acc))
+                .format(epoch, num_epochs, batch_idx, loader_len, np.mean(train_loss), np.mean(train_acc))
 
-def validate_model(validate_loader, model, criterion, save_path, device):        
+def validate_model(validate_loader, model, criterion, num_epochs, save_path, device):        
+    # switch to eval mode
+    model.eval()            
     val_loss = []
     val_acc = []
-    valid_loss_min = 0.
-    with torch.no_grad():
-        model.eval()        
-        for batch_idx, (images_batch, labels_batch) in enumerate(validate_loader):
+    loss_min = np.Inf
+    best_acc = 0.
+    total_val_images = 0
+    loader_len = len(validate_loader)
+    log_interval = 50
+    for epoch in range(1, num_epochs+1):
+        with torch.no_grad():
+            for batch_idx, (images_batch, labels_batch) in enumerate(validate_loader):
 
-            # move images to gpu
-            images_batch = images_batch.to(device)
-            labels_batch = labels_batch.to(device)
+                # move images to gpu
+                images_batch = images_batch.to(device)
+                labels_batch = labels_batch.to(device)
 
-            # compute output
-            output = model(images_batch)
+                # compute output
+                output = model(images_batch)
 
-            # loss
-            loss = criterion(output, labels_batch)
+                # loss
+                loss = criterion(output, labels_batch)
 
-            # statistics
-            batch_loss += loss.item() #* images.size(0)
-            batch_corrects += accuracy(outputs,labels_batch)
-            total += images_batch.size(0)
+                # statistics
+                batch_loss += loss.item() #* images.size(0)
+                batch_corrects += accuracy(outputs,labels_batch)
+                total_val_images += images_batch.size(0)
 
-            if (batch_idx) % print_every == 0:
-                print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Corrects: {:.4f}' 
-                    .format(epoch, num_epochs, batch_idx, total_step, batch_loss, batch_corrects))
+                if (batch_idx) % print_every == 0:
+                    print ('Batch Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Corrects: {:.4f}' 
+                        .format(epoch, num_epochs, batch_idx, loader_len, batch_loss, batch_corrects))
 
-        epoch_loss = batch_loss / total_step
-        epoch_acc = 100 * batch_corrects / total
-        val_loss.append(epoch_loss)
-        val_acc.append(epoch_acc)
-        network_learned = batch_loss < valid_loss_min
-        print ('Validate Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}' 
-                .format(epoch, num_epochs, batch_idx, total_step, epoch_loss, epoch_acc))
+            epoch_loss = batch_loss / loader_len
+            epoch_acc = batch_corrects / total_val_images
+            val_loss.append(epoch_loss)
+            val_acc.append(epoch_acc)
 
-        if epoch_loss < valid_loss_min:
-            print('Validation loss decreased ({:.2f} --> {:.2f}).  Saving model ...'.format(
-                valid_loss_min,
-                epoch_loss))
-            torch.save(model.state_dict(), save_path)
-            valid_loss_min = epoch_loss       
+            network_learned = epoch_loss < loss_min
+            #network_learned = epoch_acc > best_acc
+
+            print ('Validate Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}' 
+                .format(epoch, num_epochs, batch_idx, loader_len, np.mean(val_loss), np.mean(val_acc))
+
+            if network_learned:
+                loss_min = epoch_loss
+                #best_acc = epoch_acc
+                print('Validation loss decreased ({:.2f} --> {:.2f}).  Saving model ...'
+                    .format(loss_min,epoch_loss))
+                #print('Better Accuracy ({:.2f} --> {:.2f}).  Saving model ...'
+                #    .format(best_acc,epoch_acc))
+                torch.save(model.state_dict(), save_path)
 
 if __name__ == "__main__":
 
