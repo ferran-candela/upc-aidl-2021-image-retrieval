@@ -17,7 +17,14 @@ def accuracy(out, labels):
     _,pred = torch.max(out, dim=1)
     return torch.sum(pred==labels).item()
 
-def train_model(train_loader, model, criterion, optimizer, num_epochs, device):
+def train_model(train_loader, model, criterion, optimizer, num_epochs, device, config):
+
+    #Create timer to calculate the process time
+    proctimer = ProcessTime()    
+    proctimer.start()
+    #create logfile for save statistics - extract features
+    fields = ['ModelName','Criterion','Optimizer','lr','Epoch', 'Step','Loss','Accuracy', 'Time']
+    logfile = LogFile(fields) 
 
     # switch to train mode
     model.train()
@@ -26,7 +33,7 @@ def train_model(train_loader, model, criterion, optimizer, num_epochs, device):
     train_acc = []
 
     loader_len = len(train_loader)
-    log_interval = 50
+    log_interval = 10
 
     for epoch in range(1, num_epochs+1):
         batch_loss = 0.0
@@ -50,33 +57,65 @@ def train_model(train_loader, model, criterion, optimizer, num_epochs, device):
             optimizer.step()
 
             # statistics
-            batch_loss += loss.item() #* images.size(0)
+            batch_loss += loss.item() * images_batch.size(0)
             batch_corrects += accuracy(outputs,labels_batch)
             total_train_images += images_batch.size(0)
 
             if (batch_idx) % log_interval == 0:
-                print ('Batch Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Corrects: {:.4f}' 
-                    .format(epoch, num_epochs, batch_idx, loader_len, batch_loss, batch_corrects))
+                print ('Batch Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}' 
+                    .format(epoch, num_epochs, batch_idx, loader_len, batch_loss/total_train_images, batch_corrects/total_train_images))
+                processtime = proctimer.current_time()
+                values = {  'ModelName':'RESNET50',
+                        'Criterion': type(criterion).__name__,
+                        'Optimizer': type(optimizer).__name__,
+                        'lr': config["lr"],
+                        'Epoch': 'Batch Epoch ' + str(epoch) + '/' + str(num_epochs), 
+                        'Step': str(batch_idx) + '/' + str(loader_len), 
+                        'Loss': str(batch_loss), 
+                        'Accuracy': str(round(batch_corrects/total_train_images,4)),
+                        'Time': processtime
+                        } 
+                logfile.writeLogFile(values)                    
 
-        
         epoch_loss = batch_loss / loader_len
-        epoch_acc = batch_corrects / total_train_images
+        epoch_acc =  100.0 * batch_corrects / total_train_images
         train_loss.append(epoch_loss)
         train_acc.append(epoch_acc)
 
         print ('Train Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}' 
                 .format(epoch, num_epochs, batch_idx, loader_len, np.mean(train_loss), np.mean(train_acc)))
+        processtime = proctimer.stop()
+        values = {  'ModelName':'RESNET50',
+                    'Criterion': type(criterion).__name__,
+                    'Optimizer': type(optimizer).__name__,
+                    'lr': config["lr"],
+                    'Epoch': 'Train Epoch ' + str(epoch) + '/' + str(num_epochs), 
+                    'Step': str(batch_idx) + '/' + str(loader_len), 
+                    'Loss': str(np.mean(train_loss)), 
+                    'Accuracy': str(np.mean(train_acc)),
+                    'Time': processtime
+                } 
+        logfile.writeLogFile(values)
+        logfile.saveLogFile_to_csv('trainproc',config)
 
-def validate_model(validate_loader, model, criterion, num_epochs, save_path, device):        
+def validate_model(validate_loader, model, criterion, num_epochs, device, model_path):        
     # switch to eval mode
-    model.eval()            
+    model.eval()         
+
+    #Create timer to calculate the process time
+    proctimer = ProcessTime()    
+    proctimer.start()
+    #create logfile for save statistics - extract features
+    fields = ['ModelName','Criterion','Epoch', 'Step','Loss','Accuracy', 'Time']
+    logfile = LogFile(fields) 
+
     val_loss = []
     val_acc = []
     loss_min = np.Inf
     best_acc = 0.
     total_val_images = 0
     loader_len = len(validate_loader)
-    log_interval = 50
+    log_interval = 10
     for epoch in range(1, num_epochs+1):
         with torch.no_grad():
             for batch_idx, (images_batch, labels_batch) in enumerate(validate_loader):
@@ -92,13 +131,13 @@ def validate_model(validate_loader, model, criterion, num_epochs, save_path, dev
                 loss = criterion(output, labels_batch)
 
                 # statistics
-                batch_loss += loss.item() #* images.size(0)
+                batch_loss += loss.item() * images_batch.size(0)
                 batch_corrects += accuracy(outputs,labels_batch)
                 total_val_images += images_batch.size(0)
 
                 if (batch_idx) % print_every == 0:
-                    print ('Batch Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Corrects: {:.4f}' 
-                        .format(epoch, num_epochs, batch_idx, loader_len, batch_loss, batch_corrects))
+                    print ('Batch Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}' 
+                        .format(epoch, num_epochs, batch_idx, loader_len, batch_loss/total_val_images, batch_corrects/total_val_images))
 
             epoch_loss = batch_loss / loader_len
             epoch_acc = batch_corrects / total_val_images
@@ -118,6 +157,10 @@ def validate_model(validate_loader, model, criterion, num_epochs, save_path, dev
                     .format(loss_min,epoch_loss))
                 #print('Better Accuracy ({:.2f} --> {:.2f}).  Saving model ...'
                 #    .format(best_acc,epoch_acc))
+
+                model_name='resnet50'
+                work_dir = config["work_dir"]
+                save_path =  os.path.join(model_path,'model.ckpt')    
                 torch.save(model.state_dict(), save_path)
 
 if __name__ == "__main__":
@@ -128,7 +171,7 @@ if __name__ == "__main__":
         "work_dir" : "C:\\UPC\\data\\FashionProduct\\processed_datalab",
         "transforms_resize" : 332,
         "PCAdimension" : 10,
-        "train_size" : "all",  # "all" / "divide"=train(60%), Eval and test (20%) / number=fixed size
+        "train_size" : "divide",  # "all" / "divide"=train(60%), Eval and test (20%) / number=fixed size
         "test_validate_size": 1, #used only for train_size = fixed zize
         "batch_size" : 8,
         "log_dir" : "C:\\UPC\\data\\FashionProduct\\processed_datalab\\log\\",
@@ -137,6 +180,7 @@ if __name__ == "__main__":
         "top_k_image" : 15,  #multiple of 5
         "evaluate" : "False", # True/False  Process Evaluation
         "mAP_n_queries": 300,
+        "lr": 0.001,
         "debug" : "False"
     }
 
@@ -177,6 +221,8 @@ if __name__ == "__main__":
                                                     )
         
     train_df.reset_index(drop=True, inplace=True)
+    test_df.reset_index(drop=True, inplace=True)
+    validate_df.reset_index(drop=True, inplace=True)
 
     #Show classes graphic
     # plt.figure(figsize=(7,20))
@@ -201,20 +247,22 @@ if __name__ == "__main__":
 
     model = resnet50(pretrained=True)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    optimizer = optim.SGD(model.parameters(), lr=config["lr"], momentum=0.9)
 
     #num classes
-    class_names=pd.unique(train_df['articleTypeEncoded'])
+    #class_names=pd.unique(train_df['articleTypeEncoded'])
+    num_classes = 4
     num_features = model.fc.in_features
-    model.fc = nn.Linear(num_features, len(class_names))
+    model.fc = nn.Linear(num_features, num_classes) #len(class_names)
     #model.fc = model.fc.cuda() if torch.cuda.is_available() else model.fc
 
     model_name='resnet50'
-    model_dir = os.path.join(work_dir, model_name)
+    model_path = os.path.join(work_dir, model_name)
 
-    train_model(train_loader, model, criterion, optimizer, 1, device)
+    #TRAIN
+    train_model(train_loader, model, criterion, optimizer, 1, device, config)
 
-    #Validation
-    #val_dataset = 
-    #val_loader = DataLoader(val_dataset, batch_size=config["batchsize"], shuffle=False)
-    #validate_model(val_loader,model, criterion, optimizer, 1,model_dir,device)
+    #VALIDATION
+    val_dataset = MyTrainDataset(dataset_image_dir, validate_df, transform=transform)
+    val_loader = DataLoader(val_dataset, batch_size=config["batch_size"], shuffle=True)
+    validate_model(val_loader,model, criterion, 1, device, model_path)

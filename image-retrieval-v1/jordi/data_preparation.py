@@ -52,11 +52,28 @@ def Prepare_Data(img_dir, original_labels_file, process_dir, img_format = '.jpg'
     #If train dataset exists -> load else create it
     if os.path.isfile(os.path.join(base_dir, "train_dataset.csv")):
         train_df = pd.read_csv(os.path.join(base_dir, "train_dataset.csv"), error_bad_lines=False)     
-        if fixed_train_size > 0:
+        if not fixed_train_size  == -1 :
             test_df = pd.read_csv(os.path.join(base_dir, "test_dataset.csv"), error_bad_lines=False)     
             validate_df = pd.read_csv(os.path.join(base_dir, "val_dataset.csv"), error_bad_lines=False)     
     else:
         labels_df = pd.read_csv(original_labels_file, error_bad_lines=False) # header=None, skiprows = 1
+
+        #Validate images exists
+        labels_df = Validate_Images_DataFrame(labels_df,"id",img_dir,img_format = '.jpg')
+
+        ### FILTER ###
+        #classes have minimum 100 images
+        minimum_pictures_class = 100
+        n_classes = np.sum(labels_df.articleType.value_counts().to_numpy() > minimum_pictures_class)
+        print('num classes ' + str(n_classes))
+        classes = labels_df.articleType.value_counts().sort_values(ascending=False)[:n_classes]
+        print(classes)
+        labels_df = labels_df[labels_df['articleType'].isin(classes.index)]
+
+        ### ENCODE ###
+        #Encode any string columns: Need for training and convert to tensor
+        labels_df = EncodeColumns(labels_df)
+
 
         # Divide labels in train, test and validate
         if fixed_train_size > 0:
@@ -71,21 +88,9 @@ def Prepare_Data(img_dir, original_labels_file, process_dir, img_format = '.jpg'
             train_df, validate_df, test_df = np.split(labels_df.sample(frac=1, random_state=42), 
                                             [int(.6*len(labels_df)), int(.8*len(labels_df))])
 
-        #Validate images exists
-        train_df = Validate_Images_DataFrame(train_df,"id",img_dir,img_format = '.jpg')
-
-        #Encode any string columns: Need for training and convert to tensor
-        train_df = EncodeColumns(train_df)
-
         # Save datasets
         train_df.to_csv(os.path.join(base_dir, "train_dataset.csv"),index=False)
         if not fixed_train_size == -1:
-            validate_df = Validate_Images_DataFrame(validate_df,"id",img_dir,img_format = '.jpg')
-            test_df = Validate_Images_DataFrame(test_df,"id",img_dir,img_format = '.jpg')
-            #Encode any string columns: Need for training and convert to tensor
-            validate_df  = EncodeColumns(validate_df )
-            test_df = EncodeColumns(test_df)
-
             validate_df.to_csv(os.path.join(base_dir, "val_dataset.csv"),index=False)
             test_df.to_csv(os.path.join(base_dir, "test_dataset.csv"),index=False)
 

@@ -26,6 +26,15 @@ class ProcessTime:
         print(f"Elapsed time: {duration}")
         return str(duration)
 
+    def current_time(self):
+        """Get current elapsed time"""
+        if self._start_time is None:
+            raise TimerError(f"Timer is not running. Use .start() to start it")
+
+        elapsed_time = time.perf_counter() - self._start_time
+        duration = timedelta(seconds=elapsed_time)
+        return str(duration)
+
 class LogFile:
     def __init__(self,fields):
         super().__init__()
