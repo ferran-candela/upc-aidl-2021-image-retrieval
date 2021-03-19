@@ -17,6 +17,23 @@
             "TEST_VALIDATE_SIZE": ""
         }
     }
+
+    {
+            "name": "Extract features",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/fcandela/src/upc/upc-jmc-project/imageretrieval/src/features.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset",
+                "LOG_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset/log/",
+                "TRAIN_SIZE": "500",
+                "TEST_VALIDATE_SIZE": "500"
+            }
+        }
 ```
 
 # Command line execution for training
