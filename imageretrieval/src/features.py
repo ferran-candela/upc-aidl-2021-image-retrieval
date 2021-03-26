@@ -13,7 +13,6 @@ from utils import ProcessTime, LogFile
 device = DeviceConfig.DEVICE
 DEBUG = DebugConfig.DEBUG
 
-# TODO: Move code from feature extraction and load features from precalculated features
 class FeaturesManager:
     RAW_FEATURES_FILE_NAME = 'raw_features.pt'
     NORM_FEATURES_FILE_NAME = 'normalized_features.pt'
@@ -34,12 +33,34 @@ class FeaturesManager:
         checkpoint = model.get_checkpoint()
         checkpoint['data'] = df
         checkpoint['raw_features'] = features
+        # checkpoint = {
+        #     "model_name": # same that in model checkpoint,
+        #     "model_state_dict": # same that in model checkpoint,
+        #     "optimizer_state_dict": # same that in model checkpoint,
+        #     "is_pretrained": # same that in model checkpoint,
+        #     "input_resize": # same that in model checkpoint,
+        #     "data": # data frame,
+        #     "raw_features": # raw features,
+        # }
         return checkpoint
 
-    def get_normalized_features_checkpoint(self, model, df, features):
+    def get_normalized_features_checkpoint(self, model, df, features, pca, PCA_dim):
         checkpoint = model.get_checkpoint()
         checkpoint['data'] = df
         checkpoint['normalized_features'] = features
+        checkpoint['pca'] = pca
+        checkpoint['PCA_dim'] = PCA_dim
+        # checkpoint = {
+        #     "model_name": # same that in model checkpoint,
+        #     "model_state_dict": # same that in model checkpoint,
+        #     "optimizer_state_dict": # same that in model checkpoint,
+        #     "is_pretrained": # same that in model checkpoint,
+        #     "input_resize": # same that in model checkpoint,
+        #     "data": # data frame,
+        #     "normalized_features": # normalized features,
+        #     "pca": # PCA configuration,
+        #     "PCA_dim": # PCA dimesion
+        # }
         return checkpoint
         
     def save_raw_features_checkpoint(self, model, df, features):
@@ -47,13 +68,37 @@ class FeaturesManager:
         raw_features_checkpoint = self.get_raw_features_checkpoint(model, df, features)        
         torch.save(raw_features_checkpoint, features_file_path)
 
-    def save_normalized_features_checkpoint(self, model, df, features):
+    def save_normalized_features_checkpoint(self, model, df, features, pca, PCA_dim):
         features_file_path = self.get_normalized_features_file_path(model.get_name())
-        raw_features_checkpoint = self.get_normalized_features_checkpoint(model, df, features)        
-        torch.save(raw_features_checkpoint, features_file_path)
+        normalized_features_checkpoint = self.get_normalized_features_checkpoint(model, df, features, pca,  PCA_dim)        
+        torch.save(normalized_features_checkpoint, features_file_path)
 
     def is_raw_feature_saved(self, model_name):
         return os.path.isfile(self.get_raw_features_file_path(model_name))
+
+    def load_from_raw_features_checkpoint(self, model_name):
+        pass
+
+    def load_from_norm_features_checkpoint(self, model_name):
+        checkpoint = torch.load(self.get_normalized_features_file_path(model_name))
+        # checkpoint = {
+        #     "model_name": # same that in model checkpoint,
+        #     "model_state_dict": # same that in model checkpoint,
+        #     "optimizer_state_dict": # same that in model checkpoint,
+        #     "is_pretrained": # same that in model checkpoint,
+        #     "input_resize": # same that in model checkpoint,
+        #     "data": # data frame,
+        #     "normalized_features": # normalized features,
+        #     "pca": # PCA configuration,
+        #     "PCA_dim": # PCA dimesion
+        # }
+        return {
+            "model": self.model_manager.load_from_checkpoint(model_name, checkpoint),
+            "data": checkpoint['data'],
+            "normalized_features": torch.tensor(checkpoint['normalized_features']),
+            "pca": checkpoint['pca'],
+            "PCA_dim": checkpoint['PCA_dim']
+        }
 
 def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validate_test_size, clean_process_dir):
     dataset_manager = DatasetManager()      
@@ -114,16 +159,20 @@ def extract_features(model, dataloader):
 
         # stack the features into a N x D matrix            
         features = np.vstack(features)
-        return features 
+        return features
 
-def postprocess_features(features, PCAdimension):
+def fit_pca(features, PCAdimension):
+    #The n_components of PCA must be lower than min(n_samples, n_features)
+    return PCA(PCAdimension, whiten=True).fit(features)
+
+def postprocess_features(features, pca):
     #Postprocessing
     # A standard postprocessing pipeline used in retrieval applications is to do L2-normalization,
     # PCA whitening, and L2-normalization again. 
     # Effectively this decorrelates the features and makes them unit vectors.
     features = normalize(features, norm='l2')
-    features = PCA(PCAdimension, whiten=True).fit_transform(features) #The n_components of PCA must be lower than min(n_samples, n_features)
-    features= normalize(features, norm='l2')
+    features = pca.transform(features)
+    features = normalize(features, norm='l2')
 
     return features
 
@@ -165,7 +214,7 @@ def extract_models_features():
             transform = model.get_input_transform()
             batch_size = ModelBatchSizeConfig.get_batch_size(model_name)
             train_dataset = FashionProductDataset(dataset_base_dir, train_df, transform=transform)
-            train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
+            train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
 
             if DEBUG:print(model.get_model())
             model.to_device()
@@ -179,9 +228,10 @@ def extract_models_features():
 
             # Post process: normalize features
             PCA_size = FeaturesConfig.get_PCA_size(model_name)
-            features = postprocess_features(features, PCA_size) 
+            pca = fit_pca(features, PCA_size)
+            features = postprocess_features(features, pca)
             postproc_features_size = features[0].shape[0]
-            features_manager.save_normalized_features_checkpoint(model, train_df, features)
+            features_manager.save_normalized_features_checkpoint(model, train_df, features, pca, PCA_size)
 
             #LOG
             processtime = proctimer.stop()

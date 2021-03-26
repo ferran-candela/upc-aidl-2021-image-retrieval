@@ -96,7 +96,7 @@ def train():
             transform = model.get_input_transform()
             batch_size = ModelBatchSizeConfig.get_batch_size(model_name)
             train_dataset = FashionProductDataset(dataset_base_dir, train_df, transform=transform)
-            train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
+            train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
 
             if DEBUG:print(model.get_model())
             model.to_device()

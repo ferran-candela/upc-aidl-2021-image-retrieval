@@ -2,12 +2,14 @@ import os
 import shutil
 
 import pandas as pd
+import torch
 from torch.utils.data import Dataset
 from PIL import Image
 import numpy as np
 
-from config import DebugConfig
+from config import DebugConfig, DeviceConfig
 
+device = DeviceConfig.DEVICE
 DEBUG = DebugConfig.DEBUG
 
 class FashionProductDataset(Dataset):
@@ -28,16 +30,7 @@ class FashionProductDataset(Dataset):
     def __getitem__(self, idx):
         imageid,gender,masterCategory,subCategory,articleType,baseColour,season,year,usage,productDisplayName = self.labels_df.loc[idx, :]
         path = os.path.join(self.images_path, f"{imageid}{self.IMAGE_FORMAT}")
-        sample = Image.open(path).convert('RGB')
-        if self.transform:
-            sample = self.transform(sample)
-            # import matplotlib.pyplot as plt
-            # plt.imshow(sample)
-            # plt.grid(False)
-            # plt.xticks([])
-            # plt.yticks([])
-            # plt.show()
-
+        sample = self.preprocess_image(path, self.transform)
         return sample,imageid
 
     def get_images_path(self):
@@ -45,6 +38,16 @@ class FashionProductDataset(Dataset):
     
     def get_base_path(self):
         self.images_path
+    
+    @staticmethod
+    def preprocess_image(path, transform):
+        # Preprocess query image
+        # Returns Tensor [3, input_resize, input_resize]
+        sample = Image.open(path).convert('RGB')
+        if transform:
+            sample = transform(sample)
+
+        return sample
 
 class DatasetManager():
     def __init__(self):

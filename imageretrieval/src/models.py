@@ -60,8 +60,9 @@ class Model:
 
         torch.save(model_checkpoint, model_file_path)
     
-    def load_from_checkpoint(self):
-        checkpoint = torch.load(self.get_model_file_path(self.models_dir, self.model_name))
+    def load_from_checkpoint(self, checkpoint=None):
+        if(checkpoint == None):
+            checkpoint = torch.load(self.get_model_file_path(self.models_dir, self.model_name))
         # model_checkpoint = {
         #     "model_name": self.model_name,
         #     "model_state_dict": self.model.cpu().state_dict(),
@@ -71,10 +72,14 @@ class Model:
         # }
         model = self.get_model()
         model.load_state_dict(checkpoint['model_state_dict'])
+        self.to_device()
         model.eval()
 
+        self.input_resize = checkpoint['input_resize']
+        self.is_pretrained = checkpoint['is_pretrained']
+
         if(self.optimizer != None and checkpoint['optimizer_state_dict'] != None):
-            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     
     def count_parameters(self):
         return sum(p.numel() for p in self.model.parameters() if p.requires_grad)
@@ -198,12 +203,12 @@ class ModelManager:
     def get_model_dir(self, model_name):
         return Model.get_model_dir(self.models_dir, model_name)
     
-    def load_from_checkpoint(self, model_name):
+    def load_from_checkpoint(self, model_name, checkpoint=None):
         if not self.is_model_saved(model_name):
             raise Exception('Model "{0}" checkpoint cannot be found.'.format(model_name))
 
         model = self.get_raw_model(model_name)
-        model.load_from_checkpoint()
+        model.load_from_checkpoint(checkpoint)
 
         return model
 
