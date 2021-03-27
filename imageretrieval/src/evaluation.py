@@ -2,13 +2,22 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import average_precision_score
 
+from models import ModelManager
+from features import FeaturesManager
+from config import DebugConfig, FoldersConfig, DeviceConfig, RetrievalEvalConfig
+
+from utils import ProcessTime, LogFile
+
+device = DeviceConfig.DEVICE
+DEBUG = DebugConfig.DEBUG
+
 def create_ground_truth_entries(path, dataframe, N):
     entries = []
 
     with open(path) as myfile:
         lines = [next(myfile) for x in range(N)]
 
-    it = 1
+    it = 0
     for row in lines:
         labels = row.rsplit(',')
         id = labels[0]
@@ -27,8 +36,8 @@ def create_ground_truth_entries(path, dataframe, N):
 
         entries.append(entry)
 
-        print(f'\rCreating ground truth queries... {it}/{N}', end='', flush=True)
         it += 1
+        print(f'Creating ground truth queries... {it}/{N}', end='', flush=True)
         
     return entries
 
@@ -45,7 +54,7 @@ def create_ground_truth_queries(dataframe, type, N, imgIdxList):
     else:
         raise Exception("create_ground_truth_queries: UNKNOW OPTION")
         
-    it = 1
+    it = 0
     for index, row in query_df.iterrows():
         id = row[0]
         if (id == 'id'):
@@ -63,8 +72,8 @@ def create_ground_truth_queries(dataframe, type, N, imgIdxList):
 
         entries.append(entry)
 
-        print(f'\rCreating ground truth queries... {it}/{N}', end='', flush=True)
         it += 1
+        print(f'\rCreating ground truth queries... {it}/{N}', end='', flush=True)
         
     return entries
 
@@ -108,16 +117,27 @@ def evaluate(S, y_true, q_indx):
     df = pd.DataFrame({'ap': aps}, index=q_indx)
     return df
 
-def evaluation_hits(labels_df, imgindex,ranking):
+def evaluation_hits(labels_df, imgindex, ranking):
     # ranking = index list 
     # imgindex = index image query
 
-    queries = create_ground_truth_queries( labels_df, "List", 0, [imgindex])
+    queries = create_ground_truth_queries(labels_df, "List", 0, [imgindex])
     q_indx, y_true = make_ground_truth_matrix(labels_df, queries)
 
     imagesIdx = ranking.tolist()
-    return round(np.mean(y_true[0][imagesIdx]),4)
+    return round(np.mean(y_true[0][imagesIdx]), 4)
 
+def cosine_similarity(features, imgidx, top_k):
+    # This gives the same rankings as (negative) Euclidean distance 
+    # when the features are L2 normalized (as ours are).
+    # The cosine similarity can be efficiently computed for all images 
+    # in the dataset using a matrix multiplication!
+    query = features[imgidx]
+    scores = features @ query 
+
+    # rank by score, descending, and skip the top match (because it will be the query)
+    ranking = (-scores).argsort()[1:top_k + 1]
+    return ranking
 
 def evaluate_models():
     #create logfile for image retrieval
@@ -126,54 +146,79 @@ def evaluate_models():
     #Create timer to calculate the process time
     proctimer = ProcessTime()
 
-    for model_name in pretrained_list_models:
+    model_manager = ModelManager(device, FoldersConfig.WORK_DIR)
+    features_manager = FeaturesManager(device, model_manager)
 
-        for file in ['features.pickle','features_aqe.pickle']:
+    model_names = model_manager.get_model_names()
 
-            print(f'\rEvaluate File ... {file}', end='', flush=True)
-            proctimer.start()
 
-            # LOAD FEATURES
-            model_dir = os.path.join(config["work_dir"], model_name)
-            features_file = os.path.join(model_dir , file)
-            features = pickle.load(open(features_file , 'rb'))
+    # TODO: MIRAR EL TEMA DEL AQE
+    for model_name in model_names:
+        try:
+            if(features_manager.is_normalized_feature_saved(model_name)):
+                print('\n\n## Evaluating model ', model_name)
+                proctimer.start()
 
-            #compute the similarity matrix
-            S = features @ features.T
+                # LOAD FEATURES
+                print('\nLoading features from checkpoint...')
+                loaded_model_features = features_manager.load_from_norm_features_checkpoint(model_name)
 
-            num_queries = config["mAP_n_queries"]
+                features = loaded_model_features['normalized_features']
+                data = loaded_model_features['data']
 
-            queries = create_ground_truth_queries( train_df, "FirstN", num_queries,[])
-            q_indx, y_true = make_ground_truth_matrix(train_df, queries)
+                # compute the similarity matrix
+                print('\nComputing similarity matrix...')
+                S = features @ features.T
 
-            #Compute mean Average Precision (mAP)
-            df = evaluate(S, y_true, q_indx)
-            print(f'\rmAP: {df.ap.mean():0.04f}')
+                num_queries = RetrievalEvalConfig.MAP_N_QUERIES
 
-            #Compute evaluation Hits
-            accuracy = []
-            for index in q_indx:
-                ranking = pretrained_models.Cosine_Similarity(features,index,config["top_k_image"])
-                precision = evaluation_hits(train_df,index,ranking)
-                accuracy.append(precision)
-            precision = np.mean(accuracy)
-            print(f'\rPrecision Hits: {precision:0.04f}')
+                queries = create_ground_truth_queries(data, RetrievalEvalConfig.GT_SELECTION_MODE, num_queries, [])
+                print('\nMake ground truth matrix...')
+                q_indx, y_true = make_ground_truth_matrix(data, queries)
 
-            #LOG
+                # Compute mean Average Precision (mAP)
+                print('\nComputing mean Average Precision (mAP)...')
+                df = evaluate(S, y_true, q_indx)
+                print(f'\nmAP: {df.ap.mean():0.04f}')
+
+                # Compute evaluation Hits
+                print('\nComputing evaluation Hits...')
+                accuracy = []
+                for index in q_indx:
+                    ranking = cosine_similarity(features, index, RetrievalEvalConfig.TOP_K_IMAGE)
+                    precision = evaluation_hits(data, index, ranking)
+                    accuracy.append(precision)
+                precision = np.mean(accuracy)
+                print(f'\nPrecision Hits: {precision:0.04f}')
+
+                #LOG
+                processtime = proctimer.stop()
+                values = {'ModelName': model_name, 
+                        'DataSetSize': data.shape[0],
+                        # 'UsedFeatures': file,
+                        'FeaturesSize': features[0].shape[0],
+                        'ProcessTime': processtime,
+                        'mAPqueries': num_queries,
+                        'mAP': f'{df.ap.mean():0.04f}',
+                        'PrecisionHits:' : precision
+                    } 
+                logfile.writeLogFile(values)
+        except Exception as e:
+            print(e)
             processtime = proctimer.stop()
-            values = {'ModelName':model_name, 
-                    'DataSetSize':train_df.shape[0],
-                    'UsedFeatures': file,
+            values = {'ModelName': model_name, 
+                    'DataSetSize': data.shape[0],
+                    # 'UsedFeatures': file,
                     'FeaturesSize': features[0].shape[0],
                     'ProcessTime': processtime,
                     'mAPqueries': num_queries,
-                    'mAP': f'mAP: {df.ap.mean():0.04f}',
-                    'PrecisionHits:' : precision
+                    'mAP': 'ERROR',
+                    'PrecisionHits:' : 'ERROR'
                 } 
             logfile.writeLogFile(values)
     #Print and save logfile    
     logfile.printLogFile()
-    logfile.saveLogFile_to_csv("evaluation",config)
+    logfile.saveLogFile_to_csv("evaluation")
 
 
 if __name__ == "__main__":

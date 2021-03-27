@@ -59,8 +59,7 @@ class FeaturesManager:
         #     "data": # data frame,
         #     "normalized_features": # normalized features,
         #     "pca": # PCA configuration,
-        #     "PCA_dim": # PCA dimesion
-        # }
+        #     "PCA_dfrom utils import ProcessTime, LogFile
         return checkpoint
         
     def save_raw_features_checkpoint(self, model, df, features):
@@ -75,6 +74,9 @@ class FeaturesManager:
 
     def is_raw_feature_saved(self, model_name):
         return os.path.isfile(self.get_raw_features_file_path(model_name))
+    
+    def is_normalized_feature_saved(self, model_name):
+        return os.path.isfile(self.get_normalized_features_file_path(model_name))
 
     def load_from_raw_features_checkpoint(self, model_name):
         pass

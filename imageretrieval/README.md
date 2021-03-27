@@ -71,3 +71,23 @@ export TRAIN_SIZE=all &&
 export TEST_VALIDATE_SIZE=0 &&
 python /home/fcandela/src/upc/upc-jmc-project/imageretrieval/src/features.py
 ```
+
+# Command line execution for evaluation
+Activate the conda environment, setup environment vars and execute evaluation.py.
+
+```
+source /home/fcandela/opt/miniconda3/bin/activate &&
+conda activate image-retrieval-v1
+
+export DEBUG=True &&
+export DATASET_BASE_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset &&
+export DATASET_LABELS_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
+export WORK_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset &&
+export LOG_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset/log/ &&
+export TRAIN_SIZE=all &&
+export TEST_VALIDATE_SIZE=0 &&
+export GT_SELECTION_MODE=Random &&
+export MAP_N_QUERIES=300 &&
+export TOP_K_IMAGE=15 &&
+python /home/fcandela/src/upc/upc-jmc-project/imageretrieval/src/evaluation.py
+```

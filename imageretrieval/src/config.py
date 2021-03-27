@@ -95,3 +95,13 @@ class FeaturesConfig:
 class ModelTrainConfig:
     TRAIN_SIZE = os.environ.get("TRAIN_SIZE") # "all" / "divide"=train(60%), Eval and test (20%) / number=fixed size
     TEST_VALIDATE_SIZE = os.environ.get("TEST_VALIDATE_SIZE") # used only for train_size = fixed size
+
+
+class RetrievalEvalConfig:
+    # OPTIONS:
+    ## 'FirstN'
+    ## 'Random'
+    ## TODO: 'List'
+    GT_SELECTION_MODE = os.environ.get("GT_SELECTION_MODE")
+    MAP_N_QUERIES = int(os.environ.get("MAP_N_QUERIES"))
+    TOP_K_IMAGE = int(os.environ.get("TOP_K_IMAGE"))
