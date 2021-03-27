@@ -80,7 +80,6 @@ class RetrievalEngine:
 if __name__ == "__main__":
 
     top_k = 5
-    model_name = 'vgg16'
     engine = RetrievalEngine(device, FoldersConfig.WORK_DIR)
     engine.load_models_and_precomputed_features()
 
@@ -89,5 +88,8 @@ if __name__ == "__main__":
     images_path = os.path.join(base_dir, FashionProductDataset.IMAGE_DIR_NAME)
     query_path = os.path.join(images_path, f"{imageid}{FashionProductDataset.IMAGE_FORMAT}")
 
-    top_k_ranking = engine.query(model_name, query_path, top_k)
-    print(top_k_ranking)
+    model_names = engine.get_model_names()
+
+    for model_name in model_names:
+        top_k_ranking = engine.query(model_name, query_path, top_k)
+        print(model_name, ': ', top_k_ranking)

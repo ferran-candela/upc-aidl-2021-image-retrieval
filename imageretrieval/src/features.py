@@ -207,43 +207,57 @@ def extract_models_features():
         proctimer = ProcessTime()
 
         for model_name in pending_features:
-            model = model_manager.load_from_checkpoint(model_name)
-            if DEBUG:print(f'Extracting features for model {model_name} ....')
+            try:
+                model = model_manager.load_from_checkpoint(model_name)
+                if DEBUG:print(f'Extracting features for model {model_name} ....')
 
-            # Define input transformations
-            transform = model.get_input_transform()
-            batch_size = ModelBatchSizeConfig.get_batch_size(model_name)
-            train_dataset = FashionProductDataset(dataset_base_dir, train_df, transform=transform)
-            train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+                # Define input transformations
+                transform = model.get_input_transform()
+                batch_size = ModelBatchSizeConfig.get_batch_size(model_name)
+                train_dataset = FashionProductDataset(dataset_base_dir, train_df, transform=transform)
+                train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
 
-            if DEBUG:print(model.get_model())
-            model.to_device()
+                if DEBUG:print(model.get_model())
+                model.to_device()
 
-            proctimer.start()
+                proctimer.start()
 
-            # Extract features
-            features = extract_features(model, train_loader)
-            features_size = features[0].shape[0]
-            features_manager.save_raw_features_checkpoint(model, train_df, features)
+                # Extract features
+                features = extract_features(model, train_loader)
+                features_size = features[0].shape[0]
+                features_manager.save_raw_features_checkpoint(model, train_df, features)
 
-            # Post process: normalize features
-            PCA_size = FeaturesConfig.get_PCA_size(model_name)
-            pca = fit_pca(features, PCA_size)
-            features = postprocess_features(features, pca)
-            postproc_features_size = features[0].shape[0]
-            features_manager.save_normalized_features_checkpoint(model, train_df, features, pca, PCA_size)
+                # Post process: normalize features
+                PCA_size = FeaturesConfig.get_PCA_size(model_name)
+                pca = fit_pca(features, PCA_size)
+                features = postprocess_features(features, pca)
+                postproc_features_size = features[0].shape[0]
+                features_manager.save_normalized_features_checkpoint(model, train_df, features, pca, PCA_size)
 
-            #LOG
-            processtime = proctimer.stop()
-            values = {  'ModelName': model_name, 
-                        'DataSetSize': train_df.shape[0], 
-                        'TransformsResize': model.get_input_resize(),
-                        'PCASize': PCA_size,
-                        'RawFeatures': features_size,
-                        'NormalizedFeatures': postproc_features_size,
-                        'ProcessTime': processtime
-                    }
-            logfile.writeLogFile(values)
+                #LOG
+                processtime = proctimer.stop()
+                values = {  'ModelName': model_name, 
+                            'DataSetSize': train_df.shape[0], 
+                            'TransformsResize': model.get_input_resize(),
+                            'PCASize': PCA_size,
+                            'RawFeatures': features_size,
+                            'NormalizedFeatures': postproc_features_size,
+                            'ProcessTime': processtime
+                        }
+                logfile.writeLogFile(values)
+            except Exception as e:
+                print(e)
+                #LOG
+                processtime = proctimer.stop()
+                values = {  'ModelName': model_name, 
+                            'DataSetSize': train_df.shape[0], 
+                            'TransformsResize': model.get_input_resize(),
+                            'PCASize': PCA_size,
+                            'RawFeatures': features_size,
+                            'NormalizedFeatures': 'ERROR',
+                            'ProcessTime': processtime
+                        }
+                logfile.writeLogFile(values)
 
         #Print and save logfile    
         logfile.printLogFile()

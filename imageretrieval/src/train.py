@@ -89,36 +89,48 @@ def train():
         proctimer = ProcessTime()
 
         for model in pending_models_train:
-            model_name = model.get_name()
-            if DEBUG:print(f'Training model {model_name} ....')
+            try:
+                model_name = model.get_name()
+                if DEBUG:print(f'Training model {model_name} ....')
 
-            # Define input transformations
-            transform = model.get_input_transform()
-            batch_size = ModelBatchSizeConfig.get_batch_size(model_name)
-            train_dataset = FashionProductDataset(dataset_base_dir, train_df, transform=transform)
-            train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+                # Define input transformations
+                transform = model.get_input_transform()
+                batch_size = ModelBatchSizeConfig.get_batch_size(model_name)
+                train_dataset = FashionProductDataset(dataset_base_dir, train_df, transform=transform)
+                train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
 
-            if DEBUG:print(model.get_model())
-            model.to_device()
+                if DEBUG:print(model.get_model())
+                model.to_device()
 
-            proctimer.start()
+                proctimer.start()
 
-            # Train
-            train_model(model, train_loader) 
-            
-            # Save raw model
-            model.save_model()
+                # Train
+                train_model(model, train_loader) 
+                
+                # Save raw model
+                model.save_model()
 
-            #LOG
-            processtime = proctimer.stop()
-            values = {  'ModelName': model_name, 
-                        'DataSetSize': train_df.shape[0], 
-                        'TransformsResize': model.get_input_resize(),
-                        'ParametersCount': model.count_parameters(),
-                        'OutputFeatures': model.get_output_features(),
-                        'ProcessTime': processtime
-                    } 
-            logfile.writeLogFile(values)
+                #LOG
+                processtime = proctimer.stop()
+                values = {  'ModelName': model_name, 
+                            'DataSetSize': train_df.shape[0], 
+                            'TransformsResize': model.get_input_resize(),
+                            'ParametersCount': model.count_parameters(),
+                            'OutputFeatures': model.get_output_features(),
+                            'ProcessTime': processtime
+                        } 
+                logfile.writeLogFile(values)
+            except Exception as e:
+                print(e)
+                processtime = proctimer.stop()
+                values = {  'ModelName': model_name, 
+                            'DataSetSize': train_df.shape[0], 
+                            'TransformsResize': model.get_input_resize(),
+                            'ParametersCount': 'ERROR',
+                            'OutputFeatures': 'ERROR',
+                            'ProcessTime': processtime
+                        } 
+                logfile.writeLogFile(values)
 
         #Print and save logfile    
         logfile.printLogFile()
