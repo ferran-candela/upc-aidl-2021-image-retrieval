@@ -3,8 +3,10 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.data import DataLoader
+
 from dataset import DatasetManager, FashionProductDataset
 from models import ModelManager
+from features import FeaturesManager
 from utils import ProcessTime, LogFile
 from config import DebugConfig, DeviceConfig, FoldersConfig, ModelBatchSizeConfig, ModelTrainConfig
 
@@ -12,7 +14,6 @@ device = DeviceConfig.DEVICE
 DEBUG = DebugConfig.DEBUG
 
 def tune_batch_norm_statistics(model, loader):
-    # The batch norm statistics for this network match those of the ImageNet dataset. 
     # We can use a trick to get them to match our dataset. The idea is to put the network into train mode and do a pass over the dataset without doing any backpropagation. 
     # This will cause the network to update the batch norm statistics for the model without modifying the weights. This can sometimes improve results.        
     model_raw = model.get_model()
@@ -104,7 +105,7 @@ def val_epoch(validate_loader, model, criterion):
 
         return epoch_loss, epoch_acc
 
-def train_model(model, train_loader, val_loader=None, test_loader=None):
+def train_model(model, train_loader, val_loader=None):
     #Create timer to calculate the process time
     proctimer = ProcessTime()
     proctimer.start()
@@ -138,8 +139,9 @@ def train_model(model, train_loader, val_loader=None, test_loader=None):
         #Print and save logfile    
         logfile.printLogFile()
         logfile.saveLogFile_to_csv(model.get_name() + '_transfer_learning_model_log')
+
         
-    else:
+    elif(ModelTrainConfig.TRAIN_TYPE=="scratch"):
         #create logfile for training statistics
         fields = ['ModelName','Criterion','Optimizer','lr','Epoch', 'Step','Loss','Accuracy', 'Time']
         logfile = LogFile(fields) 
@@ -195,6 +197,9 @@ def train_model(model, train_loader, val_loader=None, test_loader=None):
                 print('Early stopping!' )
                 break
         proctimer.stop()
+    else:
+        raise Exception('Train type "{0}" unknow.'.format(ModelTrainConfig.TRAIN_TYPE))
+
     return avg_train_loss, avg_val_loss, avg_train_acc, avg_val_acc
 
 def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validate_test_size, clean_process_dir):
@@ -215,6 +220,64 @@ def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validat
         validate_df.reset_index(drop=True, inplace=True)
 
     return train_df, test_df, validate_df
+
+def test_model(model, test_loader):
+    #create logfile for testing statistics
+    fields = ['ModelName','Criterion','Step','Loss','Accuracy', 'Time']
+    logfile = LogFile(fields) 
+
+    # switch to eval mode
+    model.eval()         
+
+    total_test_images = 0
+    loader_len = len(test_loader)
+    batch_loss = 0.0
+    batch_corrects = 0
+    log_interval = 10
+
+    #Create timer to calculate the process time
+    proctimer = ProcessTime()
+    proctimer.start()
+
+    with torch.no_grad():
+        for batch_idx, (images_batch, labels_batch) in enumerate(test_loader):
+
+            # move images to gpu
+            images_batch = images_batch.to(device)
+            labels_batch = labels_batch.to(device)
+
+            # compute output
+            outputs = model(images_batch)
+
+            # loss
+            loss = criterion(outputs, labels_batch)
+
+            # statistics
+            batch_loss += loss.item() * images_batch.size(0)
+            batch_corrects += accuracy(outputs,labels_batch)
+            total_test_images += images_batch.size(0)
+
+            if (batch_idx) % log_interval == 0:
+                print ('Testing batch Step [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}' 
+                    .format(batch_idx, loader_len, batch_loss/total_test_images, batch_corrects/total_test_images))
+
+            processtime = proctimer.current_time()
+            values = {  'ModelName': model.get_name, 
+                    'Criterion': 'CrossEntropyLoss', #model.get_criterion().__name__
+                    'Step': batch_idx, 
+                    'Loss': batch_loss/total_test_images, 
+                    'Accuracy': batch_corrects/total_test_images,
+                    'Time': processtime
+                    } 
+            logfile.writeLogFile(values)
+            logfile.saveLogFile_to_csv(model.get_name() + '_scratch_model_log')
+
+
+        test_loss = batch_loss / total_test_images
+        test_acc = batch_corrects / total_test_images
+
+        return test_loss, test_acc
+
 
 def train():
 
@@ -242,8 +305,10 @@ def train():
             # Get raw model
             if(ModelTrainConfig.TRAIN_TYPE=="transferlearning"):
                 pending_models_train.append(model_manager.get_transferlearning_model(model_name))
-            else:
+            elif(ModelTrainConfig.TRAIN_TYPE=="scratch"):
                 pending_models_train.append(model_manager.get_scratch_model(model_name))
+            else:
+                raise Exception('Train type "{0}" unknow.'.format(ModelTrainConfig.TRAIN_TYPE))
         else:
             # Test model can be loaded from checkpoint
             loaded_model = model_manager.load_from_checkpoint(model_name)
@@ -269,7 +334,7 @@ def train():
             if DEBUG:print(model.get_model())
 
             # Train
-            avg_train_loss, avg_val_loss, avg_train_acc, avg_val_acc = train_model(model, train_loader, val_loader, test_loader) 
+            avg_train_loss, avg_val_loss, avg_train_acc, avg_val_acc = train_model(model, train_loader, val_loader) 
             
             if(ModelTrainConfig.TRAIN_TYPE=="scratch"):
                 # visualize the loss and save graph
@@ -285,6 +350,11 @@ def train():
                 plt.tight_layout()
                 plt.show()
                 #fig.savefig(os.path.join(model.get_model_dir,'loss_plot.png'), bbox_inches='tight')
+
+            # TEST
+            test_loss,test_acc = test_model(model, test_loader) 
+            print ('Test (Overall), Loss: {:.4f}, Accuracy: {:.4f}'.format(test_loss,test_acc))
+
 
 if __name__ == "__main__":
     train()
