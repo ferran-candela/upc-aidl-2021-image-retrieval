@@ -5,6 +5,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from PIL import Image
+from sklearn.preprocessing import LabelEncoder
 import numpy as np
 
 from config import DebugConfig, DeviceConfig
@@ -28,10 +29,13 @@ class FashionProductDataset(Dataset):
         return len(self.labels_df)
 
     def __getitem__(self, idx):
-        imageid,gender,masterCategory,subCategory,articleType,baseColour,season,year,usage,productDisplayName = self.labels_df.loc[idx, :]
+
+        imageid,gender,masterCategory,subCategory,articleType,baseColour, \
+            season,year,usage,productDisplayName,masterCategoryEncoded, \
+            subCategoryEncoded,articleTypeEncoded,baseColourEncoded = self.labels_df.loc[idx, :]        
         path = os.path.join(self.images_path, f"{imageid}{self.IMAGE_FORMAT}")
         sample = self.preprocess_image(path, self.transform)
-        return sample,imageid
+        return sample,articleTypeEncoded
 
     def get_images_path(self):
         self.images_path
@@ -61,6 +65,19 @@ class DatasetManager():
             if not os.path.isfile(path):
                 delete_index.append(index)
         df.drop(df.index[delete_index],inplace=True)
+        return df
+
+    def EncodeColumns(self,df):
+        #Encode any string columns: Need for training and convert to tensor
+        le = LabelEncoder()
+        df["masterCategoryEncoded"] =  le.fit_transform(df['masterCategory'])
+        df["masterCategoryEncoded"] = df["masterCategoryEncoded"].astype('int64')
+        df["subCategoryEncoded"] =  le.fit_transform(df['subCategory'])
+        df["subCategoryEncoded"] = df["subCategoryEncoded"].astype('int64')
+        df['articleTypeEncoded'] = le.fit_transform(df['articleType'])
+        df["articleTypeEncoded"] = df["articleTypeEncoded"].astype('int64')
+        df["baseColourEncoded"] =  le.fit_transform(df['baseColour'])
+        df["baseColourEncoded"] = df["baseColourEncoded"].astype('int64')
         return df
 
     def split_dataset(self, dataset_base_dir, original_labels_file, process_dir, clean_process_dir=False, split_train_dir=False, train_size='divide', fixed_validate_test_size=0):
@@ -98,11 +115,27 @@ class DatasetManager():
         #If train dataset exists -> load else create it
         if os.path.isfile(os.path.join(base_dir, "train_dataset.csv")):
             train_df = pd.read_csv(os.path.join(base_dir, "train_dataset.csv"), error_bad_lines=False)     
-            if fixed_train_size > 0:
+            if fixed_train_size >= 0:
                 test_df = pd.read_csv(os.path.join(base_dir, "test_dataset.csv"), error_bad_lines=False)     
                 validate_df = pd.read_csv(os.path.join(base_dir, "val_dataset.csv"), error_bad_lines=False)     
         else:
             labels_df = pd.read_csv(original_labels_file, error_bad_lines=False) # header=None, skiprows = 1
+            
+            #Validate images exists
+            labels_df = self.Validate_Images_DataFrame(labels_df,"id",img_dir,img_format = '.jpg')
+
+            ### FILTER ###
+            #classes have minimum 100 images
+            minimum_pictures_class = 100
+            n_classes = np.sum(labels_df.articleType.value_counts().to_numpy() > minimum_pictures_class)
+            if DEBUG: print('num classes ' + str(n_classes))
+            classes = labels_df.articleType.value_counts().sort_values(ascending=False)[:n_classes]
+            if DEBUG: print(classes)
+            labels_df = labels_df[labels_df['articleType'].isin(classes.index)]
+
+            ### ENCODE ###
+            #Encode any string columns: Need for training and convert to tensor
+            labels_df = self.EncodeColumns(labels_df)
 
             # Divide labels in train, test and validate
             if fixed_train_size > 0:

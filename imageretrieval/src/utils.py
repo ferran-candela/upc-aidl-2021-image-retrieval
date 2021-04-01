@@ -29,6 +29,15 @@ class ProcessTime:
         print(f"Elapsed time: {duration}")
         return str(duration)
 
+    def current_time(self):
+        """Get current elapsed time"""
+        if self._start_time is None:
+            raise Exception(f"Timer is not running. Use .start() to start it")
+
+        elapsed_time = time.perf_counter() - self._start_time
+        duration = timedelta(seconds=elapsed_time)
+        return str(duration)
+
 class LogFile:
     def __init__(self, fields):
         super().__init__()
@@ -46,7 +55,7 @@ class LogFile:
         #Log directory
         log_dir = FoldersConfig.LOG_DIR
         if not os.path.exists(log_dir):
-            os.mkdir(log_dir)
+            os.makedirs(log_dir)
         self._log_df.to_csv(log_dir + processname + '_log_' + time.strftime("%Y%m%d-%H%M%S") + '.csv',index=False)
 
     def printLogFile(self):

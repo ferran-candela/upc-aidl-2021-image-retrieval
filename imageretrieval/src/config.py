@@ -93,8 +93,72 @@ class FeaturesConfig:
 
 
 class ModelTrainConfig:
+    TRAIN_TYPE = os.environ.get("TRAIN_TYPE") # transferlearning / scratch
     TRAIN_SIZE = os.environ.get("TRAIN_SIZE") # "all" / "divide"=train(60%), Eval and test (20%) / number=fixed size
     TEST_VALIDATE_SIZE = os.environ.get("TEST_VALIDATE_SIZE") # used only for train_size = fixed size
+    NUM_CLASSES = 54 # used only for train
+    PATIENCE = 1000  #Number of epochs to wait if no improvement and then stop the training.
+
+    @staticmethod
+    def get_learning_rate(model_name):
+        lr = 0.001
+        
+        if model_name == 'vgg16':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'resnet50':
+            # TODO: To be defined
+            pass
+            
+        if model_name == 'inception_v3':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'inception_resnet_v2':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'densenet161':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'efficient_net_b4':
+            # TODO: To be defined
+            pass
+
+        return lr
+
+    @staticmethod
+    def get_num_epochs(model_name):
+        nepochs = 20
+        
+        if model_name == 'vgg16':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'resnet50':
+            nepochs = 10
+            pass
+            
+        if model_name == 'inception_v3':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'inception_resnet_v2':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'densenet161':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'efficient_net_b4':
+            # TODO: To be defined
+            pass
+
+        return nepochs
+
 
 
 class RetrievalEvalConfig:

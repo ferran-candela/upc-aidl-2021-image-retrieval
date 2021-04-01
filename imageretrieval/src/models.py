@@ -1,27 +1,42 @@
 import os
 import torch
 import torch.nn as nn
+import torch.optim as optim
 from torchvision import transforms
+from config import ModelTrainConfig
 
 
 class Model:
-    TRAIN_FILE_NAME = 'trained_model.pt'
+    #TRAIN_FILE_NAME = 'trained_model.pt'
+    TRAIN_SCRATCH_FILE_NAME = 'trained_scratch.pt'
+    TRAIN_TRANSFER_LEARNIG_FILE_NAME = 'trained_transfer_learning.pt'
 
-    def __init__(self, device, model_name, models_dir, model, optimizer=None, is_pretrained=True, input_resize=224, output_features=0):
+    def __init__(self, device, model_name, models_dir, model, optimizer=None, criterion=None, is_pretrained=True, input_resize=224, output_features=0, num_classes=0):
         self.device = device
         self.model_name = model_name
         self.models_dir = models_dir
         self.model = model
         self.optimizer = optimizer
+        self.criterion = criterion
         self.is_pretrained = is_pretrained
-        self.input_resize = input_resize
-        self.output_features = output_features
+        self.input_resize = int(input_resize)
+        self.output_features = int(output_features)
+        self.num_classes = int(num_classes)
     
     def get_name(self):
         return self.model_name
     
     def get_model(self):
         return self.model
+
+    def get_num_classes(self):
+        return self.num_classes
+
+    def get_criterion(self):
+        return self.criterion
+
+    def get_optimizer(self):
+        return self.optimizer
 
     def get_input_resize(self):
         return self.input_resize
@@ -39,7 +54,7 @@ class Model:
         optimizer_state_dict = None
 
         if(self.optimizer != None):
-            optimizer_state_dict = self.optimizer.cpu().state_dict()
+            optimizer_state_dict = self.optimizer.state_dict()
 
         return {
             "model_name": self.model_name,
@@ -49,13 +64,13 @@ class Model:
             "input_resize": self.input_resize
         }
     
-    def save_model(self):
-        model_dir = self.get_model_dir(self.models_dir, self.model_name)
+    def save_model(self, version=-1):
+        model_dir = self.get_model_dir(self.models_dir, self.model_name, version=version)
 
         if not os.path.exists(model_dir):
-            os.mkdir(model_dir)
+            os.makedirs(model_dir)
 
-        model_file_path = self.get_model_file_path(self.models_dir, self.model_name)
+        model_file_path = self.get_model_file_path(self.models_dir, self.model_name, version)
         model_checkpoint = self.get_checkpoint()
 
         torch.save(model_checkpoint, model_file_path)
@@ -93,23 +108,38 @@ class Model:
                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ])
 
+    def get_current_model_dir(self, version=-1):
+        return Model.get_model_dir(self.models_dir, self.model_name, version)
+    
     @staticmethod
-    def get_model_dir(models_dir, model_name):
-        return os.path.join(models_dir, model_name)
+    def get_model_dir(models_dir, model_name, version=-1):
+        model_dir = os.path.join(models_dir, model_name)
+
+        if(version != -1):
+            model_dir = os.path.join(model_dir, 'v' + str(version))
+
+        return model_dir
 
     @staticmethod
-    def get_model_file_path(models_dir, model_name):
-        return os.path.join(Model.get_model_dir(models_dir, model_name), Model.TRAIN_FILE_NAME)
+    def get_model_file_path(models_dir, model_name, version=-1):
+        model_dir = Model.get_model_dir(models_dir, model_name, version)
+
+        if ModelTrainConfig.TRAIN_TYPE == "transferlearning":
+            return os.path.join(model_dir, Model.TRAIN_TRANSFER_LEARNIG_FILE_NAME)
+        elif ModelTrainConfig.TRAIN_TYPE == "scratch":
+            return os.path.join(model_dir, Model.TRAIN_SCRATCH_FILE_NAME)
+        else:
+            return ""
 
 class ModelManager:
     def __init__(self, device, models_dir):
         self.models =   {  
-                            'vgg16', # Documentation says input must be 224x224
+                            # 'vgg16', # Documentation says input must be 224x224
                             'resnet50',
-                            'inception_v3', # [batch_size, 3, 299, 299]
-                            'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
-                            'densenet161',
-                            'efficient_net_b4'
+                            # 'inception_v3', # [batch_size, 3, 299, 299]
+                            # 'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
+                            # 'densenet161',
+                            # 'efficient_net_b4'
                         }
                     
         self.device = device
@@ -119,7 +149,7 @@ class ModelManager:
     def get_model_names(self):
         return self.models
 
-    def get_raw_model(self, model_name):
+    def get_transferlearning_model(self, model_name):
         device = self.device
         input_resize = 299
         is_pretrained = True
@@ -139,7 +169,7 @@ class ModelManager:
             input_resize = 224
             output_features = 512
 
-        if model_name == 'resnet50':
+        if model_name == 'resnet50' or model_name == 'resnet50':
             from torchvision.models import resnet50
             model = resnet50(pretrained=True)
             # Remove FC layer
@@ -196,7 +226,48 @@ class ModelManager:
             output_features = 1792
         
         return Model(device=self.device, model_name=model_name, models_dir=self.models_dir, model=model, is_pretrained=is_pretrained, input_resize=input_resize, output_features=output_features)
+
+    def get_scratch_model(self, model_name):
+        device = self.device
+        is_pretrained = False
+
+        # if model_name == 'vgg16':
+        #     from torchvision.models import vgg16
+        #     # Input must be 224x224
+        #     pretrained_model = vgg16(pretrained=True)
+
+        if model_name == 'resnet50':
+            from torchvision.models import resnet50
+            model = resnet50(pretrained=True)
+
+            num_features = model.fc.in_features
+            model.fc = nn.Linear(num_features, ModelTrainConfig.NUM_CLASSES)
+
+            criterion = nn.CrossEntropyLoss()
+            lr = ModelTrainConfig.get_learning_rate(model_name=model_name)
+            optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+
+
+        # if model_name == 'inception_v3':
+        #     from torchvision.models import inception_v3
+        #     model = inception_v3(pretrained=True)
+
+        # if model_name == 'inception_resnet_v2':
+        #     from torch_inception_resnet_v2.model import InceptionResNetV2
+        #     model = InceptionResNetV2(1000) #upper to PCA
+
+
+        # if model_name == 'densenet161':
+        #     from torchvision.models import densenet161
+        #     model = densenet161(pretrained=True)
         
+        # if model_name == 'efficient_net_b4':
+
+        #     from efficientnet_pytorch import EfficientNet
+        #     model = EfficientNet.from_pretrained('efficientnet-b4')
+
+        return Model(device=self.device, model_name=model_name, models_dir=self.models_dir, model=model, is_pretrained=is_pretrained, optimizer=optimizer, criterion=criterion, num_classes=ModelTrainConfig.NUM_CLASSES)
+
     def is_model_saved(self, model_name):
         return os.path.isfile(Model.get_model_file_path(self.models_dir, model_name))
 
@@ -207,7 +278,11 @@ class ModelManager:
         if not self.is_model_saved(model_name):
             raise Exception('Model "{0}" checkpoint cannot be found.'.format(model_name))
 
-        model = self.get_raw_model(model_name)
+        if ModelTrainConfig.TRAIN_TYPE == "transferlearning":
+            model = self.get_transferlearning_model(model_name)
+        elif ModelTrainConfig.TRAIN_TYPE == "scratch":
+            model = self.get_scratch_model(model_name)
+            
         model.load_from_checkpoint(checkpoint)
 
         return model
