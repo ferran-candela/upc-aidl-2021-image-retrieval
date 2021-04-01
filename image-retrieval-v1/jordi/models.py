@@ -76,8 +76,9 @@ class Model:
 
         torch.save(model_checkpoint, model_file_path)
     
-    def load_from_checkpoint(self):
-        checkpoint = torch.load(self.get_model_file_path(self.models_dir, self.model_name))
+    def load_from_checkpoint(self, checkpoint=None):
+        if(checkpoint == None):
+            checkpoint = torch.load(self.get_model_file_path(self.models_dir, self.model_name))
         # model_checkpoint = {
         #     "model_name": self.model_name,
         #     "model_state_dict": self.model.cpu().state_dict(),
@@ -87,10 +88,14 @@ class Model:
         # }
         model = self.get_model()
         model.load_state_dict(checkpoint['model_state_dict'])
+        self.to_device()
         model.eval()
 
+        self.input_resize = checkpoint['input_resize']
+        self.is_pretrained = checkpoint['is_pretrained']
+
         if(self.optimizer != None and checkpoint['optimizer_state_dict'] != None):
-            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     
     def count_parameters(self):
         return sum(p.numel() for p in self.model.parameters() if p.requires_grad)
@@ -115,7 +120,8 @@ class Model:
         elif ModelTrainConfig.TRAIN_TYPE == "scratch":
             return os.path.join(Model.get_model_dir(models_dir, model_name), Model.TRAIN_SCRATCH_FILE_NAME)
         else:
-            return ""
+            raise Exception('Train type "{0}" unknow.'.format(ModelTrainConfig.TRAIN_TYPE))
+
 
 class ModelManager:
     def __init__(self, device, models_dir):
@@ -217,17 +223,46 @@ class ModelManager:
         device = self.device
         is_pretrained = False
 
-        # if model_name == 'vgg16':
-        #     from torchvision.models import vgg16
-        #     # Input must be 224x224
-        #     pretrained_model = vgg16(pretrained=True)
+        if model_name == 'vgg16':
+            from torchvision.models import vgg16
+            model = vgg16(pretrained=True)
 
+            #TODO:
+            #Define last layer for classifier
+            #num_features = 
+            #feature_classifier = nn.Linear(num_features, ModelTrainConfig.NUM_CLASSES)
+            #features_model = model.features
+            #for layer in features_model [:24]:  # Freeze layers 0 to 23
+            #    for param in layer.parameters():
+            #        param.requires_grad = False
+            #for layer in feature_extractor[24:]:  # Train layers 24 to 30
+            #    for param in layer.parameters():
+            #        param.requires_grad = True
+            #model = nn.Sequential(
+                            #features_model,
+                            #nn.Flatten(),
+                            #feature_classifier
+                        #)
         if model_name == 'resnet50':
             from torchvision.models import resnet50
             model = resnet50(pretrained=True)
 
+            #Freeze all
+            for layer in model.children():
+                for param in layer.parameters():
+                    param.requires_grad = False
+
+            #unfreeze layer4
+            for param in model.layer4.parameters():
+                param.requires_grad = True
+            
+            #Define last layer for classifier
             num_features = model.fc.in_features
-            model.fc = nn.Linear(num_features, ModelTrainConfig.NUM_CLASSES)
+            feature_classifier = nn.Linear(num_features, ModelTrainConfig.NUM_CLASSES, bias=True)
+            
+            model.fc = feature_classifier
+
+            #print(model)
 
             criterion = nn.CrossEntropyLoss()
             lr = ModelTrainConfig.get_learning_rate(model_name=model_name)
@@ -260,15 +295,11 @@ class ModelManager:
     def get_model_dir(self, model_name):
         return Model.get_model_dir(self.models_dir, model_name)
     
-    def load_from_checkpoint(self, model_name):
+    def load_from_checkpoint(self, model_name, checkpoint=None):
         if not self.is_model_saved(model_name):
             raise Exception('Model "{0}" checkpoint cannot be found.'.format(model_name))
 
-        if ModelTrainConfig.TRAIN_TYPE == "transferlearning":
-            model = self.get_transferlearning_model(model_name)
-        elif ModelTrainConfig.TRAIN_TYPE == "scratch":
-            model = self.get_scratch_model(model_name)
-        model.load_from_checkpoint()
+        model = self.get_transferlearning_model(model_name)
+        model.load_from_checkpoint(checkpoint)
 
         return model
-

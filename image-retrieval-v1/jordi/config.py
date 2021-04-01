@@ -99,7 +99,8 @@ class ModelTrainConfig:
     TEST_VALIDATE_SIZE = os.environ.get("TEST_VALIDATE_SIZE") # used only for train_size = fixed size
     NUM_CLASSES = 4 # used only for train
     PATIENCE = 2  #Number of epochs to wait if no improvement and then stop the training.
-
+    TOP_K_AQE = 15
+    
     @staticmethod
     def get_learning_rate(model_name):
         lr = 0.001
@@ -139,7 +140,7 @@ class ModelTrainConfig:
             pass
 
         if model_name == 'resnet50':
-            #nepochs = 2
+            nepochs = 1
             pass
             
         if model_name == 'inception_v3':
@@ -159,3 +160,11 @@ class ModelTrainConfig:
             pass
 
         return nepochs
+class RetrievalEvalConfig:
+    # OPTIONS:
+    ## 'FirstN'
+    ## 'Random'
+    ## TODO: 'List'
+    GT_SELECTION_MODE = os.environ.get("GT_SELECTION_MODE")
+    MAP_N_QUERIES = int(os.environ.get("MAP_N_QUERIES"))
+    TOP_K_IMAGE = int(os.environ.get("TOP_K_IMAGE"))
