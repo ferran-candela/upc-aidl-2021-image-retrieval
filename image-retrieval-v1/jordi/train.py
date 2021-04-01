@@ -150,9 +150,9 @@ def train_model(model, train_loader, val_loader=None):
         best_acc = 0.
         num_epochs = ModelTrainConfig.get_num_epochs(model_name=model.get_name())
         for epoch in range(1, num_epochs + 1):
-            epoch_train_loss,epoch_train_acc = train_epoch(train_loader=train_loader,model=model.get_model(),optimizer=model.get_optimizer(),criterion=model.get_criterion())
-            avg_train_loss.append(epoch_train_loss)
-            avg_train_acc.append(epoch_train_acc)
+            #epoch_train_loss,epoch_train_acc = train_epoch(train_loader=train_loader,model=model.get_model(),optimizer=model.get_optimizer(),criterion=model.get_criterion())
+            #avg_train_loss.append(epoch_train_loss)
+            #avg_train_acc.append(epoch_train_acc)
 
             epoch_val_loss,epoch_val_acc = val_epoch(validate_loader=val_loader,model=model.get_model(),criterion=model.get_criterion())
             avg_val_loss.append(epoch_val_loss)
@@ -325,6 +325,7 @@ def train():
             train_dataset = FashionProductDataset(dataset_base_dir, train_df, transform=transform)
             train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
 
+            val_loader = None
             if(ModelTrainConfig.TRAIN_TYPE=="scratch"):
                 val_dataset = FashionProductDataset(dataset_base_dir, validate_df, transform=transform)
                 val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, pin_memory=True)
@@ -351,10 +352,9 @@ def train():
                 plt.show()
                 #fig.savefig(os.path.join(model.get_model_dir,'loss_plot.png'), bbox_inches='tight')
 
-            # TEST
-            test_loss,test_acc = test_model(model, test_loader) 
-            print ('Test (Overall), Loss: {:.4f}, Accuracy: {:.4f}'.format(test_loss,test_acc))
-
+                # TEST
+                test_loss,test_acc = test_model(model, test_loader) 
+                print ('Test (Overall), Loss: {:.4f}, Accuracy: {:.4f}'.format(test_loss,test_acc))
 
 if __name__ == "__main__":
     train()

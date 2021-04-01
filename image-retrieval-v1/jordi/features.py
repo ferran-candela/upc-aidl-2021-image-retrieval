@@ -108,7 +108,21 @@ class FeaturesManager:
         return os.path.isfile(self.get_aqe_features_file_path(model_name))
 
     def load_from_raw_features_checkpoint(self, model_name):
-        pass
+        checkpoint = torch.load(self.get_raw_features_file_path(model_name))
+        # checkpoint = {
+        #     "model_name": # same that in model checkpoint,
+        #     "model_state_dict": # same that in model checkpoint,
+        #     "optimizer_state_dict": # same that in model checkpoint,
+        #     "is_pretrained": # same that in model checkpoint,
+        #     "input_resize": # same that in model checkpoint,
+        #     "data": # data frame,
+        #     "aqe_features": # AQE features,
+        # }
+        return {
+            "model": self.model_manager.load_from_checkpoint(model_name, checkpoint),
+            "data": checkpoint['data'],
+            "raw_features": torch.tensor(checkpoint['raw_features'])
+        }
 
     def load_from_norm_features_checkpoint(self, model_name):
         checkpoint = torch.load(self.get_normalized_features_file_path(model_name))
@@ -225,7 +239,8 @@ def postprocess_features(features, pca):
     return features
 
 def Average_Query_Expansion(features, q_indx, top_k=5):
-    new_features = features.copy()
+    #new_features = features.copy()
+    new_features = features.clone()
     for index in q_indx:
         query = features[index]
         scores = features @ query
@@ -258,7 +273,7 @@ def extract_models_features():
     if len(pending_features) > 0 :
 
         #create logfile for save statistics - extract features
-        fields = ['ModelName', 'DataSetSize','TransformsResize', 'PCASize', 'RawFeatures', 'NormalizedFeatures', 'AQEFeatures', 'ProcessTime']
+        fields = ['ModelName', 'DataSetSize','TransformsResize', 'PCASize', 'RawFeatures', 'NormalizedFeatures', 'CalcAQEFeatures', 'ProcessTime']
         logfile = LogFile(fields)
 
         #Create timer to calculate the process time
@@ -281,6 +296,8 @@ def extract_models_features():
                 proctimer.start()
 
                 recalc_aqe = False 
+                features_size = 0
+                PCA_size = 0
                 if not features_manager.is_raw_feature_saved(model_name) :
                     recalc_aqe = True  #if generate new normalitzed features, allways generate AQE
 
@@ -300,12 +317,13 @@ def extract_models_features():
                 if not features_manager.is_aqe_feature_saved(model_name) or recalc_aqe:
                     calcAQE = True
                     loaded_model_features = features_manager.load_from_norm_features_checkpoint(model.get_name())
-
-                    num_queries = loaded_model_features[0].shape[0] #all dataset
+                    features = loaded_model_features['normalized_features']
+                    postproc_features_size = features[0].shape[0]
 
                     # average of the top-K ranked results (including the query itself)
+                    num_queries = features.shape[0] #all dataset
                     q_indx = range(0,num_queries - 1)
-                    features = Average_Query_Expansion(loaded_model_features,q_indx,ModelTrainConfig.TOP_K_AQE)
+                    features = Average_Query_Expansion(features,q_indx,ModelTrainConfig.TOP_K_AQE)
                     features_manager.save_aqe_features_checkpoint(model, train_df, features)
 
                 #LOG

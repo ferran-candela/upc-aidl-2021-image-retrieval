@@ -295,17 +295,11 @@ class ModelManager:
     def get_model_dir(self, model_name):
         return Model.get_model_dir(self.models_dir, model_name)
     
-    def load_from_checkpoint(self, model_name):
+    def load_from_checkpoint(self, model_name, checkpoint=None):
         if not self.is_model_saved(model_name):
             raise Exception('Model "{0}" checkpoint cannot be found.'.format(model_name))
 
-        if ModelTrainConfig.TRAIN_TYPE == "transferlearning":
-            model = self.get_transferlearning_model(model_name)
-        elif ModelTrainConfig.TRAIN_TYPE == "scratch":
-            model = self.get_scratch_model(model_name)
-        else:
-            raise Exception('Train type "{0}" unknow.'.format(ModelTrainConfig.TRAIN_TYPE))
-        model.load_from_checkpoint()
+        model = self.get_transferlearning_model(model_name)
+        model.load_from_checkpoint(checkpoint)
 
         return model
-

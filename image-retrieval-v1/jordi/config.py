@@ -140,7 +140,7 @@ class ModelTrainConfig:
             pass
 
         if model_name == 'resnet50':
-            #nepochs = 2
+            nepochs = 1
             pass
             
         if model_name == 'inception_v3':
