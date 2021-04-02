@@ -327,16 +327,16 @@ def train():
             transform = model.get_input_transform()
             batch_size = ModelBatchSizeConfig.get_batch_size(model_name)
             train_dataset = FashionProductDataset(dataset_base_dir, train_df, transform=transform)
-            train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+            train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
             val_loader = None
             test_loader = None
 
             if(ModelTrainConfig.TRAIN_TYPE == "scratch"):
                 val_dataset = FashionProductDataset(dataset_base_dir, validate_df, transform=transform)
-                val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+                val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
                 test_dataset = FashionProductDataset(dataset_base_dir, test_df, transform=transform)
-                test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+                test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
             if DEBUG:print(model.get_model())
 

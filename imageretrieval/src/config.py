@@ -108,8 +108,7 @@ class ModelTrainConfig:
             pass
 
         if model_name == 'resnet50':
-            # TODO: To be defined
-            pass
+            lr = 0.0001
             
         if model_name == 'inception_v3':
             # TODO: To be defined
