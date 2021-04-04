@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 
 from config import DebugConfig, DeviceConfig, FoldersConfig, ModelBatchSizeConfig, ModelTrainConfig, FeaturesConfig
 from dataset import DatasetManager, FashionProductDataset
-from models import ModelManager
+from models import ModelManager, ModelType
 from utils import ProcessTime, LogFile
 
 device = DeviceConfig.DEVICE
@@ -30,7 +30,7 @@ class FeaturesManager:
         return os.path.join(model_dir, self.NORM_FEATURES_FILE_NAME)
 
     def get_raw_features_checkpoint(self, model, df, features):
-        checkpoint = model.get_checkpoint()
+        checkpoint = model.create_checkpoint()
         checkpoint['data'] = df
         checkpoint['raw_features'] = features
         # checkpoint = {
@@ -45,7 +45,7 @@ class FeaturesManager:
         return checkpoint
 
     def get_normalized_features_checkpoint(self, model, df, features, pca, PCA_dim):
-        checkpoint = model.get_checkpoint()
+        checkpoint = model.create_checkpoint()
         checkpoint['data'] = df
         checkpoint['normalized_features'] = features
         checkpoint['pca'] = pca
@@ -82,7 +82,7 @@ class FeaturesManager:
         pass
 
     def load_from_norm_features_checkpoint(self, model_name):
-        checkpoint = torch.load(self.get_normalized_features_file_path(model_name))
+        checkpoint = torch.load(self.get_normalized_features_file_path(model_name), map_location=self.device)
         # checkpoint = {
         #     "model_name": # same that in model checkpoint,
         #     "model_state_dict": # same that in model checkpoint,
@@ -95,7 +95,7 @@ class FeaturesManager:
         #     "PCA_dim": # PCA dimesion
         # }
         return {
-            "model": self.model_manager.load_from_checkpoint(model_name, checkpoint),
+            "model": self.model_manager.get_feature_extractor(model_name, checkpoint, load_from=ModelType.FEATURE_EXTRACTOR),
             "data": checkpoint['data'],
             "normalized_features": torch.tensor(checkpoint['normalized_features']),
             "pca": checkpoint['pca'],
@@ -126,14 +126,20 @@ def get_pending_features_model(features_manager, model_manager):
     models_list = model_manager.get_model_names()
     for model_name in models_list:
         if not features_manager.is_raw_feature_saved(model_name):
-            if model_manager.is_model_saved(model_name):
-                # Add model name with pending features
-                pending_features.append(model_name)
+            load_from = ModelType.FEATURE_EXTRACTOR
+
+            if model_manager.is_model_saved(model_name, ModelType.FEATURE_EXTRACTOR):
+                load_from = ModelType.FEATURE_EXTRACTOR
+            elif model_manager.is_model_saved(model_name, ModelType.CLASSIFIER):
+                load_from = ModelType.CLASSIFIER
             else:
                 raise Exception('Unable to find raw model checkpoint for "' + model_name + '"')
+            
+            model = model_manager.get_feature_extractor(model_name, load_from=load_from)
+            pending_features.append(model)
         else:
             # Test model can be loaded from checkpoint
-            loaded_model = model_manager.load_from_checkpoint(model_name)
+            loaded_features = features_manager.load_from_norm_features_checkpoint(model_name)
     return pending_features
 
 def extract_features(model, dataloader):
@@ -207,11 +213,15 @@ def extract_models_features():
 
         #Create timer to calculate the process time
         proctimer = ProcessTime()
+        proctimer.start()
 
-        for model_name in pending_features:
+        for model in pending_features:
             try:
-                model = model_manager.load_from_checkpoint(model_name)
+                model_name = model.get_name()
                 if DEBUG:print(f'Extracting features for model {model_name} ....')
+
+                # Save model as feature extractor
+                model.save_model()
 
                 # Define input transformations
                 transform = model.get_input_transform()
@@ -221,8 +231,6 @@ def extract_models_features():
 
                 if DEBUG:print(model.get_model())
                 model.to_device()
-
-                proctimer.start()
 
                 # Extract features
                 features = extract_features(model, train_loader)

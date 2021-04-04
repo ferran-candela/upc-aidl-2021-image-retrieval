@@ -21,7 +21,7 @@ class ModelBatchSizeConfig:
         batch_size = 8
         
         if model_name == 'vgg16':
-            batch_size = 24
+            batch_size = 20
 
         if model_name == 'resnet50':
             batch_size = 10
@@ -93,7 +93,6 @@ class FeaturesConfig:
 
 
 class ModelTrainConfig:
-    TRAIN_TYPE = os.environ.get("TRAIN_TYPE") # transferlearning / scratch
     TRAIN_SIZE = os.environ.get("TRAIN_SIZE") # "all" / "divide"=train(60%), Eval and test (20%) / number=fixed size
     TEST_VALIDATE_SIZE = os.environ.get("TEST_VALIDATE_SIZE") # used only for train_size = fixed size
     NUM_CLASSES = 54 # used only for train
@@ -166,5 +165,5 @@ class RetrievalEvalConfig:
     ## 'Random'
     ## TODO: 'List'
     GT_SELECTION_MODE = os.environ.get("GT_SELECTION_MODE")
-    MAP_N_QUERIES = int(os.environ.get("MAP_N_QUERIES"))
-    TOP_K_IMAGE = int(os.environ.get("TOP_K_IMAGE"))
+    MAP_N_QUERIES = int(os.environ.get("MAP_N_QUERIES")) if (os.environ.get("MAP_N_QUERIES") is not None) else 0
+    TOP_K_IMAGE = int(os.environ.get("TOP_K_IMAGE")) if (os.environ.get("TOP_K_IMAGE") is not None) else 0

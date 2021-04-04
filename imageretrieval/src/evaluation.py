@@ -30,7 +30,7 @@ def create_ground_truth_entries(path, dataframe, N):
         isSameArticleType = dataframe['articleType'] == labels[4]
         isSimilarSubCategory = dataframe['subCategory'] == labels[3]
         isSimilarColour = dataframe['baseColour'] == labels[5]
-        similar_clothes_df = dataframe[isSameArticleType | (isSimilarSubCategory & isSimilarColour)]
+        similar_clothes_df = dataframe[isSameArticleType]
 
         entry['gt'] = similar_clothes_df['id'].to_numpy()
 
@@ -66,7 +66,7 @@ def create_ground_truth_queries(dataframe, type, N, imgIdxList):
         isSameArticleType = dataframe['articleType'] == row[4]
         isSimilarSubCategory = dataframe['subCategory'] == row[3]
         isSimilarColour = dataframe['baseColour'] == row[5]
-        similar_clothes_df = dataframe[isSameArticleType | (isSimilarSubCategory & isSimilarColour)]
+        similar_clothes_df = dataframe[isSameArticleType]
 
         entry['gt'] = similar_clothes_df['id'].to_numpy()
 
@@ -200,7 +200,7 @@ def evaluate_models():
                         'ProcessTime': processtime,
                         'mAPqueries': num_queries,
                         'mAP': f'{df.ap.mean():0.04f}',
-                        'PrecisionHits:' : precision
+                        'PrecisionHits' : precision
                     } 
                 logfile.writeLogFile(values)
         except Exception as e:
@@ -213,7 +213,7 @@ def evaluate_models():
                     'ProcessTime': processtime,
                     'mAPqueries': num_queries,
                     'mAP': 'ERROR',
-                    'PrecisionHits:' : 'ERROR'
+                    'PrecisionHits' : 'ERROR'
                 } 
             logfile.writeLogFile(values)
     #Print and save logfile    

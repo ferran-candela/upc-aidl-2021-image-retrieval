@@ -5,7 +5,7 @@ import numpy as np
 from torch.utils.data import DataLoader
 
 from dataset import DatasetManager, FashionProductDataset
-from models import ModelManager
+from models import ModelManager, ModelType
 from utils import ProcessTime, LogFile
 
 from config import DebugConfig, DeviceConfig, FoldersConfig, ModelBatchSizeConfig, ModelTrainConfig
@@ -118,7 +118,13 @@ def save_loss_plot(model, avg_train_loss, avg_val_loss, epoch):
     plt.legend()
     plt.tight_layout()
     #plt.show()
-    fig.savefig(os.path.join(model.get_current_model_dir(version=epoch), 'loss_plot_' + str(epoch) + '.png'), bbox_inches='tight')
+
+    image_path = model.get_current_model_dir(epoch=epoch)
+
+    if not os.path.exists(image_path):
+        os.makedirs(image_path)
+
+    fig.savefig(os.path.join(image_path, 'loss_plot_' + str(epoch) + '.png'), bbox_inches='tight')
 
 def save_acc_plot(model, avg_train_acc, avg_val_acc, epoch):
     # visualize the loss and save graph
@@ -133,9 +139,16 @@ def save_acc_plot(model, avg_train_acc, avg_val_acc, epoch):
     plt.legend()
     plt.tight_layout()
     #plt.show()
-    fig.savefig(os.path.join(model.get_current_model_dir(version=epoch), 'acc_plot_' + str(epoch) + '.png'), bbox_inches='tight')
+
+    image_path = model.get_current_model_dir(epoch=epoch)
+
+    if not os.path.exists(image_path):
+        os.makedirs(image_path)
+
+    fig.savefig(os.path.join(image_path, 'acc_plot_' + str(epoch) + '.png'), bbox_inches='tight')
 
 def train_scratch_model(model, train_loader, val_loader=None, test_loader=None):
+
     #Create timer to calculate the process time
     proctimer = ProcessTime()
     proctimer.start()
@@ -177,7 +190,7 @@ def train_scratch_model(model, train_loader, val_loader=None, test_loader=None):
                 #best_acc = epoch_val_acc
 
                 # Save model
-                model.save_model(version=epoch)
+                model.save_model(epoch=epoch)
             else:
                 epochs_no_improve += 1
             
@@ -208,7 +221,7 @@ def train_scratch_model(model, train_loader, val_loader=None, test_loader=None):
         processtime = proctimer.stop()
         values = {  
                     'ModelName': model.get_name(),
-                    'ProcessTime': processtime
+                    'Time': processtime
                 } 
         logfile.writeLogFile(values)
     
@@ -225,7 +238,7 @@ def train_transferlearning_model(model, train_loader, val_loader=None, test_load
 
     try:
         #create logfile for save statistics - extract features
-        fields = ['ModelName', 'DataSetSize','TransformsResize', 'ParametersCount', 'OutputFeatures', 'ProcessTime']
+        fields = ['ModelName', 'DataSetSize','TransformsResize', 'ParametersCount', 'ProcessTime']
         logfile = LogFile(fields)
 
         tune_batch_norm_statistics(model, train_loader)
@@ -239,7 +252,6 @@ def train_transferlearning_model(model, train_loader, val_loader=None, test_load
                     'DataSetSize': len(train_loader), 
                     'TransformsResize': model.get_input_resize(),
                     'ParametersCount': model.count_parameters(),
-                    'OutputFeatures': model.get_output_features(),
                     'ProcessTime': processtime
                 } 
         logfile.writeLogFile(values)
@@ -250,7 +262,6 @@ def train_transferlearning_model(model, train_loader, val_loader=None, test_load
                     'DataSetSize': len(train_loader), 
                     'TransformsResize': model.get_input_resize(),
                     'ParametersCount': 'ERROR',
-                    'OutputFeatures': 'ERROR',
                     'ProcessTime': processtime
                 } 
         logfile.writeLogFile(values)
@@ -261,7 +272,7 @@ def train_transferlearning_model(model, train_loader, val_loader=None, test_load
 
 
 def train_model(model, train_loader, val_loader=None, test_loader=None):
-    if(ModelTrainConfig.TRAIN_TYPE=="transferlearning"):
+    if(model.is_pretrained):
         train_transferlearning_model(model, train_loader, val_loader, test_loader)
     else:
         train_scratch_model(model, train_loader, val_loader, test_loader)
@@ -307,15 +318,12 @@ def train():
     ########### TRAIN MODEL IF NOT TRAINED PREVIOUSLY #####################
     pending_models_train = []
     for model_name in models_list:        
-        if not model_manager.is_model_saved(model_name):
+        if not model_manager.is_model_saved(model_name, ModelType.CLASSIFIER):
             # Get raw model
-            if(ModelTrainConfig.TRAIN_TYPE=="transferlearning"):
-                pending_models_train.append(model_manager.get_transferlearning_model(model_name))
-            else:
-                pending_models_train.append(model_manager.get_scratch_model(model_name))
+            pending_models_train.append(model_manager.get_classifier(model_name))
         else:
             # Test model can be loaded from checkpoint
-            loaded_model = model_manager.load_from_checkpoint(model_name)
+            loaded_model = model_manager.get_classifier(model_name, load_from_checkpoint=True)
 
     if len(pending_models_train) > 0 :
 
@@ -324,19 +332,18 @@ def train():
             if DEBUG:print(f'Training model {model_name} ....')
 
             # Define input transformations
-            transform = model.get_input_transform()
+            train_transform = model.get_input_transform()
+            input_transform = model.get_input_transform()
             batch_size = ModelBatchSizeConfig.get_batch_size(model_name)
-            train_dataset = FashionProductDataset(dataset_base_dir, train_df, transform=transform)
+            
+            train_dataset = FashionProductDataset(dataset_base_dir, train_df, transform=train_transform)
             train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-            val_loader = None
-            test_loader = None
-
-            if(ModelTrainConfig.TRAIN_TYPE == "scratch"):
-                val_dataset = FashionProductDataset(dataset_base_dir, validate_df, transform=transform)
-                val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
-                test_dataset = FashionProductDataset(dataset_base_dir, test_df, transform=transform)
-                test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+            val_dataset = FashionProductDataset(dataset_base_dir, validate_df, transform=input_transform)
+            val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
+            
+            test_dataset = FashionProductDataset(dataset_base_dir, test_df, transform=input_transform)
+            test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
             if DEBUG:print(model.get_model())
 

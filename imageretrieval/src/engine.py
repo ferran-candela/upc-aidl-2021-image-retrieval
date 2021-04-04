@@ -76,6 +76,42 @@ class RetrievalEngine:
     def cosine_similarity(self, model_name, query_features):
         features = self.model_features[model_name]['normalized_features']
         return features @ query_features.T
+    
+    def get_image_path(self, img_id):
+        base_dir = FoldersConfig.DATASET_BASE_DIR
+        images_path = os.path.join(base_dir, FashionProductDataset.IMAGE_DIR_NAME)
+        return os.path.join(images_path, f"{img_id}{FashionProductDataset.IMAGE_FORMAT}")
+
+    def print_query_results(self, query_image_id, ranking, description):
+        import matplotlib.pyplot as plt
+        import matplotlib.cbook as cbook
+
+        # show the query image
+        print(f'\rImage Query id: ', str(query_image_id),' - ',description)
+        plt.figure(figsize=(2.8,2.8))
+        with cbook.get_sample_data(self.get_image_path(query_image_id)) as image_file:
+            query_image = plt.imread(image_file)
+        plt.imshow(query_image)
+        plt.grid(False)
+        plt.xticks([])
+        plt.yticks([])
+        plt.show()
+
+        print(f'\rTop N Similarity: ', description)
+        fig, ax = plt.subplots(nrows=int(len(ranking)/5), ncols=5, figsize=(18, 6))
+        ax = ax.ravel()
+
+        if DEBUG: print(ranking)
+        for i in range(len(ranking)):
+            # show the images
+            with cbook.get_sample_data(self.get_image_path(ranking[i])) as image_file:
+                query_image = plt.imread(image_file)
+            ax[i].imshow(query_image)
+            ax[i].grid(False) 
+            ax[i].set_xticks([])
+            ax[i].set_yticks([])
+            ax[i].set_title(str(i) + " - id:" + str(ranking[i]) )
+        plt.show()
 
 if __name__ == "__main__":
 
@@ -83,13 +119,12 @@ if __name__ == "__main__":
     engine = RetrievalEngine(device, FoldersConfig.WORK_DIR)
     engine.load_models_and_precomputed_features()
 
-    imageid = 26267
-    base_dir = FoldersConfig.DATASET_BASE_DIR
-    images_path = os.path.join(base_dir, FashionProductDataset.IMAGE_DIR_NAME)
-    query_path = os.path.join(images_path, f"{imageid}{FashionProductDataset.IMAGE_FORMAT}")
-
+    img_id = 26267
+    query_path = engine.get_image_path(img_id)
+    
     model_names = engine.get_model_names()
 
     for model_name in model_names:
         top_k_ranking = engine.query(model_name, query_path, top_k)
         print(model_name, ': ', top_k_ranking)
+        engine.print_query_results(query_image_id=img_id, ranking=top_k_ranking, description=model_name + " - COSINE SIMILARITY")
