@@ -312,8 +312,6 @@ class ModelManager:
                 models_dir=self.models_dir, model=model, is_pretrained=is_pretrained, optimizer=optimizer, \
                 criterion=criterion, num_classes=ModelTrainConfig.NUM_CLASSES, input_resize=input_resize)
 
-        
-
         if(load_from_checkpoint):
             classifier.load_from_checkpoint(checkpoint, epoch)
             
