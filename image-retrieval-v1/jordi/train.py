@@ -150,9 +150,9 @@ def train_model(model, train_loader, val_loader=None):
         best_acc = 0.
         num_epochs = ModelTrainConfig.get_num_epochs(model_name=model.get_name())
         for epoch in range(1, num_epochs + 1):
-            #epoch_train_loss,epoch_train_acc = train_epoch(train_loader=train_loader,model=model.get_model(),optimizer=model.get_optimizer(),criterion=model.get_criterion())
-            #avg_train_loss.append(epoch_train_loss)
-            #avg_train_acc.append(epoch_train_acc)
+            epoch_train_loss,epoch_train_acc = train_epoch(train_loader=train_loader,model=model.get_model(),optimizer=model.get_optimizer(),criterion=model.get_criterion())
+            avg_train_loss.append(epoch_train_loss)
+            avg_train_acc.append(epoch_train_acc)
 
             epoch_val_loss,epoch_val_acc = val_epoch(validate_loader=val_loader,model=model.get_model(),criterion=model.get_criterion())
             avg_val_loss.append(epoch_val_loss)
@@ -221,11 +221,11 @@ def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validat
 
     return train_df, test_df, validate_df
 
-def test_model(model, test_loader):
+def test_model(model, criterion, test_loader, modelname):
     #create logfile for testing statistics
     fields = ['ModelName','Criterion','Step','Loss','Accuracy', 'Time']
     logfile = LogFile(fields) 
-
+    
     # switch to eval mode
     model.eval()         
 
@@ -262,7 +262,7 @@ def test_model(model, test_loader):
                     .format(batch_idx, loader_len, batch_loss/total_test_images, batch_corrects/total_test_images))
 
             processtime = proctimer.current_time()
-            values = {  'ModelName': model.get_name, 
+            values = {  'ModelName': modelname, 
                     'Criterion': 'CrossEntropyLoss', #model.get_criterion().__name__
                     'Step': batch_idx, 
                     'Loss': batch_loss/total_test_images, 
@@ -270,7 +270,7 @@ def test_model(model, test_loader):
                     'Time': processtime
                     } 
             logfile.writeLogFile(values)
-            logfile.saveLogFile_to_csv(model.get_name() + '_scratch_model_log')
+            logfile.saveLogFile_to_csv(modelname + '_scratch_model_log')
 
 
         test_loss = batch_loss / total_test_images
@@ -353,7 +353,7 @@ def train():
                 #fig.savefig(os.path.join(model.get_model_dir,'loss_plot.png'), bbox_inches='tight')
 
                 # TEST
-                test_loss,test_acc = test_model(model, test_loader) 
+                test_loss,test_acc = test_model(model=model.get_model(), criterion=model.get_criterion(),test_loader=test_loader,modelname=model.get_name()) 
                 print ('Test (Overall), Loss: {:.4f}, Accuracy: {:.4f}'.format(test_loss,test_acc))
 
 if __name__ == "__main__":
