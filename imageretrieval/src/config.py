@@ -103,7 +103,8 @@ class ModelTrainConfig:
     TRAIN_SIZE = os.environ.get("TRAIN_SIZE") # "all" / "divide"=train(60%), Eval and test (20%) / number=fixed size
     TEST_VALIDATE_SIZE = os.environ.get("TEST_VALIDATE_SIZE") # used only for train_size = fixed size
     NUM_CLASSES = 54 # used only for train
-    PATIENCE = 1000  #Number of epochs to wait if no improvement and then stop the training.
+    PATIENCE = 1000  #Number of epochs to wait if no improvement and then stop the training.    TOP_K_AQE = 15
+    TOP_K_AQE = 15
 
     @staticmethod
     def get_learning_rate(model_name):

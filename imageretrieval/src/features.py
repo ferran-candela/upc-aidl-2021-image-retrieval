@@ -16,6 +16,7 @@ DEBUG = DebugConfig.DEBUG
 class FeaturesManager:
     RAW_FEATURES_FILE_NAME = 'raw_features.pt'
     NORM_FEATURES_FILE_NAME = 'normalized_features.pt'
+    AQE_FEATURES_FILE_NAME = 'aqe_features.pt'
 
     def __init__(self, device, model_manager):
         self.device = device
@@ -28,6 +29,10 @@ class FeaturesManager:
     def get_normalized_features_file_path(self, model_name):
         model_dir = self.model_manager.get_model_dir(model_name)
         return os.path.join(model_dir, self.NORM_FEATURES_FILE_NAME)
+
+    def get_aqe_features_file_path(self, model_name):
+        model_dir = self.model_manager.get_model_dir(model_name)
+        return os.path.join(model_dir, self.AQE_FEATURES_FILE_NAME)
 
     def get_raw_features_checkpoint(self, model, df, features):
         checkpoint = model.create_checkpoint()
@@ -59,9 +64,27 @@ class FeaturesManager:
         #     "data": # data frame,
         #     "normalized_features": # normalized features,
         #     "pca": # PCA configuration,
-        #     "PCA_dfrom utils import ProcessTime, LogFile
+        #     "PCA_dim
         return checkpoint
-        
+
+    def get_aqe_features_checkpoint(self, model, df, features, pca, PCA_dim):
+        checkpoint = model.create_checkpoint()
+        checkpoint['data'] = df
+        checkpoint['pca'] = pca
+        checkpoint['PCA_dim'] = PCA_dim
+        checkpoint['aqe_features'] = features
+        # checkpoint = {
+        #     "model_name": # same that in model checkpoint,
+        #     "model_state_dict": # same that in model checkpoint,
+        #     "optimizer_state_dict": # same that in model checkpoint,
+        #     "is_pretrained": # same that in model checkpoint,
+        #     "input_resize": # same that in model checkpoint,
+        #     "data": # data frame,
+        #     "pca": # PCA configuration,
+        #     "PCA_dim
+        #     "aqe_features": # aqe features,
+        # }
+        return checkpoint
     def save_raw_features_checkpoint(self, model, df, features):
         features_file_path = self.get_raw_features_file_path(model.get_name())
         raw_features_checkpoint = self.get_raw_features_checkpoint(model, df, features)        
@@ -69,17 +92,39 @@ class FeaturesManager:
 
     def save_normalized_features_checkpoint(self, model, df, features, pca, PCA_dim):
         features_file_path = self.get_normalized_features_file_path(model.get_name())
-        normalized_features_checkpoint = self.get_normalized_features_checkpoint(model, df, features, pca,  PCA_dim)        
+        normalized_features_checkpoint = self.get_normalized_features_checkpoint(model, df, features, pca, PCA_dim)        
         torch.save(normalized_features_checkpoint, features_file_path)
+
+    def save_aqe_features_checkpoint(self, model, df, features, pca, PCA_dim):
+        features_file_path = self.get_aqe_features_file_path(model.get_name())
+        aqe_features_checkpoint = self.get_aqe_features_checkpoint(model, df, features, pca, PCA_dim)        
+        torch.save(aqe_features_checkpoint, features_file_path)
 
     def is_raw_feature_saved(self, model_name):
         return os.path.isfile(self.get_raw_features_file_path(model_name))
     
     def is_normalized_feature_saved(self, model_name):
         return os.path.isfile(self.get_normalized_features_file_path(model_name))
+        
+    def is_aqe_feature_saved(self, model_name):
+        return os.path.isfile(self.get_aqe_features_file_path(model_name))
 
     def load_from_raw_features_checkpoint(self, model_name):
-        pass
+        checkpoint = torch.load(self.get_raw_features_file_path(model_name), map_location=self.device)
+        # checkpoint = {
+        #     "model_name": # same that in model checkpoint,
+        #     "model_state_dict": # same that in model checkpoint,
+        #     "optimizer_state_dict": # same that in model checkpoint,
+        #     "is_pretrained": # same that in model checkpoint,
+        #     "input_resize": # same that in model checkpoint,
+        #     "data": # data frame,
+        #     "aqe_features": # AQE features,
+        # }
+        return {
+            "model": self.model_manager.get_feature_extractor(model_name, checkpoint, load_from=ModelType.FEATURE_EXTRACTOR),
+            "data": checkpoint['data'],
+            "raw_features": torch.tensor(checkpoint['raw_features'])
+        }
 
     def load_from_norm_features_checkpoint(self, model_name):
         checkpoint = torch.load(self.get_normalized_features_file_path(model_name), map_location=self.device)
@@ -101,7 +146,25 @@ class FeaturesManager:
             "pca": checkpoint['pca'],
             "PCA_dim": checkpoint['PCA_dim']
         }
-
+    
+    def load_from_aqe_features_checkpoint(self, model_name):
+        checkpoint = torch.load(self.get_aqe_features_file_path(model_name))
+        # checkpoint = {
+        #     "model_name": # same that in model checkpoint,
+        #     "model_state_dict": # same that in model checkpoint,
+        #     "optimizer_state_dict": # same that in model checkpoint,
+        #     "is_pretrained": # same that in model checkpoint,
+        #     "input_resize": # same that in model checkpoint,
+        #     "data": # data frame,
+        #     "aqe_features": # AQE features,
+        # }
+        return {
+            "model": self.model_manager.get_feature_extractor(model_name, checkpoint, load_from=ModelType.FEATURE_EXTRACTOR),
+            "data": checkpoint['data'],
+            "aqe_features": torch.tensor(checkpoint['aqe_features']),
+            "pca": checkpoint['pca'],
+            "PCA_dim": checkpoint['PCA_dim']
+        }
 def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validate_test_size, clean_process_dir):
     dataset_manager = DatasetManager()      
 
@@ -185,6 +248,17 @@ def postprocess_features(features, pca):
 
     return features
 
+def Average_Query_Expansion(features, q_indx, top_k=5):
+    #new_features = features.copy()
+    new_features = features.clone()
+    for index in q_indx:
+        query = features[index]
+        scores = features @ query
+        ranking = (-scores).argsort()
+        indices = ranking[:top_k+1]
+        new_features[index] = features[indices].mean(axis=0)
+    return new_features
+
 def extract_models_features():
     # The path of original dataset
     dataset_base_dir = FoldersConfig.DATASET_BASE_DIR
@@ -209,13 +283,15 @@ def extract_models_features():
     if len(pending_features) > 0 :
 
         #create logfile for save statistics - extract features
-        fields = ['ModelName', 'DataSetSize','TransformsResize', 'PCASize', 'RawFeatures', 'NormalizedFeatures', 'ProcessTime']
+        fields = ['ModelName', 'DataSetSize','TransformsResize', 'PCASize', 'RawFeatures', 'NormalizedFeatures', 'CalcAQEFeatures', 'ProcessTime']
         logfile = LogFile(fields)
+
+        #Create timer to calculate the process time
+        proctimer = ProcessTime()   
 
         for model in pending_features:
             try:
-                #Create timer to calculate the process time
-                proctimer = ProcessTime()
+
                 proctimer.start()
 
                 model_name = model.get_name()
@@ -232,18 +308,37 @@ def extract_models_features():
 
                 if DEBUG:print(model.get_model())
                 model.to_device()
+                
+                recalc_aqe = False 
+                features_size = 0
+                PCA_size = 0
+                if not features_manager.is_raw_feature_saved(model_name) :
+                    recalc_aqe = True  #if generate new normalitzed features, allways generate AQE
 
-                # Extract features
-                features = extract_features(model, train_loader)
-                features_size = features[0].shape[0]
-                features_manager.save_raw_features_checkpoint(model, train_df, features)
+                    # Extract features
+                    features = extract_features(model, train_loader)
+                    features_size = features[0].shape[0]
+                    features_manager.save_raw_features_checkpoint(model, train_df, features)
 
-                # Post process: normalize features
-                PCA_size = FeaturesConfig.get_PCA_size(model_name)
-                pca = fit_pca(features, PCA_size)
-                features = postprocess_features(features, pca)
-                postproc_features_size = features[0].shape[0]
-                features_manager.save_normalized_features_checkpoint(model, train_df, features, pca, PCA_size)
+                    # Post process: normalize features
+                    PCA_size = FeaturesConfig.get_PCA_size(model_name)
+                    pca = fit_pca(features, PCA_size)
+                    features = postprocess_features(features, pca)
+                    postproc_features_size = features[0].shape[0]
+                    features_manager.save_normalized_features_checkpoint(model, train_df, features, pca, PCA_size)
+
+                calcAQE = False
+                if not features_manager.is_aqe_feature_saved(model_name) or recalc_aqe:
+                    calcAQE = True
+                    loaded_model_features = features_manager.load_from_norm_features_checkpoint(model.get_name())
+                    features = loaded_model_features['normalized_features']
+                    postproc_features_size = features[0].shape[0]
+
+                    # average of the top-K ranked results (including the query itself)
+                    num_queries = features.shape[0] #all dataset
+                    q_indx = range(0,num_queries - 1)
+                    features = Average_Query_Expansion(features,q_indx,ModelTrainConfig.TOP_K_AQE)
+                    features_manager.save_aqe_features_checkpoint(model, train_df, features, pca, PCA_size)
 
                 #LOG
                 processtime = proctimer.stop()
@@ -253,6 +348,7 @@ def extract_models_features():
                             'PCASize': PCA_size,
                             'RawFeatures': features_size,
                             'NormalizedFeatures': postproc_features_size,
+                            'CalcAQEFeatures': calcAQE,
                             'ProcessTime': processtime
                         }
                 logfile.writeLogFile(values)
@@ -266,6 +362,7 @@ def extract_models_features():
                             'PCASize': PCA_size,
                             'RawFeatures': features_size,
                             'NormalizedFeatures': 'ERROR',
+                            'CalcAQEFeatures': 'ERROR',
                             'ProcessTime': processtime
                         }
                 logfile.writeLogFile(values)

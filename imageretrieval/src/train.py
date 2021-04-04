@@ -296,6 +296,64 @@ def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validat
 
     return train_df, test_df, validate_df
 
+def test_model(model, criterion, test_loader, modelname):
+    #create logfile for testing statistics
+    fields = ['ModelName','Criterion','Step','Loss','Accuracy', 'Time']
+    logfile = LogFile(fields) 
+    
+    # switch to eval mode
+    model.eval()         
+
+    total_test_images = 0
+    loader_len = len(test_loader)
+    batch_loss = 0.0
+    batch_corrects = 0
+    log_interval = 10
+
+    #Create timer to calculate the process time
+    proctimer = ProcessTime()
+    proctimer.start()
+
+    with torch.no_grad():
+        for batch_idx, (images_batch, labels_batch) in enumerate(test_loader):
+
+            # move images to gpu
+            images_batch = images_batch.to(device)
+            labels_batch = labels_batch.to(device)
+
+            # compute output
+            outputs = model(images_batch)
+
+            # loss
+            loss = criterion(outputs, labels_batch)
+
+            # statistics
+            batch_loss += loss.item() * images_batch.size(0)
+            batch_corrects += accuracy(outputs,labels_batch)
+            total_test_images += images_batch.size(0)
+
+            if (batch_idx) % log_interval == 0:
+                print ('Testing batch Step [{}/{}], Loss: {:.4f}, Accuracy: {:.4f}' 
+                    .format(batch_idx, loader_len, batch_loss/total_test_images, batch_corrects/total_test_images))
+
+            processtime = proctimer.current_time()
+            values = {  'ModelName': modelname, 
+                    'Criterion': 'CrossEntropyLoss', #model.get_criterion().__name__
+                    'Step': batch_idx, 
+                    'Loss': batch_loss/total_test_images, 
+                    'Accuracy': batch_corrects/total_test_images,
+                    'Time': processtime
+                    } 
+            logfile.writeLogFile(values)
+            logfile.saveLogFile_to_csv(modelname + '_scratch_model_log')
+
+
+        test_loss = batch_loss / total_test_images
+        test_acc = batch_corrects / total_test_images
+
+        return test_loss, test_acc
+
+
 def train():
 
     # The path of original dataset
@@ -349,6 +407,10 @@ def train():
 
             # Train
             train_model(model, train_loader, val_loader, test_loader)
+
+            # TEST
+            test_loss, test_acc = test_model(model=model.get_model(), criterion=model.get_criterion(), test_loader=test_loader, modelname=model.get_name()) 
+            print ('Test (Overall), Loss: {:.4f}, Accuracy: {:.4f}'.format(test_loss,test_acc))
 
 
 if __name__ == "__main__":

@@ -153,15 +153,9 @@ class DatasetManager():
                 train_df, validate_df, test_df = np.split(labels_df.sample(frac=1, random_state=42), 
                                                 [int(.6*len(labels_df)), int(.8*len(labels_df))])
 
-            #Validate images exists
-            train_df = self.Validate_Images_DataFrame(train_df, "id", img_dir, img_format = img_format)
-
             # Save datasets
             train_df.to_csv(os.path.join(base_dir, "train_dataset.csv"),index=False)
             if not fixed_train_size == -1:
-                validate_df = self.Validate_Images_DataFrame(validate_df, "id", img_dir, img_format = img_format)
-                test_df = self.Validate_Images_DataFrame(test_df,"id", img_dir, img_format = img_format)
-
                 validate_df.to_csv(os.path.join(base_dir, "val_dataset.csv"), index=False)
                 test_df.to_csv(os.path.join(base_dir, "test_dataset.csv"), index=False)
 
