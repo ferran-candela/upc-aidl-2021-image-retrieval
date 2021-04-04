@@ -63,10 +63,10 @@ class ModelBatchSizeConfig:
             batch_size = 8
 
         if model_name == 'efficient_net_b4':
-            batch_size = 8
+            batch_size = 6
 
         if model_name == 'resnet50_custom':
-            batch_size = 12
+            batch_size = 10
 
         return batch_size
 

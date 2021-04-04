@@ -273,9 +273,9 @@ def train_transferlearning_model(model, train_loader, val_loader=None, test_load
 
 def train_model(model, train_loader, val_loader=None, test_loader=None):
     if(model.is_pretrained):
-        train_transferlearning_model(model, train_loader, val_loader, test_loader)
+        return train_transferlearning_model(model, train_loader, val_loader, test_loader)
     else:
-        train_scratch_model(model, train_loader, val_loader, test_loader)
+        return train_scratch_model(model, train_loader, val_loader, test_loader)
 
 def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validate_test_size, clean_process_dir):
     dataset_manager = DatasetManager()      
@@ -375,13 +375,17 @@ def train():
   
     ########### TRAIN MODEL IF NOT TRAINED PREVIOUSLY #####################
     pending_models_train = []
+    pending_models_test = []
     for model_name in models_list:        
         if not model_manager.is_model_saved(model_name, ModelType.CLASSIFIER):
             # Get raw model
-            pending_models_train.append(model_manager.get_classifier(model_name))
+            model = model_manager.get_classifier(model_name)
+            pending_models_train.append(model)
         else:
+            model = model_manager.get_classifier(model_name, load_from_checkpoint=True)
             # Test model can be loaded from checkpoint
-            loaded_model = model_manager.get_classifier(model_name, load_from_checkpoint=True)
+            if(not model.is_pretrained):
+                pending_models_test.append(model)
 
     if len(pending_models_train) > 0 :
 
@@ -407,8 +411,20 @@ def train():
 
             # Train
             train_model(model, train_loader, val_loader, test_loader)
+    
+    if len(pending_models_test) > 0 :
+
+        for model in pending_models_test:
+            model_name = model.get_name()
+            input_transform = model.get_input_transform()
+            batch_size = ModelBatchSizeConfig.get_batch_size(model_name)
+
+            if DEBUG:print(f'Testing model {model_name} ....')
 
             # TEST
+            test_dataset = FashionProductDataset(dataset_base_dir, test_df, transform=input_transform)
+            test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+            
             test_loss, test_acc = test_model(model=model.get_model(), criterion=model.get_criterion(), test_loader=test_loader, modelname=model.get_name()) 
             print ('Test (Overall), Loss: {:.4f}, Accuracy: {:.4f}'.format(test_loss,test_acc))
 

@@ -155,12 +155,12 @@ class Model:
 class ModelManager:
     def __init__(self, device, models_dir):
         self.models =   [  
-                            'vgg16', # Documentation says input must be 224x224
-                            'resnet50',
-                            'inception_v3', # [batch_size, 3, 299, 299]
-                            'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
-                            'densenet161',
-                            'efficient_net_b4',
+                            # 'vgg16', # Documentation says input must be 224x224
+                            # 'resnet50',
+                            # 'inception_v3', # [batch_size, 3, 299, 299]
+                            # 'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
+                            # 'densenet161',
+                            # 'efficient_net_b4',
                             'resnet50_custom'
                             ]
                     
@@ -311,8 +311,6 @@ class ModelManager:
         classifier = Model(device=self.device, model_name=model_name, model_type=ModelType.CLASSIFIER, \
                 models_dir=self.models_dir, model=model, is_pretrained=is_pretrained, optimizer=optimizer, \
                 criterion=criterion, num_classes=ModelTrainConfig.NUM_CLASSES, input_resize=input_resize)
-
-        
 
         if(load_from_checkpoint):
             classifier.load_from_checkpoint(checkpoint, epoch)
