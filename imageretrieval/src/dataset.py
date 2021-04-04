@@ -48,6 +48,7 @@ class FashionProductDataset(Dataset):
         # Preprocess query image
         # Returns Tensor [3, input_resize, input_resize]
         sample = Image.open(path).convert('RGB')
+
         if transform:
             sample = transform(sample)
 
@@ -82,6 +83,8 @@ class DatasetManager():
 
     def split_dataset(self, dataset_base_dir, original_labels_file, process_dir, clean_process_dir=False, split_train_dir=False, train_size='divide', fixed_validate_test_size=0):
 
+        dataset_folder_name = 'dataset_' + str(train_size)
+
         if train_size == 'all':
             fixed_train_size = -1
         elif train_size == 'divide':
@@ -90,7 +93,7 @@ class DatasetManager():
             fixed_train_size = int(train_size)
             fixed_validate_test_size = int(fixed_validate_test_size)
 
-        base_dir = process_dir
+        base_dir = os.path.join(process_dir, dataset_folder_name)
         img_dir = os.path.join(dataset_base_dir, FashionProductDataset.IMAGE_DIR_NAME)
         img_format = FashionProductDataset.IMAGE_FORMAT
 
@@ -110,7 +113,7 @@ class DatasetManager():
             shutil.rmtree(base_dir)
         
         if not os.path.exists(base_dir):
-            os.mkdir(base_dir)
+            os.makedirs(base_dir)
 
         #If train dataset exists -> load else create it
         if os.path.isfile(os.path.join(base_dir, "train_dataset.csv")):
@@ -122,7 +125,7 @@ class DatasetManager():
             labels_df = pd.read_csv(original_labels_file, error_bad_lines=False) # header=None, skiprows = 1
             
             #Validate images exists
-            labels_df = self.Validate_Images_DataFrame(labels_df,"id",img_dir,img_format = '.jpg')
+            labels_df = self.Validate_Images_DataFrame(labels_df, "id", img_dir, img_format = '.jpg')
 
             ### FILTER ###
             #classes have minimum 100 images

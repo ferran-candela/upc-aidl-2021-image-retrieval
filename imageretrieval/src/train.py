@@ -217,7 +217,7 @@ def train_scratch_model(model, train_loader, val_loader=None, test_loader=None):
                 print('Early stopping!' )
                 break
     except Exception as e:
-        print(e)
+        print('\n', e)
         processtime = proctimer.stop()
         values = {  
                     'ModelName': model.get_name(),
@@ -256,7 +256,7 @@ def train_transferlearning_model(model, train_loader, val_loader=None, test_load
                 } 
         logfile.writeLogFile(values)
     except Exception as e:
-        print(e)
+        print('\n', e)
         processtime = proctimer.stop()
         values = {  'ModelName': model.get_name(), 
                     'DataSetSize': len(train_loader), 
@@ -332,7 +332,7 @@ def train():
             if DEBUG:print(f'Training model {model_name} ....')
 
             # Define input transformations
-            train_transform = model.get_input_transform()
+            train_transform = model.get_train_transform()
             input_transform = model.get_input_transform()
             batch_size = ModelBatchSizeConfig.get_batch_size(model_name)
             

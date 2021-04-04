@@ -1,78 +1,124 @@
-# Setting for VSCode
+# Settings for VSCode
 
 ```
     {
-        "name": "Train",
-        "type": "python",
-        "request": "launch",
-        "program": "/home/fcandela/src/upc/upc-jmc-project/imageretrieval/src/train.py",
-        "console": "integratedTerminal",
-        "env": {
-            "DEBUG": "True",
-            "DATASET_BASE_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset",
-            "DATASET_LABELS_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
-            "WORK_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset",
-            "LOG_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset/log/",
-            "TRAIN_SIZE": "all",
-            "TEST_VALIDATE_SIZE": ""
-        }
-    }
-
-    {
-            "name": "Extract features",
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Image Retrieval API Rest test",
             "type": "python",
             "request": "launch",
-            "program": "/home/fcandela/src/upc/upc-jmc-project/imageretrieval/src/features.py",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "entrypoint.py",
+                "FLASK_ENV": "development",
+                "FLASK_DEBUG": "0"
+            },
+            "args": [
+                "run",
+                "--no-debugger",
+                "--no-reload"
+            ],
+            "jinja": true
+        },
+        {
+            "name": "Train",
+            "type": "python",
+            "request": "launch",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/train.py",
             "console": "integratedTerminal",
             "env": {
                 "DEBUG": "True",
-                "DATASET_BASE_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset",
-                "DATASET_LABELS_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
-                "WORK_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset",
-                "LOG_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset/log/",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
                 "TRAIN_SIZE": "500",
                 "TEST_VALIDATE_SIZE": "500"
             }
+        },
+        {
+            "name": "Extract features",
+            "type": "python",
+            "request": "launch",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/features.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
+                "TRAIN_SIZE": "500",
+                "TEST_VALIDATE_SIZE": "500"
+            }
+        },
+        {
+            "name": "Evaluation",
+            "type": "python",
+            "request": "launch",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/evaluation.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
+                "TRAIN_SIZE": "500",
+                "TEST_VALIDATE_SIZE": "500",
+                "GT_SELECTION_MODE": "Random",
+                "MAP_N_QUERIES": "300",
+                "TOP_K_IMAGE": "15"
+            }
+        },
+        {
+            "name": "Engine test",
+            "type": "python",
+            "request": "launch",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/engine.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/"
+            }
         }
-```
-
-# Command line execution for training normalization
-
-Activate the conda environment, setup environment vars and execute train.py.
+    ]
+}
 
 ```
-source /home/fcandela/opt/miniconda3/bin/activate &&
-conda activate image-retrieval-v1
 
-export DEBUG=True &&
-export DATASET_BASE_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset &&
-export DATASET_LABELS_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
-export WORK_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset &&
-export LOG_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset/log/ &&
-export TRAIN_SIZE=all &&
-export TEST_VALIDATE_SIZE=0 &&
-export MAP_N_QUERIES=0 &&
-export TOP_K_IMAGE=0 &&
-python /home/fcandela/src/upc/upc-jmc-project/imageretrieval/src/train.py
+# Command line execution
+
+First define the PROJECT_ROOT variable.
+
+```
+export PROJECT_ROOT= {PATH TO PROJECT ROOT}
 ```
 
-# Command line execution for training scratch
-Activate the conda environment, setup environment vars and execute train.py.
+Then activate the environment.
 
 ```
 source /home/fcandela/opt/miniconda3/bin/activate &&
 conda activate image-retrieval-v1
+```
 
+## Command line execution for training
+
+Activate the conda environment, setup environment vars and execute train.py.
+
+```
 export DEBUG=True &&
-export DATASET_BASE_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset &&
-export DATASET_LABELS_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
-export WORK_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset &&
-export LOG_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset/log/ &&
+export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
+export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
+export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
 export TRAIN_SIZE=divide &&
 export TEST_VALIDATE_SIZE=0 &&
-export MAP_N_QUERIES=0 &&
-export TOP_K_IMAGE=0 &&
-python /home/fcandela/src/upc/upc-jmc-project/imageretrieval/src/train.py
+python ${PROJECT_ROOT}/imageretrieval/src/train.py
 ```
 
 # Command line execution for feature extraction
@@ -80,37 +126,42 @@ python /home/fcandela/src/upc/upc-jmc-project/imageretrieval/src/train.py
 Activate the conda environment, setup environment vars and execute features.py.
 
 ```
-source /home/fcandela/opt/miniconda3/bin/activate &&
-conda activate image-retrieval-v1
-
 export DEBUG=True &&
-export DATASET_BASE_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset &&
-export DATASET_LABELS_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
-export WORK_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset &&
-export LOG_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset/log/ &&
+export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
+export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
+export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
 export TRAIN_SIZE=all &&
 export TEST_VALIDATE_SIZE=0 &&
-export MAP_N_QUERIES=0 &&
-export TOP_K_IMAGE=0 &&
-python /home/fcandela/src/upc/upc-jmc-project/imageretrieval/src/features.py
+python ${PROJECT_ROOT}/imageretrieval/src/features.py
 ```
 
 # Command line execution for evaluation
 Activate the conda environment, setup environment vars and execute evaluation.py.
 
 ```
-source /home/fcandela/opt/miniconda3/bin/activate &&
-conda activate image-retrieval-v1
-
 export DEBUG=True &&
-export DATASET_BASE_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset &&
-export DATASET_LABELS_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
-export WORK_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset &&
-export LOG_DIR=/home/fcandela/src/upc/upc-jmc-project/datasets/Fashion_Product_Full_Subset/log/ &&
-export TRAIN_SIZE=all &&
+export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
+export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
+export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
+export TRAIN_SIZE=divide &&
 export TEST_VALIDATE_SIZE=0 &&
 export GT_SELECTION_MODE=Random &&
 export MAP_N_QUERIES=300 &&
 export TOP_K_IMAGE=15 &&
-python /home/fcandela/src/upc/upc-jmc-project/imageretrieval/src/evaluation.py
+python ${PROJECT_ROOT}/imageretrieval/src/evaluation.py
+```
+
+
+# Command line execution for engine test
+Activate the conda environment, setup environment vars and execute engine.py.
+
+```
+export DEBUG=True &&
+export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
+export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
+export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
+python ${PROJECT_ROOT}/imageretrieval/src/engine.py
 ```

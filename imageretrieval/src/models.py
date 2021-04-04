@@ -66,9 +66,13 @@ class Model:
         }
 
         if(self.model_type is ModelType.CLASSIFIER):
+            optimizer_state_dict = None
+
             if(self.optimizer != None):
-                checkpoint['optimizer_state_dict'] = self.optimizer.state_dict()
-           
+                optimizer_state_dict = self.optimizer.state_dict()
+
+            checkpoint['optimizer_state_dict'] = optimizer_state_dict
+
             if(epoch != -1):
                 checkpoint['epoch'] = epoch
                 checkpoint['min_loss'] = min_loss
@@ -106,25 +110,26 @@ class Model:
         self.input_resize = checkpoint['input_resize']
         self.is_pretrained = checkpoint['is_pretrained']
 
-        if(checkpoint['model_type'] == ModelType.CLASSIFIER):
+        if(checkpoint['model_type'] == ModelType.CLASSIFIER and checkpoint['optimizer_state_dict'] != None):
             self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     
     def count_parameters(self):
         return sum(p.numel() for p in self.model.parameters() if p.requires_grad)
     
     def get_input_transform(self):
-        image_resized_size = self.get_input_resize() + 32
+        image_resized_size = self.get_input_resize()
         return transforms.Compose([
                 transforms.Resize(image_resized_size),
-                transforms.CenterCrop(image_resized_size - 32),
+                transforms.CenterCrop(image_resized_size),
                 transforms.ToTensor(),
                 self.normalize
             ])
 
-    def get_train_transform():
-        image_resized_size = self.get_input_resize() + 32
+    def get_train_transform(self):
+        image_resized_size = self.get_input_resize()
         return transforms.Compose([
-                transforms.RandomResizedCrop(image_resized_size - 32),
+                transforms.Resize(image_resized_size),
+                transforms.RandomCrop(image_resized_size),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
                 self.normalize
@@ -149,15 +154,15 @@ class Model:
 
 class ModelManager:
     def __init__(self, device, models_dir):
-        self.models =   {  
+        self.models =   [  
                             'vgg16', # Documentation says input must be 224x224
-                            # 'resnet50',
-                            # 'inception_v3', # [batch_size, 3, 299, 299]
-                            # 'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
-                            # 'densenet161',
-                            # 'efficient_net_b4',
+                            'resnet50',
+                            'inception_v3', # [batch_size, 3, 299, 299]
+                            'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
+                            'densenet161',
+                            'efficient_net_b4',
                             'resnet50_custom'
-                        }
+                            ]
                     
         self.device = device
         self.models_dir = models_dir
@@ -305,7 +310,9 @@ class ModelManager:
 
         classifier = Model(device=self.device, model_name=model_name, model_type=ModelType.CLASSIFIER, \
                 models_dir=self.models_dir, model=model, is_pretrained=is_pretrained, optimizer=optimizer, \
-                criterion=criterion, num_classes=ModelTrainConfig.NUM_CLASSES)
+                criterion=criterion, num_classes=ModelTrainConfig.NUM_CLASSES, input_resize=input_resize)
+
+        
 
         if(load_from_checkpoint):
             classifier.load_from_checkpoint(checkpoint, epoch)

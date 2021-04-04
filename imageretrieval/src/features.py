@@ -143,31 +143,32 @@ def get_pending_features_model(features_manager, model_manager):
     return pending_features
 
 def extract_features(model, dataloader):
-        model.to_device()
-        raw_model = model.get_model()
-        raw_model.eval()
-        
-        n_batches = len(dataloader)
-        i = 1
-        features = []
-        with torch.no_grad():
-            for image_batch, image_id in dataloader:
-                image_batch = image_batch.to(model.get_device())
+    model_name = model.get_name()
+    model.to_device()
+    raw_model = model.get_model()
+    raw_model.eval()
+    
+    n_batches = len(dataloader)
+    i = 1
+    features = []
+    with torch.no_grad():
+        for image_batch, image_id in dataloader:
+            image_batch = image_batch.to(model.get_device())
 
-                batch_features = raw_model(image_batch)
+            batch_features = raw_model(image_batch)
 
-                # features to numpy
-                batch_features = torch.squeeze(batch_features).cpu().numpy()
+            # features to numpy
+            batch_features = torch.squeeze(batch_features).cpu().numpy()
 
-                # collect features
-                features.append(batch_features)
-                print(f'\rExtract Features: Processed {i} of {n_batches} batches', end='', flush=True)
+            # collect features
+            features.append(batch_features)
+            print(f'\rExtract Features {model_name}: Processed {i} of {n_batches} batches', end='', flush=True)
 
-                i += 1
+            i += 1
 
-        # stack the features into a N x D matrix            
-        features = np.vstack(features)
-        return features
+    # stack the features into a N x D matrix            
+    features = np.vstack(features)
+    return features
 
 def fit_pca(features, PCAdimension):
     #The n_components of PCA must be lower than min(n_samples, n_features)
@@ -211,12 +212,12 @@ def extract_models_features():
         fields = ['ModelName', 'DataSetSize','TransformsResize', 'PCASize', 'RawFeatures', 'NormalizedFeatures', 'ProcessTime']
         logfile = LogFile(fields)
 
-        #Create timer to calculate the process time
-        proctimer = ProcessTime()
-        proctimer.start()
-
         for model in pending_features:
             try:
+                #Create timer to calculate the process time
+                proctimer = ProcessTime()
+                proctimer.start()
+
                 model_name = model.get_name()
                 if DEBUG:print(f'Extracting features for model {model_name} ....')
 
@@ -256,7 +257,7 @@ def extract_models_features():
                         }
                 logfile.writeLogFile(values)
             except Exception as e:
-                print(e)
+                print('\n', e)
                 #LOG
                 processtime = proctimer.stop()
                 values = {  'ModelName': model_name, 

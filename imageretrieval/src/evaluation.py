@@ -4,7 +4,8 @@ from sklearn.metrics import average_precision_score
 
 from models import ModelManager
 from features import FeaturesManager
-from config import DebugConfig, FoldersConfig, DeviceConfig, RetrievalEvalConfig
+from dataset import DatasetManager
+from config import DebugConfig, FoldersConfig, DeviceConfig, RetrievalEvalConfig, ModelTrainConfig
 
 from utils import ProcessTime, LogFile
 
@@ -139,6 +140,25 @@ def cosine_similarity(features, imgidx, top_k):
     ranking = (-scores).argsort()[1:top_k + 1]
     return ranking
 
+def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validate_test_size, clean_process_dir):
+    dataset_manager = DatasetManager()      
+
+    train_df, test_df, validate_df = dataset_manager.split_dataset(dataset_base_dir=dataset_base_dir,
+                                                    original_labels_file=labels_file,
+                                                    process_dir=process_dir,
+                                                    clean_process_dir=clean_process_dir,
+                                                    train_size=train_size,
+                                                    fixed_validate_test_size=validate_test_size
+                                                    )
+        
+    train_df.reset_index(drop=True, inplace=True)
+    if DEBUG:print(train_df.head(10))
+    if not test_df is None:
+        test_df.reset_index(drop=True, inplace=True)
+        validate_df.reset_index(drop=True, inplace=True)
+
+    return train_df, test_df, validate_df
+
 def evaluate_models():
     #create logfile for image retrieval
     fields = ['ModelName', 'DataSetSize', 'UsedFeatures', 'FeaturesSize', 'ProcessTime', 'mAPqueries', 'mAP', 'PrecisionHits']
@@ -151,6 +171,18 @@ def evaluate_models():
 
     model_names = model_manager.get_model_names()
 
+    # The path of original dataset
+    dataset_base_dir = FoldersConfig.DATASET_BASE_DIR
+    labels_file = FoldersConfig.DATASET_LABELS_DIR
+
+    # Work directory
+    work_dir = FoldersConfig.WORK_DIR
+    train_df, test_df, validate_df = prepare_data(dataset_base_dir=dataset_base_dir,
+                                        labels_file=labels_file,
+                                        process_dir=work_dir,
+                                        clean_process_dir=False,
+                                        train_size=ModelTrainConfig.TRAIN_SIZE,
+                                        validate_test_size=ModelTrainConfig.TEST_VALIDATE_SIZE)
 
     # TODO: MIRAR EL TEMA DEL AQE
     for model_name in model_names:
@@ -164,7 +196,6 @@ def evaluate_models():
                 loaded_model_features = features_manager.load_from_norm_features_checkpoint(model_name)
 
                 features = loaded_model_features['normalized_features']
-                data = loaded_model_features['data']
 
                 # compute the similarity matrix
                 print('\nComputing similarity matrix...')
@@ -172,9 +203,9 @@ def evaluate_models():
 
                 num_queries = RetrievalEvalConfig.MAP_N_QUERIES
 
-                queries = create_ground_truth_queries(data, RetrievalEvalConfig.GT_SELECTION_MODE, num_queries, [])
+                queries = create_ground_truth_queries(test_df, RetrievalEvalConfig.GT_SELECTION_MODE, num_queries, [])
                 print('\nMake ground truth matrix...')
-                q_indx, y_true = make_ground_truth_matrix(data, queries)
+                q_indx, y_true = make_ground_truth_matrix(test_df, queries)
 
                 # Compute mean Average Precision (mAP)
                 print('\nComputing mean Average Precision (mAP)...')
@@ -186,7 +217,7 @@ def evaluate_models():
                 accuracy = []
                 for index in q_indx:
                     ranking = cosine_similarity(features, index, RetrievalEvalConfig.TOP_K_IMAGE)
-                    precision = evaluation_hits(data, index, ranking)
+                    precision = evaluation_hits(test_df, index, ranking)
                     accuracy.append(precision)
                 precision = np.mean(accuracy)
                 print(f'\nPrecision Hits: {precision:0.04f}')
@@ -194,7 +225,7 @@ def evaluate_models():
                 #LOG
                 processtime = proctimer.stop()
                 values = {'ModelName': model_name, 
-                        'DataSetSize': data.shape[0],
+                        'DataSetSize': test_df.shape[0],
                         # 'UsedFeatures': file,
                         'FeaturesSize': features[0].shape[0],
                         'ProcessTime': processtime,
@@ -204,10 +235,10 @@ def evaluate_models():
                     } 
                 logfile.writeLogFile(values)
         except Exception as e:
-            print(e)
+            print('\n', e)
             processtime = proctimer.stop()
             values = {'ModelName': model_name, 
-                    'DataSetSize': data.shape[0],
+                    'DataSetSize': test_df.shape[0],
                     # 'UsedFeatures': file,
                     'FeaturesSize': features[0].shape[0],
                     'ProcessTime': processtime,

@@ -32,7 +32,7 @@ class RetrievalEngine:
                 loaded_model_features = self.features_manager.load_from_norm_features_checkpoint(model_name)
                 self.model_features[model_name] = loaded_model_features
             except Exception as e:
-                print('Failed to load model: '+ str(e))
+                print('\nFailed to load model: '+ str(e))
     
     def query(self, model_name, query_image_path, top_k):
         print('Query for model ' + model_name)

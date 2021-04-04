@@ -24,20 +24,22 @@ class ModelBatchSizeConfig:
             batch_size = 20
 
         if model_name == 'resnet50':
-            batch_size = 10
+            batch_size = 12
             
         if model_name == 'inception_v3':
-            # TODO: To be defined
-            pass
+            batch_size = 20
 
         if model_name == 'inception_resnet_v2':
             batch_size = 12
 
         if model_name == 'densenet161':
-            batch_size = 6
+            batch_size = 8
 
         if model_name == 'efficient_net_b4':
-            batch_size = 6
+            batch_size = 8
+
+        if model_name == 'resnet50_custom':
+            batch_size = 10
 
         return batch_size
     
@@ -46,23 +48,25 @@ class ModelBatchSizeConfig:
         batch_size = 8
         
         if model_name == 'vgg16':
-            batch_size = 24
+            batch_size = 20
 
         if model_name == 'resnet50':
-            batch_size = 10
+            batch_size = 12
             
         if model_name == 'inception_v3':
-            # TODO: To be defined
-            pass
+            batch_size = 20
 
         if model_name == 'inception_resnet_v2':
             batch_size = 12
 
         if model_name == 'densenet161':
-            batch_size = 6
+            batch_size = 8
 
         if model_name == 'efficient_net_b4':
-            batch_size = 6
+            batch_size = 8
+
+        if model_name == 'resnet50_custom':
+            batch_size = 12
 
         return batch_size
 
@@ -87,6 +91,9 @@ class FeaturesConfig:
             pass
 
         if model_name == 'efficient_net_b4':
+            pass
+
+        if model_name == 'resnet50_custom':
             pass
 
         return PCA
@@ -124,6 +131,9 @@ class ModelTrainConfig:
         if model_name == 'efficient_net_b4':
             # TODO: To be defined
             pass
+        
+        if model_name == 'resnet50_custom':
+            lr = 0.0001
 
         return lr
 
@@ -137,7 +147,6 @@ class ModelTrainConfig:
 
         if model_name == 'resnet50':
             nepochs = 10
-            pass
             
         if model_name == 'inception_v3':
             # TODO: To be defined
@@ -154,6 +163,9 @@ class ModelTrainConfig:
         if model_name == 'efficient_net_b4':
             # TODO: To be defined
             pass
+
+        if model_name == 'resnet50_custom':
+            nepochs = 10
 
         return nepochs
 
