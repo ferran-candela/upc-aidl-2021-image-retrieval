@@ -298,6 +298,7 @@ class ModelManager:
             from torchvision.models import resnet50
             model = resnet50(pretrained=True)
 
+            #model.avgpool = nn.GlobalAvgPool2D()
             num_features = model.fc.in_features
             model.fc = nn.Linear(num_features, ModelTrainConfig.NUM_CLASSES)
 
