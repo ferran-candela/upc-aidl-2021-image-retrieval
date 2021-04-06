@@ -148,7 +148,7 @@ export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
 export TRAIN_SIZE=divide &&
 export TEST_VALIDATE_SIZE=0 &&
 export GT_SELECTION_MODE=Random &&
-export MAP_N_QUERIES=300 &&
+export MAP_N_QUERIES=600 &&
 export TOP_K_IMAGE=15 &&
 python ${PROJECT_ROOT}/imageretrieval/src/evaluation.py
 ```

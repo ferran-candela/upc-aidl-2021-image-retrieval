@@ -12,16 +12,16 @@ from utils import ProcessTime, LogFile
 device = DeviceConfig.DEVICE
 DEBUG = DebugConfig.DEBUG
 
-def create_ground_truth_queries(dataframe, type, N, imgIdxList):
+def create_ground_truth_queries(full_df, test_df, type, N, imgIdxList):
     #type = "Random", "FirstN", "List"
     entries = []
 
     if type=="FirstN":
-        query_df = dataframe[0:N-1]
+        query_df = test_df[0:N-1]
     elif type=="Random":
-        query_df = dataframe.sample(N)
+        query_df = test_df.sample(N)
     elif type=="List":
-        query_df = dataframe[dataframe.index.isin(imgIdxList)]
+        query_df = test_df[test_df.index.isin(imgIdxList)]
     else:
         raise Exception("create_ground_truth_queries: UNKNOW OPTION")
         
@@ -34,10 +34,10 @@ def create_ground_truth_queries(dataframe, type, N, imgIdxList):
 
         entry['id'] = id
 
-        isSameArticleType = dataframe['articleType'] == row[4]
-        isSimilarSubCategory = dataframe['subCategory'] == row[3]
-        isSimilarColour = dataframe['baseColour'] == row[5]
-        similar_clothes_df = dataframe[isSameArticleType]
+        isSameArticleType = full_df['articleType'] == row[4]
+        isSimilarSubCategory = full_df['subCategory'] == row[3]
+        isSimilarColour = full_df['baseColour'] == row[5]
+        similar_clothes_df = full_df[isSameArticleType]
 
         entry['gt'] = similar_clothes_df['id'].to_numpy()
 
@@ -48,10 +48,10 @@ def create_ground_truth_queries(dataframe, type, N, imgIdxList):
         
     return entries
 
-def make_ground_truth_matrix(dataframe, entries):
+def make_ground_truth_matrix(full_df, entries):
     n_queries = len(entries)
     q_indx = np.zeros(shape=(n_queries, ), dtype=np.int32)
-    y_true = np.zeros(shape=(n_queries, dataframe.shape[0]), dtype=np.uint8)
+    y_true = np.zeros(shape=(n_queries, full_df.shape[0]), dtype=np.uint8)
 
     for it, entry in enumerate(entries):
         if (entry['id'] == 'id'):
@@ -60,14 +60,14 @@ def make_ground_truth_matrix(dataframe, entries):
 
         ident = int(entry['id'])
 
-        q_indx[it] = dataframe.index[dataframe['id'] == ident][0]
+        q_indx[it] = full_df.index[full_df['id'] == ident][0]
 
         # lookup gt imagesId
         gt = entry['gt']
         gt_ids = [f for f in gt]
 
         # lookup gt indices
-        gt_indices = [dataframe.index[dataframe['id'] == f][0] for f in gt_ids]
+        gt_indices = [full_df.index[full_df['id'] == f][0] for f in gt_ids]
         gt_indices.sort()
 
         y_true[it][q_indx[it]] = 1
@@ -88,12 +88,12 @@ def evaluate(S, y_true, q_indx):
     df = pd.DataFrame({'ap': aps}, index=q_indx)
     return df
 
-def evaluation_hits(labels_df, imgindex, ranking):
+def evaluation_hits(full_df, test_df, imgindex, ranking):
     # ranking = index list 
     # imgindex = index image query
 
-    queries = create_ground_truth_queries(labels_df, "List", 0, [imgindex])
-    q_indx, y_true = make_ground_truth_matrix(labels_df, queries)
+    queries = create_ground_truth_queries(full_df, full_df, "List", 0, [imgindex])
+    q_indx, y_true = make_ground_truth_matrix(full_df, queries)
 
     imagesIdx = ranking.tolist()
     return round(np.mean(y_true[0][imagesIdx]), 4)
@@ -130,14 +130,14 @@ def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validat
     return train_df, test_df, validate_df
 
 
-def features_evaluation(features, test_df, num_queries):
+def features_evaluation(features, full_df, test_df, num_queries):
     # compute the similarity matrix
     print('\nComputing similarity matrix...')
     S = features @ features.T
 
-    queries = create_ground_truth_queries(test_df, RetrievalEvalConfig.GT_SELECTION_MODE, num_queries, [])
+    queries = create_ground_truth_queries(full_df, test_df, RetrievalEvalConfig.GT_SELECTION_MODE, num_queries, [])
     print('\nMake ground truth matrix...')
-    q_indx, y_true = make_ground_truth_matrix(test_df, queries)
+    q_indx, y_true = make_ground_truth_matrix(full_df, queries)
 
     # Compute mean Average Precision (mAP)
     print('\nComputing mean Average Precision (mAP)...')
@@ -149,7 +149,7 @@ def features_evaluation(features, test_df, num_queries):
     accuracy = []
     for index in q_indx:
         ranking = cosine_similarity(features, index, RetrievalEvalConfig.TOP_K_IMAGE)
-        precision = evaluation_hits(test_df, index, ranking)
+        precision = evaluation_hits(full_df, test_df, index, ranking)
         accuracy.append(precision)
     precision = np.mean(accuracy)
     print(f'\nPrecision Hits: {precision:0.04f}')
@@ -197,7 +197,8 @@ def evaluate_models():
                 print('\nLoading features from checkpoint...')
                 loaded_model_features = features_manager.load_from_norm_features_checkpoint(model_name)
                 features = loaded_model_features['normalized_features']
-                mAP, precision = features_evaluation(features, test_df, num_queries)
+                full_df = loaded_model_features['data']
+                mAP, precision = features_evaluation(features, full_df, test_df, num_queries)
 
                 #LOG
                 processtime = proctimer.stop()
@@ -220,7 +221,8 @@ def evaluate_models():
 
                 loaded_model_features = features_manager.load_from_aqe_features_checkpoint(model_name)
                 features = loaded_model_features['aqe_features']
-                mAP, precision = features_evaluation(features, test_df, num_queries)
+                full_df = loaded_model_features['data']
+                mAP, precision = features_evaluation(features, full_df, test_df, num_queries)
 
                 #LOG
                 processtime = proctimer.stop()
