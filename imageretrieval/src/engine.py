@@ -115,10 +115,11 @@ class RetrievalEngine:
 
 if __name__ == "__main__":
 
-    top_k = 5
+    top_k = 15
     engine = RetrievalEngine(device, FoldersConfig.WORK_DIR)
     engine.load_models_and_precomputed_features()
 
+    # img_id = 26267
     img_id = 26267
     query_path = engine.get_image_path(img_id)
     

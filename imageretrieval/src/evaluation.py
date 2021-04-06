@@ -35,8 +35,8 @@ def create_ground_truth_queries(full_df, test_df, type, N, imgIdxList):
         entry['id'] = id
 
         isSameArticleType = full_df['articleType'] == row[4]
-        isSimilarSubCategory = full_df['subCategory'] == row[3]
-        isSimilarColour = full_df['baseColour'] == row[5]
+        # isSimilarSubCategory = full_df['subCategory'] == row[3]
+        # isSimilarColour = full_df['baseColour'] == row[5]
         similar_clothes_df = full_df[isSameArticleType]
 
         entry['gt'] = similar_clothes_df['id'].to_numpy()
