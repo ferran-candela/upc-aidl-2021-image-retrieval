@@ -48,7 +48,7 @@ def PCA_VarianceDimension_Plot(model_name,features,PCAdimension,save_path):
     fig.savefig(os.path.join(save_path, 'cumul_variance_plot_' + str(PCAdimension) + '.png'), bbox_inches='tight')
 
 
-def PCA_Tune(model_name,features,dataframe,num_queries,pca_dimensions,save_path):
+def PCA_Tune(model_name,features,dataframe,querylist,pca_dimensions,save_path):
 
     pca_accuracy = []
     pca_time = []
@@ -58,7 +58,7 @@ def PCA_Tune(model_name,features,dataframe,num_queries,pca_dimensions,save_path)
         pca = fit_pca(features, dimension)
         features_pp = postprocess_features(features,pca)
         # Calculate accuracy over the postprocesed features
-        accuracy, time_taken = accuracy_mAP_calc(features_pp[:],dataframe,num_queries)
+        accuracy, time_taken = accuracy_mAP_calc(features_pp[:],dataframe,querylist)
         # 
         pca_time.append(time_taken)
         pca_accuracy.append(accuracy)
@@ -79,7 +79,7 @@ def PCA_Tune(model_name,features,dataframe,num_queries,pca_dimensions,save_path)
     fig.savefig(os.path.join(save_path, 'pca_tune_' + str(PCAdimension) + '.png'), bbox_inches='tight')
 
 
-def accuracy_mAP_calc(features,dataframe,num_queries):
+def accuracy_mAP_calc(features,dataframe,querylist):
     #mAP accuracy
 
     proctimer = ProcessTime()
@@ -88,7 +88,7 @@ def accuracy_mAP_calc(features,dataframe,num_queries):
     #compute the similarity matrix
     S = features @ features.T
 
-    queries = create_ground_truth_queries( dataframe, "FirstN", num_queries, [])
+    queries = create_ground_truth_queries( dataframe, dataframe, "List",0, querylist)
     q_indx, y_true = make_ground_truth_matrix(dataframe, queries)
 
     #Compute mean Average Precision (mAP)
@@ -121,11 +121,14 @@ def finetune_pca():
             
             data = loaded_model_features['data']
 
-            pca_dimensions = [15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90]
+            #for evaluate, calculate always the same queries
+            #Create a random list
             num_queries = RetrievalEvalConfig.MAP_N_QUERIES
-            
+            qrylist = data.sample(num_queries).index
+
+            pca_dimensions = [15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90]
             for dimension in pca_dimensions:
-                PCA_Tune(model_name=model_name,features=features,dataframe=data,num_queries=num_queries,pca_dimensions=pca_dimensions,save_path=PCApath)
+                PCA_Tune(model_name=model_name,features=features,dataframe=data,querylist=qrylist,pca_dimensions=pca_dimensions,save_path=PCApath)
                 
 
 

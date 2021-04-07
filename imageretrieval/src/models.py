@@ -12,7 +12,7 @@ class ModelType:
 class Model:
     CHECKPOINT_EXTENSION = '.pt'
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
+                                    std=[0.229, 0.224, 0.225])
 
     def __init__(self, device, model_name, model_type, models_dir, model, optimizer=None, criterion=None, is_pretrained=True, input_resize=224, output_features=0, num_classes=0):
         self.device = device
@@ -110,8 +110,8 @@ class Model:
         self.input_resize = checkpoint['input_resize']
         self.is_pretrained = checkpoint['is_pretrained']
 
-        if(checkpoint['model_type'] == ModelType.CLASSIFIER and checkpoint['optimizer_state_dict'] != None):
-            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+#        if(checkpoint['model_type'] == ModelType.CLASSIFIER and checkpoint['optimizer_state_dict'] != None):
+#            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     
     def count_parameters(self):
         return sum(p.numel() for p in self.model.parameters() if p.requires_grad)
@@ -155,13 +155,18 @@ class Model:
 class ModelManager:
     def __init__(self, device, models_dir):
         self.models =   [  
-                            'resnet50_custom',
-                            'vgg16', # Documentation says input must be 224x224
-                            'resnet50',
-                            'inception_v3', # [batch_size, 3, 299, 299]
-                            'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
-                            'densenet161',
-                            'efficient_net_b4'
+                            #'vgg16', # Documentation says input must be 224x224
+                            #'resnet50',
+                            #'inception_v3', # [batch_size, 3, 299, 299]
+                            #'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
+                            #'densenet161',
+                            #'efficient_net_b4',
+                            #'resnet50_custom',
+                            #'vgg16_custom',
+                            #'inception_v3_custom',
+                            #'inception_resnet_v2_custom',
+                            #'densenet161_custom',
+                            'efficient_net_b4_custom'
                             ]
                     
         self.device = device
@@ -192,7 +197,7 @@ class ModelManager:
         model_name = model.get_name()
         model.model_type = ModelType.FEATURE_EXTRACTOR
 
-        if model_name == 'vgg16':
+        if model_name == 'vgg16' or model_name == 'vgg16_custom':
             # Just use the output of feature extractor and a globalAveragePooling
             model.model = nn.Sequential(
                 model.model.features,
@@ -202,7 +207,7 @@ class ModelManager:
 
             model.output_features = 512
 
-        if model_name == 'resnet50':
+        if model_name == 'resnet50' or model_name == 'resnet50_custom':
             # Remove FC layer
             model.model.fc = nn.Identity()
             # Remove RELU in order to not lose negative features information
@@ -210,12 +215,13 @@ class ModelManager:
 
             model.output_features = 2048            
 
-        if model_name == 'inception_v3':
+        if model_name == 'inception_v3' or model_name == 'inception_v3_custom':
             # Remove FC Layer
             model.model.fc = nn.Identity()
+            model.dropout = nn.Identity()
             model.output_features = 512
 
-        if model_name == 'inception_resnet_v2':
+        if model_name == 'inception_resnet_v2' or model_name == 'inception_resnet_v2_custom':
             # Remove FC Layer
             model.model.dropout = nn.Identity()
             model.model.fc = nn.Identity()
@@ -223,13 +229,13 @@ class ModelManager:
 
             model.output_features = 1888
 
-        if model_name == 'densenet161':
+        if model_name == 'densenet161' or model_name == 'densenet161_custom':
             #Just use the output of feature extractor and ignore the classifier
             model.model.classifier = nn.Identity()
 
             model.output_features = 2208
         
-        if model_name == 'efficient_net_b4':
+        if model_name == 'efficient_net_b4' or model_name == 'efficient_net_b4_custom':
             model.model._dropout = nn.Identity()
             model.model._fc = nn.Identity()
             model.model._swish = nn.Identity() #Swish activation function 
@@ -237,11 +243,6 @@ class ModelManager:
 
             model.output_features = 1792
 
-        if model_name == 'resnet50_custom':
-            # Remove FC layer
-            model.model.fc = nn.Identity()
-
-            model.output_features = 2048
     
         return model
 
@@ -262,8 +263,6 @@ class ModelManager:
         if model_name == 'resnet50':
             from torchvision.models import resnet50
             model = resnet50(pretrained=True)
-            # Remove RELU in order to not lose negative features information
-            model.layer4[2].relu = nn.Identity()
 
             input_resize = 299
             
@@ -294,9 +293,47 @@ class ModelManager:
 
             input_resize = 224
 
+        if model_name == 'vgg16_custom':
+            from torchvision.models import vgg16
+            # Input must be 224x224
+            model = vgg16(pretrained=True)
+            features_model = model.features
+            
+            for layer in features_model[:24]:  # Freeze layers 0 to 23
+                for param in layer.parameters():
+                    param.requires_grad = False
+            for layer in features_model[24:]:  # Train layers 24 to 30
+                for param in layer.parameters():
+                    param.requires_grad = True
+
+            #Define last layer for classifier
+            num_features = 4096
+            feature_classifier = nn.Linear(in_features=num_features, out_features=ModelTrainConfig.NUM_CLASSES)
+            model = nn.Sequential(
+                            features_model,
+                            nn.Flatten(),
+                            feature_classifier
+                        )
+
+            criterion = nn.CrossEntropyLoss()
+            lr = ModelTrainConfig.get_learning_rate(model_name=model_name)
+            optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+
+            is_pretrained = False
+            input_resize = 224
+
         if model_name == 'resnet50_custom':
             from torchvision.models import resnet50
             model = resnet50(pretrained=True)
+
+            #Freeze all
+            for layer in model.children():
+                for param in layer.parameters():
+                    param.requires_grad = False
+
+            #unfreeze layer4
+            for param in model.layer4.parameters():
+                param.requires_grad = True
 
             #model.avgpool = nn.GlobalAvgPool2D()
             num_features = model.fc.in_features
@@ -308,6 +345,117 @@ class ModelManager:
 
             is_pretrained = False
             input_resize = 299
+
+        if model_name == 'inception_v3_custom':
+            from torchvision.models import inception_v3
+            model = inception_v3(pretrained=True)
+            
+            #Freeze all
+            for param in model.parameters():
+                param.requires_grad = False
+                param.aux_logits=False
+
+            #unfreeze layers
+            for param in model.Mixed_7a.parameters():
+                param.requires_grad = True
+            for param in model.Mixed_7b.parameters():
+                param.requires_grad = True
+            for param in model.Mixed_7c.parameters():
+                param.requires_grad = True
+                
+            # Handle the auxilary net
+            num_features = model.AuxLogits.fc.in_features
+            model.AuxLogits.fc = nn.Linear(num_features, ModelTrainConfig.NUM_CLASSES)
+            # Handle the primary net
+            num_features = model.fc.in_features
+            model.fc = nn.Linear(num_features, ModelTrainConfig.NUM_CLASSES)
+
+            criterion = nn.CrossEntropyLoss()
+            lr = ModelTrainConfig.get_learning_rate(model_name=model_name)
+            optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+
+            is_pretrained = False
+            input_resize = 299
+
+        if model_name == 'inception_resnet_v2_custom':
+            from torch_inception_resnet_v2.model import InceptionResNetV2
+            model = InceptionResNetV2(1000) #upper to PCA
+
+            #Freeze all
+            for param in model.parameters():
+                param.requires_grad = False
+            
+            #unfreeze layers
+            for param in model.c_blocks.parameters():
+                param.requires_grad = True
+
+            num_features = model.fc.in_features
+            model.fc = nn.Linear(num_features, ModelTrainConfig.NUM_CLASSES)
+
+            criterion = nn.CrossEntropyLoss()
+            lr = ModelTrainConfig.get_learning_rate(model_name=model_name)
+            optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+
+            is_pretrained = False
+            input_resize = 299
+
+        if model_name == 'densenet161_custom':            
+            from torchvision.models import densenet161
+            model = densenet161(pretrained=True)
+            
+            #Freeze all
+            for param in model.parameters():
+                param.requires_grad = False
+
+            for layer in model.children():
+                for name, module in layer.named_children():
+                    if name in ['denseblock4','norm5']:
+                        #print(name + ' is unfrozen')
+                        for param in module.parameters():
+                            param.requires_grad = True
+                    else:
+                        #print(name + ' is frozen')
+                        for param in module.parameters():
+                            param.requires_grad = False
+
+            num_features = model.classifier.in_features
+            model.classifier = nn.Linear(num_features, ModelTrainConfig.NUM_CLASSES)
+
+            criterion = nn.CrossEntropyLoss()
+            lr = ModelTrainConfig.get_learning_rate(model_name=model_name)
+            optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+
+            is_pretrained = False
+            input_resize = 224
+
+        if model_name == 'efficient_net_b4_custom':
+
+            from efficientnet_pytorch import EfficientNet
+            model = EfficientNet.from_pretrained('efficientnet-b4')
+            #Freeze all
+            for param in model.parameters():
+                param.requires_grad = False
+
+            for layer in model.children():
+                for name, module in layer.named_children():
+                    if name in ['denseblock4','norm5']:
+                        #print(name + ' is unfrozen')
+                        for param in module.parameters():
+                            param.requires_grad = True
+                    else:
+                        #print(name + ' is frozen')
+                        for param in module.parameters():
+                            param.requires_grad = False
+
+            num_features = model._fc.in_features
+            model._fc = nn.Linear(num_features, ModelTrainConfig.NUM_CLASSES)
+
+            criterion = nn.CrossEntropyLoss()
+            lr = ModelTrainConfig.get_learning_rate(model_name=model_name)
+            optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+
+            is_pretrained = False
+            input_resize = 224
 
         classifier = Model(device=self.device, model_name=model_name, model_type=ModelType.CLASSIFIER, \
                 models_dir=self.models_dir, model=model, is_pretrained=is_pretrained, optimizer=optimizer, \

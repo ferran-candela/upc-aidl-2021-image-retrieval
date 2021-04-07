@@ -91,6 +91,7 @@ def evaluate(S, y_true, q_indx):
 def evaluation_hits(full_df, test_df, imgindex, ranking):
     # ranking = index list 
     # imgindex = index image query
+    # Calculate how many images returned in the ranking are "correct" of the total
 
     queries = create_ground_truth_queries(full_df, full_df, "List", 0, [imgindex])
     q_indx, y_true = make_ground_truth_matrix(full_df, queries)
