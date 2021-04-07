@@ -81,6 +81,31 @@ class DatasetManager():
         df["baseColourEncoded"] = df["baseColourEncoded"].astype('int64')
         return df
 
+    def filter_product_fashion(self, labels_df):
+
+        if DEBUG: print(labels_df.count())
+        if DEBUG: print(labels_df.masterCategory.unique())
+
+        different_clothes = ['Bra', 'Kurtas', 'Briefs', 'Sarees', 'Innerwear Vests', 
+                            'Kurta Sets', 'Shrug', 'Camisoles', 'Boxers', 'Dupatta', 
+                            'Capris', 'Bath Robe', 'Tunics', 'Trunk', 'Baby Dolls', 
+                            'Kurtis', 'Suspenders', 'Robe', 'Salwar and Dupatta', 
+                            'Patiala', 'Stockings', 'Tights', 'Churidar', 'Shapewear',
+                            'Nehru Jackets', 'Salwar', 'Rompers', 'Lehenga Choli',
+                            'Clothing Set', 'Belts']
+
+        is_clothes = labels_df['masterCategory'] == 'Apparel'
+        is_shoes = labels_df['masterCategory'] == 'Footwear'
+        is_differenet_clothes = labels_df['articleType'].isin(different_clothes)
+
+        df_clothes_shoes = labels_df[(is_clothes | is_shoes) & ~is_differenet_clothes]
+
+        if DEBUG: print(df_clothes_shoes.count())
+        if DEBUG: print(df_clothes_shoes.articleType.unique().size)
+
+        return df_clothes_shoes
+
+
     def split_dataset(self, dataset_base_dir, original_labels_file, process_dir, clean_process_dir=False, split_train_dir=False, train_size='divide', fixed_validate_test_size=0):
 
         dataset_folder_name = 'dataset_' + str(train_size)
@@ -124,6 +149,8 @@ class DatasetManager():
         else:
             labels_df = pd.read_csv(original_labels_file, error_bad_lines=False) # header=None, skiprows = 1
             
+            labels_df = filter_product_fashion(labels_df)
+
             #Validate images exists
             labels_df = self.Validate_Images_DataFrame(labels_df, "id", img_dir, img_format = '.jpg')
 
