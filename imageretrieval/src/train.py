@@ -372,7 +372,7 @@ def train():
 
     model_manager = ModelManager(device, work_dir)
     models_list = model_manager.get_model_names()
-  
+
     ########### TRAIN MODEL IF NOT TRAINED PREVIOUSLY #####################
     pending_models_train = []
     pending_models_test = []

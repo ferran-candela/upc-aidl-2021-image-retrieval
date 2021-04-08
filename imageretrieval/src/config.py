@@ -17,6 +17,7 @@ class FoldersConfig:
     DATASET_LABELS_DIR = os.environ.get("DATASET_LABELS_DIR")
     WORK_DIR = os.environ.get("WORK_DIR")
     LOG_DIR = os.environ.get("LOG_DIR")
+    RESOURCES_DIR = os.environ.get("RESOURCES_DIR")
 
 class ModelBatchSizeConfig:
     @staticmethod
