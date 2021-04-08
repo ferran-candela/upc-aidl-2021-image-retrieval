@@ -409,7 +409,7 @@ class ModelManager:
 
             for layer in model.children():
                 for name, module in layer.named_children():
-                    if name in ['denseblock4','norm5']:
+                    if name in ['denseblock4']:
                         #print(name + ' is unfrozen')
                         for param in module.parameters():
                             param.requires_grad = True
@@ -438,7 +438,7 @@ class ModelManager:
 
             for layer in model.children():
                 for name, module in layer.named_children():
-                    if name in ['denseblock4','norm5']:
+                    if name in ['31']:
                         #print(name + ' is unfrozen')
                         for param in module.parameters():
                             param.requires_grad = True
