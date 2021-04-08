@@ -12,7 +12,13 @@
             "env": {
                 "FLASK_APP": "entrypoint.py",
                 "FLASK_ENV": "development",
-                "FLASK_DEBUG": "0"
+                "FLASK_DEBUG": "0",
+                "DEVICE": "cpu",
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/"
             },
             "args": [
                 "run",
@@ -27,7 +33,10 @@
             "request": "launch",
             "program": "${PROJECT_ROOT}/imageretrieval/src/train.py",
             "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
             "env": {
+                "PYTHONPATH": "${cwd}",
+                "DEVICE": "cuda",
                 "DEBUG": "True",
                 "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
                 "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
@@ -43,7 +52,10 @@
             "request": "launch",
             "program": "${PROJECT_ROOT}/imageretrieval/src/features.py",
             "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
             "env": {
+                "PYTHONPATH": "${cwd}",
+                "DEVICE": "cuda",
                 "DEBUG": "True",
                 "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
                 "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
@@ -59,7 +71,10 @@
             "request": "launch",
             "program": "${PROJECT_ROOT}/imageretrieval/src/evaluation.py",
             "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
             "env": {
+                "PYTHONPATH": "${cwd}",
+                "DEVICE": "cuda",
                 "DEBUG": "True",
                 "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
                 "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
@@ -78,7 +93,10 @@
             "request": "launch",
             "program": "${PROJECT_ROOT}/imageretrieval/src/engine.py",
             "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
             "env": {
+                "PYTHONPATH": "${cwd}",
+                "DEVICE": "cpu",
                 "DEBUG": "True",
                 "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
                 "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
@@ -111,6 +129,8 @@ conda activate image-retrieval-v1
 Activate the conda environment, setup environment vars and execute train.py.
 
 ```
+export PYTHONPATH=${PROJECT_ROOT} &&
+export DEVICE=cuda &&
 export DEBUG=True &&
 export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
 export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
@@ -126,6 +146,8 @@ python ${PROJECT_ROOT}/imageretrieval/src/train.py
 Activate the conda environment, setup environment vars and execute features.py.
 
 ```
+export PYTHONPATH=${PROJECT_ROOT} &&
+export DEVICE=cuda &&
 export DEBUG=True &&
 export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
 export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
@@ -140,6 +162,8 @@ python ${PROJECT_ROOT}/imageretrieval/src/features.py
 Activate the conda environment, setup environment vars and execute evaluation.py.
 
 ```
+export PYTHONPATH=${PROJECT_ROOT} &&
+export DEVICE=cuda &&
 export DEBUG=True &&
 export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
 export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
@@ -158,6 +182,8 @@ python ${PROJECT_ROOT}/imageretrieval/src/evaluation.py
 Activate the conda environment, setup environment vars and execute engine.py.
 
 ```
+export PYTHONPATH=${PROJECT_ROOT} &&
+export DEVICE=cpu &&
 export DEBUG=True &&
 export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
 export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&

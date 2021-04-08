@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import transforms
-from config import ModelTrainConfig
+from imageretrieval.src.config import ModelTrainConfig
 
 class ModelType:
     CLASSIFIER = 'classifier'
@@ -297,6 +297,15 @@ class ModelManager:
         if model_name == 'resnet50_custom':
             from torchvision.models import resnet50
             model = resnet50(pretrained=True)
+
+            #Freeze all
+            for layer in model.children():
+                for param in layer.parameters():
+                    param.requires_grad = False
+
+            #unfreeze layer4
+            for param in model.layer4.parameters():
+                param.requires_grad = True
 
             #model.avgpool = nn.GlobalAvgPool2D()
             num_features = model.fc.in_features

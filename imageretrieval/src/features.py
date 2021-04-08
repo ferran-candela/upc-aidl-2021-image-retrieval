@@ -5,10 +5,10 @@ import numpy as np
 from sklearn.preprocessing import normalize
 from sklearn.decomposition import PCA
 
-from config import DebugConfig, DeviceConfig, FoldersConfig, ModelBatchSizeConfig, ModelTrainConfig, FeaturesConfig
-from dataset import DatasetManager, FashionProductDataset
-from models import ModelManager, ModelType
-from utils import ProcessTime, LogFile
+from imageretrieval.src.config import DebugConfig, DeviceConfig, FoldersConfig, ModelBatchSizeConfig, ModelTrainConfig, FeaturesConfig
+from imageretrieval.src.dataset import DatasetManager, FashionProductDataset
+from imageretrieval.src.models import ModelManager, ModelType
+from imageretrieval.src.utils import ProcessTime, LogFile
 
 device = DeviceConfig.DEVICE
 DEBUG = DebugConfig.DEBUG
@@ -161,7 +161,7 @@ class FeaturesManager:
         return {
             "model": self.model_manager.get_feature_extractor(model_name, checkpoint, load_from=ModelType.FEATURE_EXTRACTOR),
             "data": checkpoint['data'],
-            "aqe_features": torch.tensor(checkpoint['aqe_features']),
+            "aqe_features": checkpoint['aqe_features'],
             "pca": checkpoint['pca'],
             "PCA_dim": checkpoint['PCA_dim']
         }

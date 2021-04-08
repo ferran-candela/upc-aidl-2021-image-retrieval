@@ -7,7 +7,10 @@ class DebugConfig:
         DEBUG = True
 
 class DeviceConfig:
-    DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    DEVICE = torch.device("cpu")
+
+    if(os.environ.get("DEVICE") == 'cuda' and torch.cuda.is_available()):
+        DEVICE = torch.device("cuda")
 
 class FoldersConfig:
     DATASET_BASE_DIR = os.environ.get("DATASET_BASE_DIR")

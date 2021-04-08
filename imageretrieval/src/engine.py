@@ -2,11 +2,11 @@ import os
 import torch
 import numpy as np
 
-from models import ModelManager
-from config import DebugConfig, FoldersConfig, DeviceConfig
-from features import FeaturesManager
-from features import postprocess_features
-from dataset import FashionProductDataset
+from imageretrieval.src.models import ModelManager
+from imageretrieval.src.config import DebugConfig, FoldersConfig, DeviceConfig
+from imageretrieval.src.features import FeaturesManager
+from imageretrieval.src.features import postprocess_features
+from imageretrieval.src.dataset import FashionProductDataset
 
 device = DeviceConfig.DEVICE
 DEBUG = DebugConfig.DEBUG
@@ -120,12 +120,13 @@ if __name__ == "__main__":
     engine.load_models_and_precomputed_features()
 
     # img_id = 26267
-    img_id = 26267
+    img_id = 8080
     query_path = engine.get_image_path(img_id)
     
     model_names = engine.get_model_names()
 
-    for model_name in model_names:
-        top_k_ranking = engine.query(model_name, query_path, top_k)
-        print(model_name, ': ', top_k_ranking)
-        engine.print_query_results(query_image_id=img_id, ranking=top_k_ranking, description=model_name + " - COSINE SIMILARITY")
+    # for model_name in model_names:
+    model_name = 'resnet50_custom'
+    top_k_ranking = engine.query(model_name, query_path, top_k)
+    print(model_name, ': ', top_k_ranking)
+    engine.print_query_results(query_image_id=img_id, ranking=top_k_ranking, description=model_name + " - COSINE SIMILARITY")

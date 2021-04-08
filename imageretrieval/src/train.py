@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.data import DataLoader
 
-from dataset import DatasetManager, FashionProductDataset
-from models import ModelManager, ModelType
-from utils import ProcessTime, LogFile
+from imageretrieval.src.dataset import DatasetManager, FashionProductDataset
+from imageretrieval.src.models import ModelManager, ModelType
+from imageretrieval.src.utils import ProcessTime, LogFile
 
-from config import DebugConfig, DeviceConfig, FoldersConfig, ModelBatchSizeConfig, ModelTrainConfig
+from imageretrieval.src.config import DebugConfig, DeviceConfig, FoldersConfig, ModelBatchSizeConfig, ModelTrainConfig
 
 device = DeviceConfig.DEVICE
 DEBUG = DebugConfig.DEBUG

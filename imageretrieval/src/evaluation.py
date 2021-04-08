@@ -2,12 +2,12 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import average_precision_score
 
-from models import ModelManager
-from features import FeaturesManager
-from dataset import DatasetManager
-from config import DebugConfig, FoldersConfig, DeviceConfig, RetrievalEvalConfig, ModelTrainConfig
+from imageretrieval.src.models import ModelManager
+from imageretrieval.src.features import FeaturesManager
+from imageretrieval.src.dataset import DatasetManager
+from imageretrieval.src.config import DebugConfig, FoldersConfig, DeviceConfig, RetrievalEvalConfig, ModelTrainConfig
 
-from utils import ProcessTime, LogFile
+from .utils import ProcessTime, LogFile
 
 device = DeviceConfig.DEVICE
 DEBUG = DebugConfig.DEBUG
@@ -186,9 +186,10 @@ def evaluate_models():
     for model_name in model_names:
         try:
             num_queries = RetrievalEvalConfig.MAP_N_QUERIES
+            print('\n\n## Evaluating model ', model_name, "with num_queries=", str(num_queries))
 
             if(features_manager.is_normalized_feature_saved(model_name)):
-                print('\n\n## Evaluating model ', model_name)
+                print('\n\n## Evaluating NormalizedFeatures ', model_name)
 
                 usedfeatures = 'NormalizedFeatures'
                 proctimer.start()
@@ -214,11 +215,13 @@ def evaluate_models():
                 logfile.writeLogFile(values)
 
             if(features_manager.is_aqe_feature_saved(model_name)):
+                print('\n\n## Evaluating AQE features ', model_name)
+
                 # LOAD AVERAGE QUERY EXPANSION FEATURES
-                print('\nLoading AQE features from checkpoint...')
                 proctimer.start()
                 usedfeatures = 'AQEFeatures'
 
+                print('\nLoading AQE features from checkpoint...')
                 loaded_model_features = features_manager.load_from_aqe_features_checkpoint(model_name)
                 features = loaded_model_features['aqe_features']
                 full_df = loaded_model_features['data']

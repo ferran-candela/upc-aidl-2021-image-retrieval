@@ -8,7 +8,7 @@ from PIL import Image
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
 
-from config import DebugConfig, DeviceConfig
+from imageretrieval.src.config import DebugConfig, DeviceConfig
 
 device = DeviceConfig.DEVICE
 DEBUG = DebugConfig.DEBUG
