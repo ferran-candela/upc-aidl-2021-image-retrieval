@@ -1,0 +1,85 @@
+<div>
+  <form [formGroup] = "uploadForm" class="uploadForm" (ngSubmit)="onSubmit()">
+    <mat-form-field class="upload">
+      <mat-toolbar>
+        <!-- Display files names -->
+        <!-- <input matInput [(ngModel)]="fileName" readonly name="fileName" /> -->
+        <input matInput formControlName="fileName" readonly name="fileName" />
+
+
+        <!-- Browse Button -->
+        <button mat-flat-button color="primary" (click)="fileInput.click()">
+          Browse
+        </button>
+      </mat-toolbar>
+
+
+      <!-- Select File -->
+      <input type="file" #fileInput class="file-input" accept="image/jpeg" name="searchImage" (change)="onFileSelect($event)" />
+    </mat-form-field>
+    <!-- Assign model -->
+    <mat-form-field class="params">
+      <mat-label>Model</mat-label>
+      <mat-select formControlName="model">
+        <mat-option value="vgg16">vgg16</mat-option>
+        <mat-option value="resnet50">resnet50</mat-option>
+        <mat-option value="resnet50_custom">resnet50_custom</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Assign model -->
+    <mat-form-field class="params">
+      <mat-label>Top K</mat-label>
+      <mat-select formControlName="topK">
+        <mat-option value="5">5</mat-option>
+        <mat-option value="10">10</mat-option>
+        <mat-option value="15">15</mat-option>
+        <mat-option value="20">20</mat-option>
+        <mat-option value="30">30</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" type="submit" class="search">Search similar</button>
+  </form>
+
+  <!-- Image Preview -->
+  <div class="imagePreview" *ngIf="imageURL && imageURL !== ''">
+    <h2>Query</h2>
+    <img [src]="imageURL" [alt]="uploadForm.value.name">
+  </div>
+
+  <div class="imageResults" *ngIf="ranking.length > 0">
+    <h2>Results</h2>
+    <img *ngFor="let imageId of ranking" src="{{ '/api/images/' + imageId }}" [alt]="uploadForm.value.name">
+  </div>
+
+  
+
+<!-- 
+  <img
+    width="200"
+    alt="UPC Logo"
+    src="http://localhost:5000/api/images/44907"
+  />
+  <div>
+    <img
+    width="200"
+    alt="UPC Logo"
+    src="http://localhost:5000/api/images/2764"
+  />
+  <img
+    width="200"
+    alt="UPC Logo"
+    src="http://localhost:5000/api/images/17241"
+  />
+  <img
+  width="200"
+  alt="UPC Logo"
+  src="http://localhost:5000/api/images/48076"
+  />
+  <img
+  width="200"
+  alt="UPC Logo"
+  src="http://localhost:5000/api/images/6614"
+  /> -->
+  </div>
