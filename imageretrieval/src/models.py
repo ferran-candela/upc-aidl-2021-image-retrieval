@@ -155,13 +155,13 @@ class Model:
 class ModelManager:
     def __init__(self, device, models_dir):
         self.models =   [  
-                            'vgg16' # Documentation says input must be 224x224
-                            #'resnet50',
-                            #'inception_v3', # [batch_size, 3, 299, 299]
-                            #'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
-                            #'densenet161',
-                            #'efficient_net_b4',
-                            #'resnet50_custom',
+                            'vgg16', # Documentation says input must be 224x224
+                            'resnet50',
+                            'inception_v3', # [batch_size, 3, 299, 299]
+                            'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
+                            'densenet161',
+                            'efficient_net_b4',
+                            'resnet50_custom',
                             #'vgg16_custom',
                             #'inception_v3_custom',
                             #'inception_resnet_v2_custom',
