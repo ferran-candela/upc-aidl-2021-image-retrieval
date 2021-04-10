@@ -166,7 +166,7 @@ class ModelManager:
                             #'inception_v3_custom',
                             #'inception_resnet_v2_custom',
                             #'densenet161_custom',
-                            # 'efficient_net_b4_custom'
+                            #'efficient_net_b4_custom'
                             ]
                     
         self.device = device

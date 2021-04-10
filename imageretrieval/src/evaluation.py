@@ -7,7 +7,7 @@ from imageretrieval.src.features import FeaturesManager
 from imageretrieval.src.dataset import DatasetManager
 from imageretrieval.src.config import DebugConfig, FoldersConfig, DeviceConfig, RetrievalEvalConfig, ModelTrainConfig
 
-from .utils import ProcessTime, LogFile
+from imageretrieval.src.utils import ProcessTime, LogFile
 
 device = DeviceConfig.DEVICE
 DEBUG = DebugConfig.DEBUG
@@ -22,6 +22,7 @@ def create_ground_truth_queries(full_df, test_df, type, N, imgIdxList):
         query_df = test_df.sample(N)
     elif type=="List":
         query_df = test_df[test_df.index.isin(imgIdxList)]
+        N = len(imgIdxList)
     else:
         raise Exception("create_ground_truth_queries: UNKNOW OPTION")
         
