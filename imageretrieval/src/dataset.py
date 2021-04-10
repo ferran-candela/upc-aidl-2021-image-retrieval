@@ -149,7 +149,7 @@ class DatasetManager():
         else:
             labels_df = pd.read_csv(original_labels_file, error_bad_lines=False) # header=None, skiprows = 1
             
-            labels_df = filter_product_fashion(labels_df)
+            labels_df = self.filter_product_fashion(labels_df)
 
             #Validate images exists
             labels_df = self.Validate_Images_DataFrame(labels_df, "id", img_dir, img_format = '.jpg')

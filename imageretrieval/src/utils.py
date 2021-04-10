@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import timedelta
 from PIL import Image
 
-from .config import FoldersConfig
+from imageretrieval.src.config import FoldersConfig
 
 class ProcessTime:
     def __init__(self):

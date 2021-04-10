@@ -112,33 +112,30 @@ class ModelTrainConfig:
 
     @staticmethod
     def get_learning_rate(model_name):
-        lr = 0.001
+        lr = 0.0001
         
-        if model_name == 'vgg16':
+        if model_name == 'vgg16_custom':
             # TODO: To be defined
             pass
 
-        if model_name == 'resnet50':
-            lr = 0.0001
-            
-        if model_name == 'inception_v3':
-            # TODO: To be defined
-            pass
-
-        if model_name == 'inception_resnet_v2':
-            # TODO: To be defined
-            pass
-
-        if model_name == 'densenet161':
-            # TODO: To be defined
-            pass
-
-        if model_name == 'efficient_net_b4':
-            # TODO: To be defined
-            pass
-        
         if model_name == 'resnet50_custom':
             lr = 0.0001
+            
+        if model_name == 'inception_v3_custom':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'inception_resnet_v2_custom':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'densenet161_custom':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'efficient_net_b4_custom':
+            # TODO: To be defined
+            pass
 
         return lr
 
@@ -146,31 +143,28 @@ class ModelTrainConfig:
     def get_num_epochs(model_name):
         nepochs = 20
         
-        if model_name == 'vgg16':
-            # TODO: To be defined
-            pass
-
-        if model_name == 'resnet50':
-            nepochs = 10
-            
-        if model_name == 'inception_v3':
-            # TODO: To be defined
-            pass
-
-        if model_name == 'inception_resnet_v2':
-            # TODO: To be defined
-            pass
-
-        if model_name == 'densenet161':
-            # TODO: To be defined
-            pass
-
-        if model_name == 'efficient_net_b4':
+        if model_name == 'vgg16_custom':
             # TODO: To be defined
             pass
 
         if model_name == 'resnet50_custom':
-            nepochs = 10
+            nepochs = 20
+            
+        if model_name == 'inception_v3_custom':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'inception_resnet_v2_custom':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'densenet161_custom':
+            # TODO: To be defined
+            pass
+
+        if model_name == 'efficient_net_b4_custom':
+            # TODO: To be defined
+            pass
 
         return nepochs
 
