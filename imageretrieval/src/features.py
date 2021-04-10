@@ -255,7 +255,7 @@ def Average_Query_Expansion(features, q_indx, top_k=5):
         query = features[index]
         scores = features @ query
         ranking = (-scores).argsort()
-        indices = ranking[:top_k+1]
+        indices = ranking[1:top_k+1]
         new_features[index] = features[indices].mean(axis=0)
     return new_features
 

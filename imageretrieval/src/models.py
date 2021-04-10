@@ -109,9 +109,9 @@ class Model:
 
         self.input_resize = checkpoint['input_resize']
         self.is_pretrained = checkpoint['is_pretrained']
-
-#        if(checkpoint['model_type'] == ModelType.CLASSIFIER and checkpoint['optimizer_state_dict'] != None):
-#            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        
+        if(checkpoint['model_type'] == ModelType.CLASSIFIER and checkpoint['optimizer_state_dict'] != None):
+           self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     
     def count_parameters(self):
         return sum(p.numel() for p in self.model.parameters() if p.requires_grad)
@@ -155,14 +155,14 @@ class Model:
 class ModelManager:
     def __init__(self, device, models_dir):
         self.models =   [  
-                            # 'vgg16', # Documentation says input must be 224x224
-                            # 'resnet50',
-                            # 'inception_v3', # [batch_size, 3, 299, 299]
-                            # 'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
-                            # 'densenet161',
-                            # 'efficient_net_b4',
+                            'vgg16', # Documentation says input must be 224x224
+                            'resnet50',
+                            'inception_v3', # [batch_size, 3, 299, 299]
+                            'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
+                            'densenet161',
+                            'efficient_net_b4',
                             'resnet50_custom',
-                            #'vgg16_custom',
+                            # 'vgg16_custom',
                             #'inception_v3_custom',
                             #'inception_resnet_v2_custom',
                             #'densenet161_custom',
@@ -307,7 +307,9 @@ class ModelManager:
                     param.requires_grad = True
 
             #Define last layer for classifier
-            num_features = 4096
+            num_features = 512
+            # num_features = 4096
+
             feature_classifier = nn.Linear(in_features=num_features, out_features=ModelTrainConfig.NUM_CLASSES)
             model = nn.Sequential(
                             features_model,

@@ -106,9 +106,8 @@ def cosine_similarity(features, imgidx, top_k):
     # in the dataset using a matrix multiplication!
     query = features[imgidx]
     scores = features @ query 
-
-    # rank by score, descending, and skip the top match (because it will be the query)
-    ranking = (-scores).argsort()[1:top_k + 1]
+    # Return top K ids
+    ranking = (-scores).argsort()[:top_k]
     return ranking
 
 def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validate_test_size, clean_process_dir):

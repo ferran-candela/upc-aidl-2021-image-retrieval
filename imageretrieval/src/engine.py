@@ -47,8 +47,7 @@ class RetrievalEngine:
         # Perform similarity
         scores = self.cosine_similarity(model_name, query_features)
         # Return top K ids
-        # rank by score, descending, and skip the top match (because it will be the query)
-        ranking = (-scores).argsort()[1:top_k + 1]
+        ranking = (-scores).argsort()[:top_k]
         return self.convert_ranking_to_image_ids(model_name, ranking)
         
     def convert_ranking_to_image_ids(self, model_name, ranking):

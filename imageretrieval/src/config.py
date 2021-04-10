@@ -25,16 +25,16 @@ class ModelBatchSizeConfig:
         batch_size = 8
         
         if model_name == 'vgg16':
-            batch_size = 20
+            batch_size = 16
 
         if model_name == 'resnet50':
-            batch_size = 10
+            batch_size = 8
             
         if model_name == 'inception_v3':
-            batch_size = 12
+            batch_size = 8
 
         if model_name == 'inception_resnet_v2':
-            batch_size = 12
+            batch_size = 8
 
         if model_name == 'densenet161':
             batch_size = 6
@@ -106,7 +106,34 @@ class FeaturesConfig:
 class ModelTrainConfig:
     TRAIN_SIZE = os.environ.get("TRAIN_SIZE") # "all" / "divide"=train(60%), Eval and test (20%) / number=fixed size
     TEST_VALIDATE_SIZE = os.environ.get("TEST_VALIDATE_SIZE") # used only for train_size = fixed size
-    NUM_CLASSES = 54 # used only for train
+    # Using both filters
+    # Filter 1: Same categories that match Deep Fashion Dataset
+    # Filter 2: At least 100 images for each category
+    # Results: 
+    # Tshirts         7065
+    # Shirts          3215
+    # Casual Shoes    2845
+    # Sports Shoes    2036
+    # Tops            1762
+    # Heels           1323
+    # Flip Flops       914
+    # Sandals          897
+    # Formal Shoes     637
+    # Jeans            608
+    # Shorts           547
+    # Trousers         530
+    # Flats            500
+    # Dresses          464
+    # Track Pants      304
+    # Sweatshirts      285
+    # Sweaters         277
+    # Jackets          258
+    # Nightdress       189
+    # Leggings         177
+    # Night suits      141
+    # Skirts           128
+    NUM_CLASSES = 22
+    # NUM_CLASSES = 54 # used only for train
     PATIENCE = 1000  #Number of epochs to wait if no improvement and then stop the training.    TOP_K_AQE = 15
     TOP_K_AQE = 15
 
