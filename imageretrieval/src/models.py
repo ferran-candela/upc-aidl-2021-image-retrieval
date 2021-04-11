@@ -155,6 +155,7 @@ class Model:
 class ModelManager:
     def __init__(self, device, models_dir):
         self.models =   [  
+                            'vgg16_custom',
                             # 'vgg16', # Documentation says input must be 224x224
                             # 'resnet50',
                             # 'inception_v3', # [batch_size, 3, 299, 299]
@@ -162,7 +163,6 @@ class ModelManager:
                             # 'densenet161',
                             # 'efficient_net_b4',
                             # 'resnet50_custom',
-                            'vgg16_custom',
                             #'inception_v3_custom',
                             #'inception_resnet_v2_custom',
                             #'densenet161_custom',
@@ -297,27 +297,35 @@ class ModelManager:
             from torchvision.models import vgg16
             # Input must be 224x224
             model = vgg16(pretrained=True)
+
             features_model = model.features
             
             for layer in features_model[:24]:  # Freeze layers 0 to 23
                 for param in layer.parameters():
                     param.requires_grad = False
+
             for layer in features_model[24:]:  # Train layers 24 to 30
                 for param in layer.parameters():
                     param.requires_grad = True
 
-            #Define last layer for classifier
-            num_features = 512 * 7 * 7
-            feature_classifier = nn.Linear(in_features=num_features, out_features=ModelTrainConfig.NUM_CLASSES)
-            model = nn.Sequential(
-                            features_model,
-                            nn.Flatten(),
-                            feature_classifier
-                        )
+            # Use same classifier that proposed in vgg16 but with our num_classes as output
+            model.classifier = nn.Sequential(
+                nn.Linear(512 * 7 * 7, 4096),
+                nn.ReLU(True),
+                nn.Dropout(),
+                nn.Linear(4096, 4096),
+                nn.ReLU(True),
+                nn.Dropout(),
+                nn.Linear(4096, ModelTrainConfig.NUM_CLASSES),
+            )
 
             criterion = nn.CrossEntropyLoss()
             lr = ModelTrainConfig.get_learning_rate(model_name=model_name)
-            optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+
+            # Only pass to the optimizers the parameters that require grads
+            params_to_train = filter(lambda p: p.requires_grad, model.parameters())
+            optimizer = optim.SGD(params_to_train, lr=lr, momentum=0.9)
+            # optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
 
             is_pretrained = False
             input_resize = 224
