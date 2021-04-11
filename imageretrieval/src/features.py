@@ -148,7 +148,7 @@ class FeaturesManager:
         }
     
     def load_from_aqe_features_checkpoint(self, model_name):
-        checkpoint = torch.load(self.get_aqe_features_file_path(model_name))
+        checkpoint = torch.load(self.get_aqe_features_file_path(model_name), map_location=self.device)
         # checkpoint = {
         #     "model_name": # same that in model checkpoint,
         #     "model_state_dict": # same that in model checkpoint,
