@@ -21,9 +21,11 @@ class RetrievalEngine:
         self.features_manager = FeaturesManager(device, self.model_manager)
         self.model_features = {}
 
+
     # Returns the available models to use
     def get_model_names(self):
         return self.model_manager.get_model_names()
+
 
     # Load the precomputed features from dataset
     def load_models_and_precomputed_features(self):
@@ -34,6 +36,18 @@ class RetrievalEngine:
             except Exception as e:
                 print('\nFailed to load model: '+ str(e))
     
+
+    def get_query_features(self, model_name, query_image_path):
+        model_features = self.model_features[model_name]
+        # Preprocess query image
+        # Tensor [1, 3, input_resize, input_resize]
+        query = FashionProductDataset.preprocess_image(query_image_path, model_features['model'].get_input_transform())
+        query = torch.unsqueeze(query, 0)
+
+        # Compute features
+        return self.compute_features(model_name, query)
+
+
     def query(self, model_name, query_image_path, top_k):
         print('Query for model ' + model_name)
         model_features = self.model_features[model_name]
@@ -50,6 +64,7 @@ class RetrievalEngine:
         ranking = (-scores).argsort()[:top_k]
         return self.convert_ranking_to_image_ids(model_name, ranking)
         
+
     def convert_ranking_to_image_ids(self, model_name, ranking):
         model_features = self.model_features[model_name]
         ranking = ranking.numpy()
@@ -59,6 +74,7 @@ class RetrievalEngine:
             id_ranking[i] = data.iloc[ranking[i]]['id']
         
         return id_ranking
+
 
     def compute_features(self, model_name, query):
         model_features = self.model_features[model_name]
@@ -72,14 +88,23 @@ class RetrievalEngine:
         features = postprocess_features(numpy_features, model_features['pca'])
         return torch.tensor(features).squeeze()
 
+
     def cosine_similarity(self, model_name, query_features):
         features = self.model_features[model_name]['normalized_features']
         return features @ query_features.T
     
+
     def get_image_path(self, img_id):
         base_dir = FoldersConfig.DATASET_BASE_DIR
         images_path = os.path.join(base_dir, FashionProductDataset.IMAGE_DIR_NAME)
         return os.path.join(images_path, f"{img_id}{FashionProductDataset.IMAGE_FORMAT}")
+
+
+    def get_image_deep_fashion_path(self, img_id):
+        base_dir = FoldersConfig.DATASET_BASE_DIR
+        images_path = os.path.join(base_dir, FashionProductDataset.IMAGE_DIR_NAME)
+        return os.path.join(images_path, f"{img_id}")
+        
 
     def print_query_results(self, query_image_id, ranking, description):
         import matplotlib.pyplot as plt
@@ -111,6 +136,7 @@ class RetrievalEngine:
             ax[i].set_yticks([])
             ax[i].set_title(str(i) + " - id:" + str(ranking[i]) )
         plt.show()
+
 
 if __name__ == "__main__":
 
