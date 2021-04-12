@@ -325,7 +325,8 @@ class ModelManager:
             # Only pass to the optimizers the parameters that require grads
             params_to_train = filter(lambda p: p.requires_grad, model.parameters())
             optimizer = optim.SGD(params_to_train, lr=lr, momentum=0.9)
-            # optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+            #optimizer = optim.AdamW(params_to_train, lr=lr, weight_decay=0.01)
+
 
             is_pretrained = False
             input_resize = 224

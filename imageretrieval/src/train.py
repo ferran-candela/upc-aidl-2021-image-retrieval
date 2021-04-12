@@ -402,10 +402,10 @@ def train():
             train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
             val_dataset = FashionProductDataset(dataset_base_dir, validate_df, transform=input_transform)
-            val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
+            val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
             
             test_dataset = FashionProductDataset(dataset_base_dir, test_df, transform=input_transform)
-            test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+            test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
             if DEBUG:print(model.get_model())
 
@@ -423,11 +423,15 @@ def train():
 
             # TEST
             test_dataset = FashionProductDataset(dataset_base_dir, test_df, transform=input_transform)
-            test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+            test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
             
             test_loss, test_acc = test_model(model=model.get_model(), criterion=model.get_criterion(), test_loader=test_loader, modelname=model.get_name()) 
             print ('Test (Overall), Loss: {:.4f}, Accuracy: {:.4f}'.format(test_loss,test_acc))
 
 
 if __name__ == "__main__":
+
+    if(device.type == 'cuda' and torch.cuda.is_available()):
+        torch.cuda.empty_cache()
+
     train()

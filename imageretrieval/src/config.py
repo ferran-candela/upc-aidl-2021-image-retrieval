@@ -44,6 +44,9 @@ class ModelBatchSizeConfig:
 
         if model_name == 'resnet50_custom':
             batch_size = 10
+        
+        if model_name == 'vgg16_custom':
+            batch_size = 20
 
         return batch_size
     
@@ -142,7 +145,7 @@ class ModelTrainConfig:
         lr = 0.0001
         
         if model_name == 'vgg16_custom':
-            # TODO: To be defined
+            lr = 0.0001
             pass
 
         if model_name == 'resnet50_custom':
