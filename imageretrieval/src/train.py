@@ -31,10 +31,10 @@ def accuracy(out, labels):
     _,pred = torch.max(out, dim=1)
     return torch.sum(pred==labels).item()
 
-def train_epoch(train_loader, model, optimizer, criterion):
+def train_epoch(train_loader, model, optimizer, criterion, auxbranch=False):
     # switch to train mode
-    model.train()
-
+    model.train()    
+    
     loader_len = len(train_loader)
     log_interval = 10
     batch_loss = 0.0
@@ -49,10 +49,16 @@ def train_epoch(train_loader, model, optimizer, criterion):
         optimizer.zero_grad()
 
         # compute output
-        outputs = model(images_batch)
-
-        # loss            
-        loss = criterion(outputs, labels_batch)
+        if auxbranch:
+            outputs, aux_outputs = model(images_batch)
+            # loss            
+            loss1 = criterion(outputs, labels_batch)
+            loss2 = criterion(aux_outputs, labels_batch)
+            loss = loss1 + 0.4*loss2
+        else:
+            outputs = model(images_batch)
+            # loss            
+            loss = criterion(outputs, labels_batch)
 
         loss.backward()
         optimizer.step()
@@ -87,10 +93,8 @@ def val_epoch(validate_loader, model, criterion):
             images_batch = images_batch.to(device)
             labels_batch = labels_batch.to(device)
 
-            # compute output
             outputs = model(images_batch)
-
-            # loss
+            # loss            
             loss = criterion(outputs, labels_batch)
 
             # statistics
@@ -163,12 +167,18 @@ def train_scratch_model(model, train_loader, val_loader=None, test_loader=None):
         fields = ['ModelName','Criterion','Optimizer','lr','Epoch', 'Step','Loss','Accuracy', 'Time']
         logfile = LogFile(fields) 
 
+        #With auxBranch we need to evaluate train loss for every branch
+        auxbranch = False
+        modelname = model.get_name()
+        if modelname == 'inception_v3_custom':
+            auxbranch = True
+
         loss_min = np.Inf
         best_acc = 0.
-        num_epochs = ModelTrainConfig.get_num_epochs(model_name=model.get_name())
+        num_epochs = ModelTrainConfig.get_num_epochs(model_name=modelname)
         for epoch in range(1, num_epochs + 1):
             model.to_device()
-            epoch_train_loss,epoch_train_acc = train_epoch(train_loader=train_loader,model=model.get_model(),optimizer=model.get_optimizer(),criterion=model.get_criterion())
+            epoch_train_loss,epoch_train_acc = train_epoch(train_loader=train_loader,model=model.get_model(),optimizer=model.get_optimizer(),criterion=model.get_criterion(),auxbranch=auxbranch)
             avg_train_loss.append(epoch_train_loss)
             avg_train_acc.append(epoch_train_acc)
 
@@ -296,7 +306,7 @@ def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validat
 
     return train_df, test_df, validate_df
 
-def test_model(model, criterion, test_loader, modelname):
+def test_model(model, criterion, test_loader, modelname ):
     #create logfile for testing statistics
     fields = ['ModelName','Criterion','Step','Loss','Accuracy', 'Time']
     logfile = LogFile(fields) 
@@ -321,10 +331,8 @@ def test_model(model, criterion, test_loader, modelname):
             images_batch = images_batch.to(device)
             labels_batch = labels_batch.to(device)
 
-            # compute output
             outputs = model(images_batch)
-
-            # loss
+            # loss            
             loss = criterion(outputs, labels_batch)
 
             # statistics

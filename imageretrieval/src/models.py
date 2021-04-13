@@ -155,15 +155,15 @@ class Model:
 class ModelManager:
     def __init__(self, device, models_dir):
         self.models =   [  
-                            'vgg16_custom',
+                            #'vgg16_custom',
                             # 'vgg16', # Documentation says input must be 224x224
                             # 'resnet50',
-                            # 'inception_v3', # [batch_size, 3, 299, 299]
+                            #'inception_v3', # [batch_size, 3, 299, 299]
                             # 'inception_resnet_v2', #needs : [batch_size, 3, 299, 299]
                             # 'densenet161',
                             # 'efficient_net_b4',
                             # 'resnet50_custom',
-                            #'inception_v3_custom',
+                            'inception_v3_custom',
                             #'inception_resnet_v2_custom',
                             #'densenet161_custom',
                             #'efficient_net_b4_custom'
@@ -358,7 +358,9 @@ class ModelManager:
         if model_name == 'inception_v3_custom':
             from torchvision.models import inception_v3
             model = inception_v3(pretrained=True)
-            
+            #has auxiliary output. It's usefull only for train. Don't disable
+            #model.aux_logits=False
+
             #Freeze all
             for param in model.parameters():
                 param.requires_grad = False
