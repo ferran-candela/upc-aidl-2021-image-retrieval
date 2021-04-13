@@ -358,7 +358,9 @@ class ModelManager:
         if model_name == 'inception_v3_custom':
             from torchvision.models import inception_v3
             model = inception_v3(pretrained=True)
-            
+            #has auxiliary output. It's usefull only for train. Don't disable
+            #model.aux_logits=False
+
             #Freeze all
             for param in model.parameters():
                 param.requires_grad = False
