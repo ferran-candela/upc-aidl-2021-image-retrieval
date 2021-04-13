@@ -215,6 +215,11 @@ def evaluate_models():
                     } 
                 logfile.writeLogFile(values)
 
+                # Free memory
+                del features
+                del full_df
+                del loaded_model_features
+
             if(features_manager.is_aqe_feature_saved(model_name)):
                 print('\n\n## Evaluating AQE features ', model_name)
 

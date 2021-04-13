@@ -9,11 +9,15 @@ import { HttpClient } from '@angular/common/http';
 })
 export class SearchComponent implements OnInit {
 
-  SERVER_URL = "/api/search";
+  SERVER_URL = "/api";
+  SEARCH_URL = this.SERVER_URL + "/search"
+  MODELS_URL = this.SERVER_URL + "/models"
+  IMAGES_URL = this.SERVER_URL + "/images"
 
   uploadForm: FormGroup;
   imageURL: string;
   ranking: number[];
+  models: string[]
 
   constructor(
     private formBuilder: FormBuilder,
@@ -21,6 +25,7 @@ export class SearchComponent implements OnInit {
   ) {
     this.imageURL = '';
     this.ranking = [];
+    this.models = [];
     this.uploadForm = this.formBuilder.group({
       fileName: 'Select image',
       searchImage: [''],
@@ -30,6 +35,7 @@ export class SearchComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.loadModels();
   }
 
   onFileSelect(event: any) {
@@ -57,6 +63,15 @@ export class SearchComponent implements OnInit {
     }
   }
 
+  loadModels() {
+    this.httpClient.get<any>(this.MODELS_URL).subscribe(
+      (res) => {
+        this.models = res.models !== undefined ? res.models : [];
+      },
+      (err) => console.log(err)
+    );
+  }
+
   onSubmit() {
     const formData = new FormData();
 
@@ -70,7 +85,7 @@ export class SearchComponent implements OnInit {
       formData.append('model', model.value);
       formData.append('topK', topK.value);
 
-      this.httpClient.post<any>(this.SERVER_URL, formData).subscribe(
+      this.httpClient.post<any>(this.SEARCH_URL, formData).subscribe(
         (res) => {
           this.ranking = res.ranking;
         },

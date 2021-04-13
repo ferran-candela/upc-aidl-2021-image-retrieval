@@ -88,6 +88,23 @@
             }
         },
         {
+            "name": "Finetuning",
+            "type": "python",
+            "request": "launch",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/finetune.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${cwd}",
+                "DEVICE": "cuda",
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
+            }
+        },
+        {
             "name": "Engine test",
             "type": "python",
             "request": "launch",
@@ -175,6 +192,21 @@ export GT_SELECTION_MODE=Random &&
 export MAP_N_QUERIES=600 &&
 export TOP_K_IMAGE=15 &&
 python ${PROJECT_ROOT}/imageretrieval/src/evaluation.py
+```
+
+# Command line execution for finetuning
+Activate the conda environment, setup environment vars and execute evaluation.py.
+
+```
+export PYTHONPATH=${PROJECT_ROOT} &&
+export DEVICE=cpu &&
+export DEBUG=True &&
+export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
+export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
+export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
+export MAP_N_QUERIES=600 &&
+python ${PROJECT_ROOT}/imageretrieval/src/finetune.py
 ```
 
 

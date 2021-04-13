@@ -372,4 +372,7 @@ def extract_models_features():
         logfile.saveLogFile_to_csv("feature_extraction")
 
 if __name__ == "__main__":
+    if(device.type == 'cuda' and torch.cuda.is_available()):
+        torch.cuda.empty_cache()
+
     extract_models_features()
