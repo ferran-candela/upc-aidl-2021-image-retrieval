@@ -36,9 +36,13 @@ def add_column_with_article_type_equivalence(deep_fashion, map_to_product_fashio
     deep_fashion_df = pd.read_csv(deep_fashion, error_bad_lines=False)
     map_to_product_fashion_df = pd.read_csv(map_to_product_fashion)
 
-    deep_fashion_with_article_type = deep_fashion_df.merge(map_to_product_fashion_df, on='deep_fashion_category_name', how='left')
+    deep_fashion_with_article_type_df = deep_fashion_df.merge(map_to_product_fashion_df, on='deep_fashion_category_name', how='left')
+    deep_fashion_with_article_type_df['id'] = deep_fashion_with_article_type_df.index + 100000
 
-    deep_fashion_with_article_type.to_csv(output_path)
+    deep_fashion_with_article_type_df = deep_fashion_with_article_type_df[['id', 'path', 'deep_fashion_category_name', 'product_fashion_article_type', 'dataset']]
+    deep_fashion_with_article_type_df.columns = ['id', 'path', 'categoryName', 'articleType', 'dataset']
+
+    deep_fashion_with_article_type_df.to_csv(output_path, index=False)
 
 
 
