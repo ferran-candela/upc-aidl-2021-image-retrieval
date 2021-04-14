@@ -120,6 +120,37 @@
                 "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
                 "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/"
             }
+        },
+        {
+            "name": "Prepare datasets",
+            "type": "python",
+            "request": "launch",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/prepare_datasets.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${cwd}",
+                "DEVICE": "cuda",
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
+                "RESOURCES_DIR": "${PROJECT_ROOT}/imageretrieval/resources/",
+            }
+        },
+        {
+            "name": "Evaluate deep fashion",
+            "type": "python",
+            "request": "launch",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/evaluate_deep_fashion.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/Project/Fashion_Product_Full/",
+                "WORK_DIR": "${PROJECT_ROOT}/Project/Fashion_Product_Full/processed_datalab/",
+                "LOG_DIR": "${PROJECT_ROOT}/Project/Fashion_Product_Full/processed_datalab/log/"
+            }
         }
     ]
 }

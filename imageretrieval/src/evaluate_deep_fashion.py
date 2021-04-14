@@ -43,6 +43,8 @@ def create_ground_truth_queries(full_df, test_df):
 
 def make_ground_truth_matrix(test_df, full_df, entries):
     n_queries = len(entries)
+    print("Number of queries =")
+    print(n_queries)
     q_indx = np.zeros(shape=(n_queries, ), dtype=np.int32)
     y_true = np.zeros(shape=(n_queries, full_df.shape[0]), dtype=np.uint8)
 
@@ -62,7 +64,6 @@ def make_ground_truth_matrix(test_df, full_df, entries):
         gt_indices = [full_df.index[full_df['id'] == f][0] for f in gt_ids]
         gt_indices.sort()
 
-        y_true[it][q_indx[it]] = 1
         y_true[it][gt_indices] = 1
 
         print(f'\rMaking ground truth matrix... {it}/{len(entries)}', end='', flush=True)
@@ -99,7 +100,7 @@ def prepare_data_to_evaluate(dataset_base_dir):
 def features_evaluation(features, full_df, test_df, num_queries):
 
     queries = create_ground_truth_queries(full_df, test_df)
-    print('\nMake ground truth matrix...')
+
     y_true = make_ground_truth_matrix(test_df, full_df, queries)
 
     # Compute mean Average Precision (mAP)
@@ -110,6 +111,32 @@ def features_evaluation(features, full_df, test_df, num_queries):
     mAP = f'{df.ap.mean():0.04f}'
 
     return mAP
+
+
+def cosine_similarity(features, imgidx, top_k):
+    # This gives the same rankings as (negative) Euclidean distance 
+    # when the features are L2 normalized (as ours are).
+    # The cosine similarity can be efficiently computed for all images 
+    # in the dataset using a matrix multiplication!
+    
+    query = features[imgidx]
+    print(query)
+    print(query.shape)
+    scores = features @ query 
+    # Return top K ids
+    ranking = (-scores).argsort()[:top_k]
+    return ranking
+
+
+def evaluation_hits(full_df, test_df, ranking):
+    # Calculate how many images returned in the ranking are "correct" of the total
+
+    queries = create_ground_truth_queries(full_df, test_df)
+
+    y_true = make_ground_truth_matrix(test_df, full_df, queries)
+
+    imagesIdx = ranking.tolist()
+    return round(np.mean(y_true[0]), 4)
 
 
 def evaluate_models():
@@ -160,6 +187,17 @@ def evaluate_models():
 
     full_df = pd.read_csv(os.path.join(dataset_base_dir, "styles.csv"), error_bad_lines=False)
 
+    # Compute evaluation Hits
+    # print('\nComputing evaluation Hits...')
+    # accuracy = []
+    # for i,feature in enumerate(features):
+    #     ranking = cosine_similarity(features, i, RetrievalEvalConfig.TOP_K_IMAGE)
+    #     precision = evaluation_hits(full_df, test_df, ranking)
+    #     accuracy.append(precision)
+    # precision = np.mean(accuracy)
+    # print(f'\nPrecision Hits: {precision:0.04f}')
+
+    # Compute mAP
     mAP = features_evaluation(features, full_df, test_df, num_queries)
 
     #LOG
