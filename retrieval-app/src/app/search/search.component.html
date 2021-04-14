@@ -7,7 +7,7 @@
         <input matInput formControlName="fileName" readonly name="fileName" />
 
         <!-- Browse Button -->
-        <button mat-mini-fab class="upload-button" color="primary" (click)="fileInput.click()">
+        <button mat-mini-fab class="upload-button" color="primary" type="button" (click)="fileInput.click()">
           <mat-icon>file_upload</mat-icon>
         </button>
       </mat-toolbar>
@@ -15,8 +15,6 @@
       <!-- Select File -->
       <input type="file" #fileInput class="file-input" accept="image/jpeg" name="searchImage" (change)="onFileSelect($event)" />
     </mat-form-field>
-
-
 
     <!-- Assign model -->
     <mat-form-field class="params">

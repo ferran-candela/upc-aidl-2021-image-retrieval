@@ -28,22 +28,28 @@ def allowed_file(filename):
 
 class SearchResource(Resource):
     def post(self):
-        model_name = request.form.get('model')
-        topK = int(request.form.get('topK'))
-        file = request.files['image']
-        if file and allowed_file(file.filename):
-            # From flask uploading tutorial
-            filename = secure_filename(file.filename)
-            tmpFile = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(tmpFile)
-            ranking = retrieval_engine.query(model_name, tmpFile, topK)
-            resp = search_schema.dump({
-                'ranking': ranking,
-                'success': True 
-                })
-            os.remove(tmpFile)
-            return resp
-        else:
+        try:
+            model_name = request.form.get('model')
+            topK = int(request.form.get('topK'))
+            file = request.files['image']
+            if file and allowed_file(file.filename):
+                # From flask uploading tutorial
+                filename = secure_filename(file.filename)
+                tmpFile = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(tmpFile)
+                ranking = retrieval_engine.query(model_name, tmpFile, topK)
+                resp = search_schema.dump({
+                    'ranking': ranking,
+                    'success': True 
+                    })
+                os.remove(tmpFile)
+                return resp
+            else:
+                # return error
+                resp = search_schema.dump({ 'success': False })
+                return resp
+        except Exception as e:
+            print('\n', e)
             # return error
             resp = search_schema.dump({ 'success': False })
             return resp

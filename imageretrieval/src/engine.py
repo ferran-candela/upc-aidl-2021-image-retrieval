@@ -30,11 +30,13 @@ class RetrievalEngine:
     # Load the precomputed features from dataset
     def load_models_and_precomputed_features(self):
         for model_name in self.get_model_names():
+            print('Loading model: '+ model_name)
             try:
                 loaded_model_features = self.features_manager.load_from_norm_features_checkpoint(model_name)
                 self.model_features[model_name] = loaded_model_features
             except Exception as e:
                 print('\nFailed to load model: '+ str(e))
+            print('Models loaded.')
     
 
     def get_query_features(self, model_name, query_image_path):
@@ -53,15 +55,19 @@ class RetrievalEngine:
         model_features = self.model_features[model_name]
         # Preprocess query image
         # Tensor [1, 3, input_resize, input_resize]
+        print('Preprocessing...')
         query = FashionProductDataset.preprocess_image(query_image_path, model_features['model'].get_input_transform())
         query = torch.unsqueeze(query, 0)
 
         # Compute features
+        print('Computing features...')
         query_features = self.compute_features(model_name, query)
         # Perform similarity
+        print('Computing similarity...')
         scores = self.cosine_similarity(model_name, query_features)
         # Return top K ids
         ranking = (-scores).argsort()[:top_k]
+        print('Convert result to image ids...')
         return self.convert_ranking_to_image_ids(model_name, ranking)
         
 
@@ -147,11 +153,11 @@ if __name__ == "__main__":
     # img_id = 26267
     img_id = 8080
     query_path = engine.get_image_path(img_id)
-    
+    # query_path = '/tmp/43573.jpg'
+
     model_names = engine.get_model_names()
 
-    # for model_name in model_names:
-    model_name = 'resnet50_custom'
-    top_k_ranking = engine.query(model_name, query_path, top_k)
-    print(model_name, ': ', top_k_ranking)
-    engine.print_query_results(query_image_id=img_id, ranking=top_k_ranking, description=model_name + " - COSINE SIMILARITY")
+    for model_name in model_names:
+        top_k_ranking = engine.query(model_name, query_path, top_k)
+        print(model_name, ': ', top_k_ranking)
+        engine.print_query_results(query_image_id=img_id, ranking=top_k_ranking, description=model_name + " - COSINE SIMILARITY")

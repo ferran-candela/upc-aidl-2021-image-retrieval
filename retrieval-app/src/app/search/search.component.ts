@@ -87,7 +87,11 @@ export class SearchComponent implements OnInit {
 
       this.httpClient.post<any>(this.SEARCH_URL, formData).subscribe(
         (res) => {
-          this.ranking = res.ranking;
+          if(res.success === true) {
+            this.ranking = res.ranking;
+          } else {
+            this.ranking = []
+          }          
         },
         (err) => console.log(err)
       );
