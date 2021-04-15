@@ -1,0 +1,104 @@
+.file-input {
+    display: none;
+}
+
+.mat-form-field.upload {
+    margin: 20px 0;
+    width: 300px !important;
+}
+
+.mat-form-field.params {
+    margin: 20px 0;
+    width: 200px !important;
+}
+
+.mat-toolbar-single-row {
+    height: auto !important;
+    background: transparent;
+}
+
+.upload-button {
+    margin-right: -10px;
+    margin-left: 10px;
+}
+
+.mat-form-field {
+    width: 100%;
+    display: inline-block;
+    vertical-align: bottom;
+    padding: 10px;
+}
+
+.search {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.uploadForm {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+}
+
+.imagePreview {
+    width: 350px;
+    vertical-align: top;
+}
+
+.imageResults {
+    width: 100%;
+    width: -webkit-calc(100% - 350px);
+    width: -moz-calc(100% - 350px);
+    width: calc(100% - 350px);
+}
+
+.imagePreview, .imageResults {
+    display: inline-block;
+    margin-top: 10px;
+
+    img {
+        height: 200px;
+    }
+}
+
+#uploadFile {
+    top: 0px;
+    left: 0px;
+    width: 100%;    
+    z-index: 9;
+    opacity: 0;
+    height: 100%;
+    cursor: pointer;
+    position: absolute;
+}
+
+input {
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.search-icon.mat-icon.mat-icon-inline {
+    font-size: 1.25rem;
+    line-height: 1.25rem;
+    height: 1.25rem;
+}
+
+.search-label {
+    vertical-align: middle;
+    margin-left: 5px;
+}
+
+::ng-deep .mat-form-field-flex {
+    height: 65px;
+}
+
+::ng-deep .mat-form-field-infix {
+    height: 50px;
+    line-height: 50px;
+}
+
+.uploadForm {
+    background-color: #f2f2f2;
+    height: 100px;
+}

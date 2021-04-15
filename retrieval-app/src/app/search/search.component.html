@@ -1,0 +1,55 @@
+<div>
+  <form [formGroup] = "uploadForm" class="uploadForm" (ngSubmit)="onSubmit()">
+    <mat-form-field class="upload">
+      <mat-toolbar>
+        <!-- Display files names -->
+        <!-- <input matInput [(ngModel)]="fileName" readonly name="fileName" /> -->
+        <input matInput formControlName="fileName" readonly name="fileName" />
+
+        <!-- Browse Button -->
+        <button mat-mini-fab class="upload-button" color="primary" type="button" (click)="fileInput.click()">
+          <mat-icon>file_upload</mat-icon>
+        </button>
+      </mat-toolbar>
+
+      <!-- Select File -->
+      <input type="file" #fileInput class="file-input" accept="image/jpeg" name="searchImage" (change)="onFileSelect($event)" />
+    </mat-form-field>
+
+    <!-- Assign model -->
+    <mat-form-field class="params">
+      <mat-label>Model</mat-label>
+      <mat-select formControlName="model">
+        <mat-option *ngFor="let model of models" [value]="model">{{ model }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Assign TopK -->
+    <mat-form-field class="params">
+      <mat-label>Top K</mat-label>
+      <mat-select formControlName="topK">
+        <mat-option value="5">5</mat-option>
+        <mat-option value="10">10</mat-option>
+        <mat-option value="15">15</mat-option>
+        <mat-option value="20">20</mat-option>
+        <mat-option value="30">30</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" type="submit" class="search">
+      <mat-icon class="search-icon" inline=true>image_search</mat-icon>
+      <span class="search-label">Search similar</span>
+    </button>
+  </form>
+
+  <!-- Image Preview -->
+  <div class="imagePreview" *ngIf="imageURL && imageURL !== ''">
+    <h2>Query</h2>
+    <img [src]="imageURL" [alt]="uploadForm.value.name">
+  </div>
+
+  <div class="imageResults" *ngIf="ranking.length > 0">
+    <h2>Results</h2>
+    <img *ngFor="let imageId of ranking" src="{{ IMAGES_URL + '/' + imageId }}" [alt]="uploadForm.value.name">
+  </div>
+</div>

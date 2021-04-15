@@ -1,0 +1,35 @@
+version: '3'
+services:
+    api:
+        build:
+            context: .
+            dockerfile: Dockerfile.api
+        image: imageretrieval_api:1.0.0
+        ports:
+        - "5000:5000"
+        command: ['gunicorn', 'entrypoint:app', '--workers', '1', '--bind=0.0.0.0:5000', '--timeout', '300', '--access-logfile', '-', '--error-logfile', '-', '--log-level', 'debug']
+        # command: ['ls', '-l', '/opt/datasets/Fashion_Product_Full_Workdir']
+        environment:
+            - PYTHONUNBUFFERED=TRUE
+            - DEVICE=cpu
+            - DEBUG=True
+            - DATASET_BASE_DIR=/opt/datasets/Fashion_Product_Full/fashion-dataset
+            - DATASET_LABELS_DIR=/opt/datasets/Fashion_Product_Full/fashion-dataset/styles.csv
+            - WORK_DIR=/opt/datasets/Fashion_Product_Full_Workdir
+            - LOG_DIR=/opt/datasets/Fashion_Product_Full_Workdir/log/
+        volumes:
+            - ${DATASET_ROOT}/datasets/Fashion_Product_Full:/opt/datasets/Fashion_Product_Full
+            - ${WORKDIR_ROOT}/datasets/Fashion_Product_Full_Workdir:/opt/datasets/Fashion_Product_Full_Workdir
+            # Stores the pretrained checkpoints
+            - /tmp/imageretrieval/checkpoints:/root/.cache/torch/hub/checkpoints
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile.app
+        image: imageretrieval_app:1.0.0
+        ports:
+            - "80:80"
+        depends_on: 
+            - api
+        links:
+            - api:retrieval-api
