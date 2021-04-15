@@ -45,7 +45,6 @@ def make_ground_truth_matrix(test_df, full_df, entries):
     n_queries = len(entries)
     print("Number of queries =")
     print(n_queries)
-    q_indx = np.zeros(shape=(n_queries, ), dtype=np.int32)
     y_true = np.zeros(shape=(n_queries, full_df.shape[0]), dtype=np.uint8)
 
     for it, entry in enumerate(entries):
@@ -54,7 +53,6 @@ def make_ground_truth_matrix(test_df, full_df, entries):
         # lookup query index
 
         ident = int(entry['id'])
-        q_indx[it] = test_df.index[test_df['id'] == ident][0]
 
         # lookup gt imagesId
         gt = entry['gt']
@@ -71,21 +69,23 @@ def make_ground_truth_matrix(test_df, full_df, entries):
     return y_true
 
 
-def evaluate_deep_fashion(s, y_true):
+def evaluate_deep_fashion(scores, y_true):
     aps = []
     for i, y_t in enumerate(y_true):
+        s = scores[:,i].numpy()
         ap = average_precision_score(y_t, s)
         aps.append(ap)
     
     #print(f'\nAPs {aps}')
-    df = pd.DataFrame({'ap': aps}, index=q_indx)
-    return df
+
+    return np.nanmean(aps)
 
 
 def prepare_data_to_evaluate(dataset_base_dir):
     test_df = pd.read_csv(os.path.join(dataset_base_dir, "deep_fashion_with_article_type.csv"), error_bad_lines=False)
     
     article_types = test_df.drop_duplicates(subset = ["articleType"])['articleType'].values.tolist()
+    article_types = [x for x in article_types if str(x) != 'nan']
     print(article_types)
 
     test_subset_df = pd.DataFrame()
@@ -105,15 +105,13 @@ def features_evaluation(features, full_df, test_df, num_queries):
 
     # Compute mean Average Precision (mAP)
     print('\nComputing mean Average Precision (mAP)...')
-    df = evaluate_deep_fashion(features, y_true)
-    print(f'\nmAP: {df.ap.mean():0.04f}')
-
-    mAP = f'{df.ap.mean():0.04f}'
+    mAP = evaluate_deep_fashion(features, y_true)
+    print(f'\nmAP: {mAP:0.04f}')
 
     return mAP
 
 
-def cosine_similarity(features, imgidx, top_k):
+def cosine_similarity(features, imgidx):
     # This gives the same rankings as (negative) Euclidean distance 
     # when the features are L2 normalized (as ours are).
     # The cosine similarity can be efficiently computed for all images 
@@ -173,19 +171,29 @@ def evaluate_models():
     # Calculate features
     print('\nCalculating features for deep fashion...')
 
-    features = torch.tensor([])
+    queries = []
 
     engine = RetrievalEngine(device, FoldersConfig.WORK_DIR)
     engine.load_models_and_precomputed_features()
+
+    # LOAD FEATURES
+    print('\nLoading features from checkpoint...')
+    loaded_model_features = features_manager.load_from_norm_features_checkpoint(model_name)
+    features = loaded_model_features['normalized_features']
 
     for img_path in test_df.path.values.tolist():
         query_path = engine.get_image_deep_fashion_path(img_path)
 
         # for model_name in model_names:
         model_name = 'resnet50_custom'
-        features = engine.get_query_features(model_name, query_path)
+        query_features = engine.get_query_features(model_name, query_path)
+        queries.append(query_features)
 
-    full_df = pd.read_csv(os.path.join(dataset_base_dir, "styles.csv"), error_bad_lines=False)
+    queries = np.vstack(queries)
+
+    scores = features @ queries.T
+
+    full_df = loaded_model_features['data']
 
     # Compute evaluation Hits
     # print('\nComputing evaluation Hits...')
@@ -198,7 +206,7 @@ def evaluate_models():
     # print(f'\nPrecision Hits: {precision:0.04f}')
 
     # Compute mAP
-    mAP = features_evaluation(features, full_df, test_df, num_queries)
+    mAP = features_evaluation(scores, full_df, test_df, num_queries)
 
     #LOG
     processtime = proctimer.stop()
