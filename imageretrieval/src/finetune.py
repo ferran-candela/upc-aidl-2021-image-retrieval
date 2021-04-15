@@ -1,7 +1,8 @@
 import os
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.decomposition import PCA
-from imageretrieval.src.evaluation import make_ground_truth_matrix, create_ground_truth_queries, evaluate    
+from imageretrieval.src.evaluation import make_ground_truth_matrix, create_ground_truth_queries, evaluate, cosine_similarity, evaluation_hits    
 from imageretrieval.src.models import ModelManager
 from imageretrieval.src.features import FeaturesManager,postprocess_features,fit_pca
 from imageretrieval.src.dataset import DatasetManager
@@ -50,7 +51,7 @@ def PCA_VarianceDimension_Plot(model_name,features,PCAdimension,save_path):
     plt.close(fig)
 
 
-def PCA_Tune(model_name,features,dataframe,querylist,pca_dimensions,save_path):
+def PCA_Tune(model_name,features,dataframe,querylist,pca_dimensions,save_path,accuracy_type="pHits"):
 
     patiente = 2
 
@@ -66,8 +67,14 @@ def PCA_Tune(model_name,features,dataframe,querylist,pca_dimensions,save_path):
         print('\nPostprocessing features.... pca: ', str(dimension))        
         features_pp = postprocess_features(features,pca)
         # Calculate accuracy over the postprocesed features
-        print('\nCalculating accuracy (mAP) for query.... - PCA: ', str(dimension))        
-        accuracy, time_taken = accuracy_mAP_calc(features_pp[:],dataframe,querylist)
+
+        if accuracy_type=='mAP':
+            print('\nCalculating accuracy (mAP) for query.... - PCA: ', str(dimension))        
+            accuracy, time_taken = accuracy_mAP_calc(features_pp[:],dataframe,querylist)
+        else:
+            print('\nCalculating accuracy (precision Hits) for query.... - PCA: ', str(dimension))        
+            accuracy, time_taken = accuracy_precisionHits_calc(features_pp[:],dataframe,querylist)
+
         # 
         pca_time.append(time_taken)
         pca_accuracy.append(accuracy)
@@ -118,6 +125,28 @@ def accuracy_mAP_calc(features,dataframe,querylist):
 
     return round(df.ap.mean(),4),processtime
 
+def accuracy_precisionHits_calc(features,dataframe,querylist):
+    #mAP accuracy
+
+    proctimer = ProcessTime()
+    proctimer.start()
+
+    #compute the similarity matrix
+    S = features @ features.T
+
+    queries = create_ground_truth_queries( dataframe, dataframe, "List",0, querylist)
+    q_indx, y_true = make_ground_truth_matrix(dataframe, queries)
+
+    accuracy = []
+    for index in q_indx:
+        ranking = cosine_similarity(features, index, RetrievalEvalConfig.TOP_K_IMAGE)
+        precision = evaluation_hits(dataframe, dataframe, index, ranking)
+        accuracy.append(precision)
+    precision = np.mean(accuracy)
+    processtime = proctimer.stop()  
+
+    return round(precision,4),processtime
+
                 
 def generate_pca_interval(dimension_ini, dimension_end, interval):
     step = int( (dimension_end - dimension_ini) / interval )
@@ -152,16 +181,16 @@ def calculate_best_pca(model_name,features,data,querylist,tunefilespath):
             PCA_VarianceDimension_Plot(model_name,features,dimension,tunefilespath)
 
         #calculate best pca from pca interval
-        pca,accuracy = PCA_Tune(model_name=model_name,features=features,dataframe=data,querylist=querylist,pca_dimensions=pca_dimensions, save_path=tunefilespath)
+        pca,accuracy = PCA_Tune(model_name=model_name,features=features,dataframe=data,querylist=querylist,pca_dimensions=pca_dimensions, save_path=tunefilespath,accuracy_type=RetrievalEvalConfig.PCA_ACCURACY_TYPE)
 
         if (best_pca == pca) or (pca == dimension_end):
-            return pca
+            return pca,accuracy
 
         if accuracy > best_accuracy:
             best_accuracy = accuracy
             best_pca = pca
         else:
-            return best_pca
+            return best_pca,accuracy
 
         #new interval more closed
         dimension_ini = best_pca - step
@@ -194,12 +223,12 @@ def finetune_pca():
             model_path = model_manager.get_model_dir(model_name=model_name)
             tunepath = os.path.join(model_path, 'PCAtune')
 
-            best_pca = calculate_best_pca(model_name=model_name,features=features,data=data,querylist=qrylist,tunefilespath=tunepath)
-            print('\n', model_name , ' Best PCA: ', str(best_pca))
+            best_pca,accuracy = calculate_best_pca(model_name=model_name,features=features,data=data,querylist=qrylist,tunefilespath=tunepath)
+            print('\n', model_name , ' Best PCA: ', str(best_pca), ' Accuracy: ', str(accuracy))
             #save result into file
             filepath = os.path.join(tunepath, 'bestpca.txt')
             f = open(filepath, "w")
-            f.write(str(best_pca))
+            f.write("PCA=" + str(best_pca) + " ACCURACY " + RetrievalEvalConfig.PCA_ACCURACY_TYPE + " : " + str(accuracy))
             f.close()
 
 if __name__ == "__main__":

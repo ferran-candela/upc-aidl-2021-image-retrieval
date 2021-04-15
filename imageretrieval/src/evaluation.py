@@ -73,6 +73,7 @@ def make_ground_truth_matrix(full_df, entries):
 
         y_true[it][q_indx[it]] = 1
         y_true[it][gt_indices] = 1
+        print(f'\rMaking ground truth matrix... {it}/{n_queries}', end='', flush=True)
 
     return q_indx, y_true
 
@@ -108,7 +109,7 @@ def cosine_similarity(features, imgidx, top_k):
     query = features[imgidx]
     scores = features @ query 
     # Return top K ids
-    ranking = (-scores).argsort()[:top_k]
+    ranking = (-scores).argsort()[1:top_k + 1]
     return ranking
 
 def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validate_test_size, clean_process_dir):

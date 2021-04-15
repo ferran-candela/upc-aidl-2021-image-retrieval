@@ -204,7 +204,8 @@ class RetrievalEvalConfig:
     # OPTIONS:
     ## 'FirstN'
     ## 'Random'
-    ## TODO: 'List'
+    ## 'List'
     GT_SELECTION_MODE = os.environ.get("GT_SELECTION_MODE")
     MAP_N_QUERIES = int(os.environ.get("MAP_N_QUERIES")) if (os.environ.get("MAP_N_QUERIES") is not None) else 0
     TOP_K_IMAGE = int(os.environ.get("TOP_K_IMAGE")) if (os.environ.get("TOP_K_IMAGE") is not None) else 0
+    PCA_ACCURACY_TYPE = os.environ.get("PCA_ACCURACY_TYPE")

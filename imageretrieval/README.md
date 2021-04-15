@@ -102,6 +102,10 @@
                 "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
                 "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
                 "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
+                "TRAIN_SIZE": "all",
+                "MAP_N_QUERIES" : "600",
+                "TOP_K_IMAGE": "15",
+                "PCA_ACCURACY_TYPE" : "pHits" // mAP / pHits
             }
         },
         {
