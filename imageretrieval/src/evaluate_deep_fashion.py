@@ -32,6 +32,9 @@ def create_ground_truth_queries(full_df, test_df):
         isSameArticleType = full_df['articleType'] == row[3]
         similar_clothes_df = full_df[isSameArticleType]
 
+        if (similar_clothes_df.size == 0):
+            print("IS ZERO")
+            print(row[3])
         entry['gt'] = similar_clothes_df['id'].to_numpy()
 
         entries.append(entry)
@@ -73,7 +76,7 @@ def evaluate_deep_fashion(scores, y_true):
     aps = []
     for i, y_t in enumerate(y_true):
         s = scores[:,i].numpy()
-        ap = average_precision_score(y_t, s)
+        ap = average_precision_score(y_t.reshape((-1)), s.reshape((-1)))
         aps.append(ap)
     
     #print(f'\nAPs {aps}')
@@ -81,11 +84,11 @@ def evaluate_deep_fashion(scores, y_true):
     return np.nanmean(aps)
 
 
-def prepare_data_to_evaluate(dataset_base_dir):
+def prepare_data_to_evaluate(dataset_base_dir, article_types):
     test_df = pd.read_csv(os.path.join(dataset_base_dir, "deep_fashion_with_article_type.csv"), error_bad_lines=False)
     
-    article_types = test_df.drop_duplicates(subset = ["articleType"])['articleType'].values.tolist()
-    article_types = [x for x in article_types if str(x) != 'nan']
+    # article_types = test_df.drop_duplicates(subset = ["articleType"])['articleType'].values.tolist()
+    # article_types = [x for x in article_types if str(x) != 'nan']
     print(article_types)
 
     test_subset_df = pd.DataFrame()
@@ -158,7 +161,19 @@ def evaluate_models():
 
     # Work directory
     work_dir = FoldersConfig.WORK_DIR
-    test_df = prepare_data_to_evaluate(dataset_base_dir=dataset_base_dir)
+
+    # LOAD FEATURES
+    print('\nLoading features from checkpoint...')
+    loaded_model_features = features_manager.load_from_norm_features_checkpoint(model_name)
+    features = loaded_model_features['normalized_features']
+    full_df = loaded_model_features['data']
+
+    labels_df = full_df['articleType']
+    dataset_labels = labels_df.unique()
+
+    article_types = dataset_labels.tolist()
+
+    test_df = prepare_data_to_evaluate(dataset_base_dir=dataset_base_dir, article_types=article_types)
 
     num_queries = RetrievalEvalConfig.MAP_N_QUERIES
     print('\n\n## Evaluating model ', model_name, "with num_queries=", str(num_queries))
@@ -176,11 +191,6 @@ def evaluate_models():
     engine = RetrievalEngine(device, FoldersConfig.WORK_DIR)
     engine.load_models_and_precomputed_features()
 
-    # LOAD FEATURES
-    print('\nLoading features from checkpoint...')
-    loaded_model_features = features_manager.load_from_norm_features_checkpoint(model_name)
-    features = loaded_model_features['normalized_features']
-
     for img_path in test_df.path.values.tolist():
         query_path = engine.get_image_deep_fashion_path(img_path)
 
@@ -188,12 +198,11 @@ def evaluate_models():
         model_name = 'resnet50_custom'
         query_features = engine.get_query_features(model_name, query_path)
         queries.append(query_features)
+        print(query_features)
 
     queries = np.vstack(queries)
 
     scores = features @ queries.T
-
-    full_df = loaded_model_features['data']
 
     # Compute evaluation Hits
     # print('\nComputing evaluation Hits...')
@@ -217,7 +226,6 @@ def evaluate_models():
             'ProcessTime': processtime,
             'mAPqueries': num_queries,
             'mAP': mAP,
-            'PrecisionHits' : precision
         } 
     logfile.writeLogFile(values)
             
