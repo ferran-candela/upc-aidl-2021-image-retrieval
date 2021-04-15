@@ -87,8 +87,6 @@ def evaluate_deep_fashion(scores, y_true):
 def prepare_data_to_evaluate(dataset_base_dir, article_types):
     test_df = pd.read_csv(os.path.join(dataset_base_dir, "deep_fashion_with_article_type.csv"), error_bad_lines=False)
     
-    # article_types = test_df.drop_duplicates(subset = ["articleType"])['articleType'].values.tolist()
-    # article_types = [x for x in article_types if str(x) != 'nan']
     print(article_types)
 
     test_subset_df = pd.DataFrame()
