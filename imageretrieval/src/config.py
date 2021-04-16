@@ -83,19 +83,19 @@ class FeaturesConfig:
         PCA = 128
         
         if model_name == 'vgg16':
-            pass
+            PCA = 10
 
         if model_name == 'resnet50':
-            pass
+            PCA = 6
             
         if model_name == 'inception_v3':
-            pass
+            PCA = 6
 
         if model_name == 'inception_resnet_v2':
-            pass
+            PCA = 8
 
         if model_name == 'densenet161':
-            pass
+            PCA = 9
 
         if model_name == 'efficient_net_b4':
             pass
@@ -110,7 +110,7 @@ class ModelTrainConfig:
     TRAIN_SIZE = os.environ.get("TRAIN_SIZE") # "all" / "divide"=train(60%), Eval and test (20%) / number=fixed size
     TEST_VALIDATE_SIZE = os.environ.get("TEST_VALIDATE_SIZE") # used only for train_size = fixed size
     # Using both filters
-    # Filter 1: Same categories that match Deep Fashion Dataset
+    # Filter 1: Remove unknown clouths, remove all but master category == Apparel || category == Footwear
     # Filter 2: At least 100 images for each category
     # Results: 
     # Tshirts         7065

@@ -155,6 +155,23 @@
                 "WORK_DIR": "${PROJECT_ROOT}/Project/Fashion_Product_Full/processed_datalab/",
                 "LOG_DIR": "${PROJECT_ROOT}/Project/Fashion_Product_Full/processed_datalab/log/"
             }
+        },
+        {
+            "name": "t-SNE graphs",
+            "type": "python",
+            "request": "launch",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/tSNE.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${cwd}",
+                "DEVICE": "gpu",
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/"
+            }
         }
     ]
 }
@@ -230,7 +247,9 @@ python ${PROJECT_ROOT}/imageretrieval/src/evaluation.py
 ```
 
 # Command line execution for finetuning
-Activate the conda environment, setup environment vars and execute evaluation.py.
+Activate the conda environment, setup environment vars and execute finetune.py.
+
+PCA_ACCURACY_TYPE: // mAP / pHits
 
 ```
 export PYTHONPATH=${PROJECT_ROOT} &&
@@ -240,7 +259,9 @@ export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-da
 export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
 export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
 export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
+export TRAIN_SIZE=all,
 export MAP_N_QUERIES=600 &&
+export PCA_ACCURACY_TYPE=pHits
 python ${PROJECT_ROOT}/imageretrieval/src/finetune.py
 ```
 
@@ -257,4 +278,19 @@ export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-
 export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
 export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
 python ${PROJECT_ROOT}/imageretrieval/src/engine.py
+```
+
+
+# Command line execution for finetuning
+Activate the conda environment, setup environment vars and execute tSNE.py.
+
+```
+export PYTHONPATH=${PROJECT_ROOT} &&
+export DEVICE=gpu &&
+export DEBUG=True &&
+export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
+export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
+export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
+python ${PROJECT_ROOT}/imageretrieval/src/tSNE.py
 ```
