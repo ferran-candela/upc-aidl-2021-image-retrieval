@@ -62,7 +62,6 @@ class DeepFashionDataset(Dataset):
         super().__init__()
         self.base_dir = base_dir
         self.images_path = os.path.join(base_dir, self.IMAGE_DIR_NAME)
-        #There are rows with more than 10 columns. ex:6044
         self.labels_df = labels_df
         self.transform = transform
 
@@ -217,7 +216,7 @@ class DatasetManager():
                 validate_df = pd.read_csv(os.path.join(base_dir, "val_dataset.csv"), error_bad_lines=False)     
         else:
             labels_df = pd.read_csv(original_labels_file, error_bad_lines=False) # header=None, skiprows = 1
-            print(labels_df.head(10))
+            
             if dataset_name=="fashionproduct":
                 #Filter
                 labels_df = self.filter_fashion_product(labels_df)
