@@ -54,21 +54,72 @@ class FashionProductDataset(Dataset):
 
         return sample
 
+class DeepFashionDataset(Dataset):
+    IMAGE_DIR_NAME = 'img'
+    IMAGE_FORMAT = '.jpg'
+
+    def __init__(self, base_dir, labels_df, transform=None):
+        super().__init__()
+        self.base_dir = base_dir
+        self.images_path = os.path.join(base_dir, self.IMAGE_DIR_NAME)
+        self.labels_df = labels_df
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.labels_df)
+
+    def __getitem__(self, idx):
+
+        imageid,path,categoryName,articleType,dataset,articleTypeEncoded = self.labels_df.loc[idx, :]
+        #path = path.replace("/", "\\")  #only Windows system        
+        path = os.path.join(self.images_path, path)
+        sample = self.preprocess_image(path, self.transform)
+        return sample,articleTypeEncoded
+
+    def get_images_path(self):
+        self.images_path
+    
+    def get_base_path(self):
+        self.images_path
+    
+    @staticmethod
+    def preprocess_image(path, transform):
+        # Preprocess query image
+        # Returns Tensor [3, input_resize, input_resize]
+        sample = Image.open(path).convert('RGB')
+
+        if transform:
+            sample = transform(sample)
+
+        return sample
+
 class DatasetManager():
     def __init__(self):
         pass
 
-    def Validate_Images_DataFrame(self, df, imgid_colname, image_dir, img_format):
+    def Validate_Images_FashionProduct_DataFrame(self, df, image_dir, img_format):
         delete_index = []
         for index, row in df.iterrows():
-            imageid = row[imgid_colname]
+            imageid = row['id']
             path = os.path.join(image_dir, str(imageid ) + img_format)
             if not os.path.isfile(path):
                 delete_index.append(index)
         df.drop(df.index[delete_index],inplace=True)
         return df
 
-    def EncodeColumns(self,df):
+    def Validate_Images_DeepFashion_DataFrame(self, df, image_basedir, img_format):        
+        delete_index = []
+        for index, row in df.iterrows():
+            imageid = row['id']
+            imagepath = row['path']  #column dataframe with extra path
+            #imagepath = imagepath.replace("/", "\\")  #only Windows system
+            path = os.path.join(image_basedir, imagepath)
+            if not os.path.isfile(path):
+                delete_index.append(index)
+        df.drop(df.index[delete_index],inplace=True)
+        return df
+
+    def EncodeFashionProductColumns(self,df):
         #Encode any string columns: Need for training and convert to tensor
         le = LabelEncoder()
         df["masterCategoryEncoded"] =  le.fit_transform(df['masterCategory'])
@@ -81,7 +132,14 @@ class DatasetManager():
         df["baseColourEncoded"] = df["baseColourEncoded"].astype('int64')
         return df
 
-    def filter_product_fashion(self, labels_df):
+    def EncodeDeepFashionColumns(self,df):
+        #Encode any string columns: Need for training and convert to tensor
+        le = LabelEncoder()
+        df['articleTypeEncoded'] = le.fit_transform(df['articleType'])
+        df["articleTypeEncoded"] = df["articleTypeEncoded"].astype('int64')
+        return df
+
+    def filter_fashion_product(self, labels_df):
 
         if DEBUG: print(labels_df.count())
         if DEBUG: print(labels_df.masterCategory.unique())
@@ -105,8 +163,14 @@ class DatasetManager():
 
         return df_clothes_shoes
 
+    def filter_deep_fashion(self, labels_df):
+        filter_articles_type = ['Shirts', 'Jeans', 'Track Pants', 'Tshirts', 'Casual Shoes', 'Flip Flops', 'Tops', 'Sandals', 'Sweatshirts', 'Formal Shoes', 'Flats', 'Sports Shoes', 'Shorts', 'Heels','Dresses','Night suits','Skirts','Trousers','Jackets','Sweaters','Nightdress','Leggings']
+        #filter_articles_type = ['Shirts','Jeans']
+        new = labels_df['articleType'].isin(filter_articles_type)
+        subdf = labels_df[new]
+        return subdf
 
-    def split_dataset(self, dataset_base_dir, original_labels_file, process_dir, clean_process_dir=False, split_train_dir=False, train_size='divide', fixed_validate_test_size=0):
+    def split_dataset(self, dataset_name, dataset_base_dir, original_labels_file, process_dir, clean_process_dir=False, split_train_dir=False, train_size='divide', fixed_validate_test_size=0):
 
         dataset_folder_name = 'dataset_' + str(train_size)
 
@@ -119,8 +183,12 @@ class DatasetManager():
             fixed_validate_test_size = int(fixed_validate_test_size)
 
         base_dir = os.path.join(process_dir, dataset_folder_name)
-        img_dir = os.path.join(dataset_base_dir, FashionProductDataset.IMAGE_DIR_NAME)
-        img_format = FashionProductDataset.IMAGE_FORMAT
+        if dataset_name=="fashionproduct":
+            img_dir = os.path.join(dataset_base_dir, FashionProductDataset.IMAGE_DIR_NAME)
+            img_format = FashionProductDataset.IMAGE_FORMAT
+        else:
+            img_dir = os.path.join(dataset_base_dir, DeepFashionDataset.IMAGE_DIR_NAME)
+            img_format = DeepFashionDataset.IMAGE_FORMAT
 
         #Validation    
         if not os.path.isfile(original_labels_file) or not os.access(original_labels_file, os.R_OK):    
@@ -149,10 +217,17 @@ class DatasetManager():
         else:
             labels_df = pd.read_csv(original_labels_file, error_bad_lines=False) # header=None, skiprows = 1
             
-            labels_df = self.filter_product_fashion(labels_df)
+            if dataset_name=="fashionproduct":
+                #Filter
+                labels_df = self.filter_fashion_product(labels_df)
+                #Validate images exists
+                labels_df = self.Validate_Images_FashionProduct_DataFrame(labels_df, img_dir, img_format = '.jpg')
+            else:
+                #Filter
+                labels_df = self.filter_deep_fashion(labels_df)
+                #Validate images exists
+                labels_df = self.Validate_Images_DeepFashion_DataFrame(labels_df, img_dir, img_format = '.jpg')
 
-            #Validate images exists
-            labels_df = self.Validate_Images_DataFrame(labels_df, "id", img_dir, img_format = '.jpg')
 
             ### FILTER ###
             #classes have minimum 100 images
@@ -165,7 +240,10 @@ class DatasetManager():
 
             ### ENCODE ###
             #Encode any string columns: Need for training and convert to tensor
-            labels_df = self.EncodeColumns(labels_df)
+            if dataset_name=="deepfashion":
+                labels_df = self.EncodeDeepFashionColumns(labels_df)
+            else:
+                labels_df = self.EncodeFashionProductColumns(labels_df)
 
             # Divide labels in train, test and validate
             if fixed_train_size > 0:
@@ -179,6 +257,8 @@ class DatasetManager():
                 #Divide 60% - 20% - 20%
                 train_df, validate_df, test_df = np.split(labels_df.sample(frac=1, random_state=42), 
                                                 [int(.6*len(labels_df)), int(.8*len(labels_df))])
+
+            if DEBUG:print(train_df.head(10))
 
             # Save datasets
             train_df.to_csv(os.path.join(base_dir, "train_dataset.csv"),index=False)

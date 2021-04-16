@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.data import DataLoader
 
-from imageretrieval.src.dataset import DatasetManager, FashionProductDataset
+from imageretrieval.src.dataset import DatasetManager, FashionProductDataset, DeepFashionDataset
 from imageretrieval.src.models import ModelManager, ModelType
 from imageretrieval.src.utils import ProcessTime, LogFile
 
@@ -290,7 +290,8 @@ def train_model(model, train_loader, val_loader=None, test_loader=None):
 def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validate_test_size, clean_process_dir):
     dataset_manager = DatasetManager()      
 
-    train_df, test_df, validate_df = dataset_manager.split_dataset(dataset_base_dir=dataset_base_dir,
+    train_df, test_df, validate_df = dataset_manager.split_dataset(dataset_name=ModelTrainConfig.DATASET_USEDNAME,
+                                                    dataset_base_dir=dataset_base_dir,
                                                     original_labels_file=labels_file,
                                                     process_dir=process_dir,
                                                     clean_process_dir=clean_process_dir,
@@ -298,12 +299,6 @@ def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validat
                                                     fixed_validate_test_size=validate_test_size
                                                     )
         
-    train_df.reset_index(drop=True, inplace=True)
-    if DEBUG:print(train_df.head(10))
-    if not test_df is None:
-        test_df.reset_index(drop=True, inplace=True)
-        validate_df.reset_index(drop=True, inplace=True)
-
     return train_df, test_df, validate_df
 
 def test_model(model, criterion, test_loader, modelname ):
@@ -406,14 +401,28 @@ def train():
             input_transform = model.get_input_transform()
             batch_size = ModelBatchSizeConfig.get_batch_size(model_name)
             
-            train_dataset = FashionProductDataset(dataset_base_dir, train_df, transform=train_transform)
-            train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+            if ModelTrainConfig.DATASET_USEDNAME=="fashionproduct":
+                train_dataset = FashionProductDataset(dataset_base_dir, train_df, transform=train_transform)
+                train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-            val_dataset = FashionProductDataset(dataset_base_dir, validate_df, transform=input_transform)
-            val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+                val_dataset = FashionProductDataset(dataset_base_dir, validate_df, transform=input_transform)
+                val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
             
-            test_dataset = FashionProductDataset(dataset_base_dir, test_df, transform=input_transform)
-            test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+                test_dataset = FashionProductDataset(dataset_base_dir, test_df, transform=input_transform)
+                test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+            elif ModelTrainConfig.DATASET_USEDNAME=="deepfashion":
+                train_dataset = DeepFashionDataset(dataset_base_dir, train_df, transform=train_transform)
+                train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+                val_dataset = DeepFashionDataset(dataset_base_dir, validate_df, transform=input_transform)
+                val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+            
+                test_dataset = DeepFashionDataset(dataset_base_dir, test_df, transform=input_transform)
+                test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+            else:
+                print('Dataset name ',ModelTrainConfig.DATASET_USEDNAME, ' not defined' )
+                return False
+
 
             if DEBUG:print(model.get_model())
 

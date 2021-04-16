@@ -126,7 +126,6 @@ def accuracy_mAP_calc(features,dataframe,querylist):
     return round(df.ap.mean(),4),processtime
 
 def accuracy_precisionHits_calc(features,dataframe,querylist):
-    #mAP accuracy
 
     proctimer = ProcessTime()
     proctimer.start()

@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import average_precision_score
 
-from models import ModelManager
+from imageretrieval.src.models import ModelManager
+
 from features import FeaturesManager
 from dataset import DatasetManager
 from config import DebugConfig, FoldersConfig, DeviceConfig, RetrievalEvalConfig, ModelTrainConfig
