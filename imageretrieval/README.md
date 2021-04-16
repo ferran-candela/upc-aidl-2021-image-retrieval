@@ -38,6 +38,7 @@
                 "PYTHONPATH": "${cwd}",
                 "DEVICE": "cuda",
                 "DEBUG": "True",
+                "DATASET_USEDNAME": "deepfashion", // deepfashion / fashionproduct
                 "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
                 "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
                 "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
@@ -57,6 +58,7 @@
                 "PYTHONPATH": "${cwd}",
                 "DEVICE": "cuda",
                 "DEBUG": "True",
+                "DATASET_USEDNAME": "deepfashion", // deepfashion / fashionproduct
                 "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
                 "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
                 "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
@@ -76,6 +78,7 @@
                 "PYTHONPATH": "${cwd}",
                 "DEVICE": "cuda",
                 "DEBUG": "True",
+                "DATASET_USEDNAME": "deepfashion", // deepfashion / fashionproduct
                 "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
                 "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
                 "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
@@ -98,6 +101,7 @@
                 "PYTHONPATH": "${cwd}",
                 "DEVICE": "cuda",
                 "DEBUG": "True",
+                "DATASET_USEDNAME": "deepfashion", // deepfashion / fashionproduct
                 "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
                 "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
                 "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
@@ -119,6 +123,7 @@
                 "PYTHONPATH": "${cwd}",
                 "DEVICE": "cpu",
                 "DEBUG": "True",
+                "DATASET_USEDNAME": "deepfashion", // deepfashion / fashionproduct
                 "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
                 "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
                 "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
