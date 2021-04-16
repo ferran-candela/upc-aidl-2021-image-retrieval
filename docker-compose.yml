@@ -8,7 +8,6 @@ services:
         ports:
         - "5000:5000"
         command: ['gunicorn', 'entrypoint:app', '--workers', '1', '--bind=0.0.0.0:5000', '--timeout', '300', '--access-logfile', '-', '--error-logfile', '-', '--log-level', 'debug']
-        # command: ['ls', '-l', '/opt/datasets/Fashion_Product_Full_Workdir']
         environment:
             - PYTHONUNBUFFERED=TRUE
             - DEVICE=cpu
