@@ -16,13 +16,18 @@ from utils import ProcessTime, LogFile
 device = DeviceConfig.DEVICE
 DEBUG = DebugConfig.DEBUG
 
-def create_ground_truth_queries(full_df, test_df):
+def create_ground_truth_queries(full_df, test_df, type, N, imgIdList):
     entries = []
 
-    N = len(test_df.index)
+    if type=="List":
+        query_df = test_df[test_df.id.isin(imgIdList)]
+        N = len(imgIdList)
+    else:
+        query_df = test_df
+        N = len(query_df.index)
         
     it = 0
-    for index, row in test_df.iterrows():
+    for index, row in query_df.iterrows():
         id = row[0]
         if (id == 'id'):
             continue
@@ -101,7 +106,7 @@ def prepare_data_to_evaluate(dataset_base_dir, article_types):
 
 def features_evaluation(features, full_df, test_df, num_queries):
 
-    queries = create_ground_truth_queries(full_df, test_df)
+    queries = create_ground_truth_queries(full_df, test_df, "None", 0, [])
 
     y_true = make_ground_truth_matrix(test_df, full_df, queries)
 
@@ -113,25 +118,23 @@ def features_evaluation(features, full_df, test_df, num_queries):
     return mAP
 
 
-def cosine_similarity(features, imgidx):
-    # This gives the same rankings as (negative) Euclidean distance 
+def cosine_similarity(features, imgidx, top_k):
+   # This gives the same rankings as (negative) Euclidean distance 
     # when the features are L2 normalized (as ours are).
     # The cosine similarity can be efficiently computed for all images 
     # in the dataset using a matrix multiplication!
-    
+
     query = features[imgidx]
-    print(query)
-    print(query.shape)
     scores = features @ query 
     # Return top K ids
-    ranking = (-scores).argsort()[:top_k]
+    ranking = (-scores).argsort()[1:top_k + 1]
     return ranking
 
 
-def evaluation_hits(full_df, test_df, ranking):
+def evaluation_hits(full_df, test_df, id_img, ranking):
     # Calculate how many images returned in the ranking are "correct" of the total
 
-    queries = create_ground_truth_queries(full_df, test_df)
+    queries = create_ground_truth_queries(full_df, test_df, "List", 0 , [id_img])
 
     y_true = make_ground_truth_matrix(test_df, full_df, queries)
 
@@ -152,8 +155,6 @@ def evaluate_models():
     model_manager = ModelManager(device, FoldersConfig.WORK_DIR)
     features_manager = FeaturesManager(device, model_manager)
 
-    model_name = 'resnet50_custom'
-
     # The path of original dataset
     dataset_base_dir = FoldersConfig.DATASET_BASE_DIR
     labels_file = FoldersConfig.DATASET_LABELS_DIR
@@ -161,74 +162,76 @@ def evaluate_models():
     # Work directory
     work_dir = FoldersConfig.WORK_DIR
 
-    # LOAD FEATURES
-    print('\nLoading features from checkpoint...')
-    loaded_model_features = features_manager.load_from_norm_features_checkpoint(model_name)
-    features = loaded_model_features['normalized_features']
-    full_df = loaded_model_features['data']
+    model_names = model_manager.get_model_names()
 
-    labels_df = full_df['articleType']
-    dataset_labels = labels_df.unique()
+    for model_name in model_names:
+        # LOAD FEATURES
+        print('\nLoading features from checkpoint...')
+        loaded_model_features = features_manager.load_from_norm_features_checkpoint(model_name)
+        features = loaded_model_features['normalized_features']
 
-    article_types = dataset_labels.tolist()
+        full_df = loaded_model_features['data']
 
-    test_df = prepare_data_to_evaluate(dataset_base_dir=dataset_base_dir, article_types=article_types)
+        labels_df = full_df['articleType']
+        dataset_labels = labels_df.unique()
 
-    num_queries = RetrievalEvalConfig.MAP_N_QUERIES
-    print('\n\n## Evaluating model ', model_name, "with num_queries=", str(num_queries))
+        article_types = dataset_labels.tolist()
+        test_df = prepare_data_to_evaluate(dataset_base_dir=dataset_base_dir, article_types=article_types)
 
-    print('\n\n## Evaluating NormalizedFeatures ', model_name)
+        num_queries = RetrievalEvalConfig.MAP_N_QUERIES
+        print('\n\n## Evaluating model ', model_name, "with num_queries=", str(num_queries))
 
-    usedfeatures = 'NormalizedFeatures'
-    proctimer.start()
+        print('\n\n## Evaluating NormalizedFeatures ', model_name)
 
-    # Calculate features
-    print('\nCalculating features for deep fashion...')
+        usedfeatures = 'NormalizedFeatures'
+        proctimer.start()
 
-    queries = []
+        # Calculate features
+        print('\nCalculating features for deep fashion...')
 
-    engine = RetrievalEngine(device, FoldersConfig.WORK_DIR)
-    engine.load_models_and_precomputed_features()
+        queries = []
 
-    for img_path in test_df.path.values.tolist():
-        query_path = engine.get_image_deep_fashion_path(img_path)
+        engine = RetrievalEngine(device, FoldersConfig.WORK_DIR)
+        engine.load_models_and_precomputed_features()
 
-        # for model_name in model_names:
-        model_name = 'resnet50_custom'
-        query_features = engine.get_query_features(model_name, query_path)
-        queries.append(query_features)
-        print(query_features)
+        for img_path in test_df.path.values.tolist():
+            query_path = engine.get_image_deep_fashion_path(img_path)
 
-    queries = np.vstack(queries)
+            query_features = engine.get_query_features(model_name, query_path)
+            queries.append(query_features)
+            print(query_features)
 
-    scores = features @ queries.T
+        queries = np.vstack(queries)
 
-    # Compute evaluation Hits
-    # print('\nComputing evaluation Hits...')
-    # accuracy = []
-    # for i,feature in enumerate(features):
-    #     ranking = cosine_similarity(features, i, RetrievalEvalConfig.TOP_K_IMAGE)
-    #     precision = evaluation_hits(full_df, test_df, ranking)
-    #     accuracy.append(precision)
-    # precision = np.mean(accuracy)
-    # print(f'\nPrecision Hits: {precision:0.04f}')
+        scores = features @ queries.T
 
-    # Compute mAP
-    mAP = features_evaluation(scores, full_df, test_df, num_queries)
+        # Compute evaluation Hits
+        print('\nComputing evaluation Hits...')
+        accuracy = []
+        for i,id_img in enumerate(test_df.id.values.tolist()):
+            ranking = cosine_similarity(features, i, RetrievalEvalConfig.TOP_K_IMAGE)
+            precision = evaluation_hits(full_df, test_df, id_img, ranking)
+            accuracy.append(precision)
 
-    #LOG
-    processtime = proctimer.stop()
-    values = {'ModelName': model_name, 
-            'DataSetSize': test_df.shape[0],
-            'UsedFeatures': usedfeatures,
-            'FeaturesSize': features[0].shape[0],
-            'ProcessTime': processtime,
-            'mAPqueries': num_queries,
-            'mAP': mAP,
-        } 
-    logfile.writeLogFile(values)
-            
-    
+        precision = np.mean(accuracy)
+        print(f'\nPrecision Hits: {precision:0.04f}')
+
+        # Compute mAP
+        mAP = features_evaluation(scores, full_df, test_df, num_queries)
+
+        #LOG
+        processtime = proctimer.stop()
+        values = {'ModelName': model_name, 
+                'DataSetSize': test_df.shape[0],
+                'UsedFeatures': usedfeatures,
+                'FeaturesSize': features[0].shape[0],
+                'ProcessTime': processtime,
+                'mAPqueries': num_queries,
+                'mAP': mAP,
+                'PrecisionHits' : precision
+            } 
+        logfile.writeLogFile(values)
+
 
     #Print and save logfile    
     logfile.printLogFile()

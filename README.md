@@ -37,8 +37,6 @@ Then install Docker Compose.
 First of all export the environment variables DATASET_ROOT and WORKDIR_ROOT.
 
 
-
-
 In the root folder execute:
 
 ```

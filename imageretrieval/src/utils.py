@@ -6,6 +6,8 @@ from PIL import Image
 
 from imageretrieval.src.config import FoldersConfig
 
+Image.MAX_IMAGE_PIXELS = None
+
 class ProcessTime:
     def __init__(self):
         super().__init__()

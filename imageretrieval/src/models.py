@@ -168,7 +168,7 @@ class ModelManager:
                             'densenet161_custom',
                             #'efficient_net_b4_custom'
                             ]
-                    
+        
         self.device = device
         self.models_dir = models_dir
 

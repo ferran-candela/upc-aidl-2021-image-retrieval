@@ -215,6 +215,45 @@ export TEST_VALIDATE_SIZE=0 &&
 python ${PROJECT_ROOT}/imageretrieval/src/train.py
 ```
 
+## Command line execution for training Deep Fashion
+
+Activate the conda environment, setup environment vars and execute train.py.
+
+```
+export PYTHONPATH=${PROJECT_ROOT} &&
+export DEVICE=cpu &&
+export DEBUG=True &&
+export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/DeepFashion &&
+export DATASET_LABELS_DIR=${PROJECT_ROOT}/imageretrieval/resources/deep_fashion/deep_fashion_with_article_type.csv &&
+export WORK_DIR=${PROJECT_ROOT}/datasets/DeepFashion_Workdir &&
+export LOG_DIR=${PROJECT_ROOT}/datasets/DeepFashion_Workdir/log/ &&
+export TRAIN_SIZE=500 &&
+export TEST_VALIDATE_SIZE=500 &&
+export DATASET_USEDNAME=deepfashion &&
+python ${PROJECT_ROOT}/imageretrieval/src/train.py
+```
+
+{
+            "name": "Train Deep Fashion",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/fcandela/src/upc/upc-jmc-project/imageretrieval/src/train.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "DATASET_USEDNAME": "deepfashion", // deepfashion / fashionproduct
+                "PYTHONPATH": "${cwd}",
+                "DEVICE": "cpu",
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/DeepFashion",
+                "DATASET_LABELS_DIR": "/home/fcandela/src/upc/upc-jmc-project/imageretrieval/resources/deep_fashion/deep_fashion_with_article_type.csv",
+                "WORK_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/DeepFashion_Workdir",
+                "LOG_DIR": "/home/fcandela/src/upc/upc-jmc-project/datasets/DeepFashion_Workdir/log/",
+                "TRAIN_SIZE": "500",
+                "TEST_VALIDATE_SIZE": "500"
+            }
+        },
+
 # Command line execution for feature extraction
 
 Activate the conda environment, setup environment vars and execute features.py.
@@ -264,9 +303,9 @@ export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-da
 export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
 export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
 export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
-export TRAIN_SIZE=all,
+export TRAIN_SIZE=all &&
 export MAP_N_QUERIES=600 &&
-export PCA_ACCURACY_TYPE=pHits
+export PCA_ACCURACY_TYPE=pHits &&
 python ${PROJECT_ROOT}/imageretrieval/src/finetune.py
 ```
 
@@ -284,7 +323,6 @@ export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
 export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
 python ${PROJECT_ROOT}/imageretrieval/src/engine.py
 ```
-
 
 # Command line execution for finetuning
 Activate the conda environment, setup environment vars and execute tSNE.py.

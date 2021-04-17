@@ -20,7 +20,7 @@ services:
             - ${DATASET_ROOT}/datasets/Fashion_Product_Full:/opt/datasets/Fashion_Product_Full
             - ${WORKDIR_ROOT}/datasets/Fashion_Product_Full_Workdir:/opt/datasets/Fashion_Product_Full_Workdir
             # Stores the pretrained checkpoints
-            - /tmp/imageretrieval/checkpoints:/root/.cache/torch/hub/checkpoints
+            - ${WORKDIR_ROOT}/pretrained_checkpoints:/root/.cache/torch/hub/checkpoints
     app:
         build:
             context: .
