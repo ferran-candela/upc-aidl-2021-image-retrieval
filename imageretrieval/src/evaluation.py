@@ -115,7 +115,8 @@ def cosine_similarity(features, imgidx, top_k):
 def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validate_test_size, clean_process_dir):
     dataset_manager = DatasetManager()      
 
-    train_df, test_df, validate_df = dataset_manager.split_dataset(dataset_base_dir=dataset_base_dir,
+    train_df, test_df, validate_df = dataset_manager.split_dataset(dataset_name=ModelTrainConfig.DATASET_USEDNAME,
+                                                    dataset_base_dir=dataset_base_dir,
                                                     original_labels_file=labels_file,
                                                     process_dir=process_dir,
                                                     clean_process_dir=clean_process_dir,
