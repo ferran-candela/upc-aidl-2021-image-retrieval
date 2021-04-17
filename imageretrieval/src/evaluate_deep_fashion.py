@@ -143,24 +143,19 @@ def evaluate_models():
     #Create timer to calculate the process time
     proctimer = ProcessTime()
 
-    model_manager = ModelManager(device, FoldersConfig.WORK_DIR)
-    features_manager = FeaturesManager(device, model_manager)
-
-    # The path of original dataset
-    dataset_base_dir = FoldersConfig.DATASET_BASE_DIR
-    labels_file = FoldersConfig.DATASET_LABELS_DIR
-
     # Work directory
     work_dir = FoldersConfig.WORK_DIR
+    engine = RetrievalEngine(device, work_dir)
+    engine.load_models_and_precomputed_features()
 
-    model_names = model_manager.get_model_names()
+    # The path of deep fashion dataset
+    dataset_base_dir = FoldersConfig.DATASET_BASE_DIR
 
-    for model_name in model_names:
+    for model_name in engine.model_features:
         # LOAD FEATURES
         print('\nLoading features from checkpoint...')
-        loaded_model_features = features_manager.load_from_norm_features_checkpoint(model_name)
+        loaded_model_features = engine.model_features[model_name]
         features = loaded_model_features['normalized_features']
-
         full_df = loaded_model_features['data']
 
         labels_df = full_df['articleType']
@@ -181,9 +176,6 @@ def evaluate_models():
         print('\nCalculating features for deep fashion...')
 
         queries = []
-
-        engine = RetrievalEngine(device, FoldersConfig.WORK_DIR)
-        engine.load_models_and_precomputed_features()
 
         test_paths = test_df.path.values.tolist()
 
