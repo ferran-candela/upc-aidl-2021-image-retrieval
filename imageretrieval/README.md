@@ -249,18 +249,24 @@ python ${PROJECT_ROOT}/imageretrieval/src/tSNE.py
 
 # Evaluation
 
-Diagram of the evaluation components  
-<img src="../docs/imgs/Evaluation.png" width="400">
+Diagram of the evaluation components that shows data flow when running evaluation for fashion product and deep fashion:   
+   
+<img src="../docs/imgs/evaluation.png" width="400"> 
 
-In order to evaluate our retrieval engine we have decide to focus the attention on precision and recall. 
-* For precision we hace used the mAP since it is the most common way to evaluate retreival systems
+  
+In order to evaluate our retrieval engine we have decide to focus the attention on precision and recall.   
+<img src="../docs/imgs/precision_recall.png" width="150">
+* For precision we have used the mAP algorithm, since it is the most common way to evaluate retreival systems  
+    <img src="../docs/imgs/mAP_formula.jpeg" width="200">  
+    Mean average precision formula given provided by Wikipedia  
+
 * For recall we have use precision hits of the top 15 results.
 
 On the other hand we have also used speed of the executions tu measure our system and compare different models.
 
 We have build evaluation for the different models that we use to train, but also for two different data sets, `fashion product` and `deep fashion`.
 
-Here an example of the values:
+Here an example of the values obatained for the different evaluation systems:
 
 | ModelName   |   DataSetSize   |  UsedFeatures |   FeaturesSize |  ProcessTime  |  mAP  |  PrecisionHits  |
 |-------------|:---------------:|--------------:|----------------|:-------------:|------:|----------------:|
@@ -271,7 +277,7 @@ Here an example of the values:
 | resnet50_custom | 390 |    NormalizedFeatures |  128 | 0:09:33.012131 |  0.057209 |  0.0489 |
 | vgg16_custom | 390 |    NormalizedFeatures |  128 | 0:10:07.504492 |  0.097952 |  0.0489 |
 | densenet161_custom | 390 |    NormalizedFeatures |  128 | 0:10:37.180019 |  0.102703 |  0.0489 |
-
+  
 
 ## Run evaluations
 1. If using visual studio 
