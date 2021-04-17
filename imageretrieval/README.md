@@ -327,11 +327,16 @@ Here an example of the values obatained for the different evaluation systems:
                 "request": "launch",
                 "program": "${PROJECT_ROOT}/imageretrieval/src/evaluate_deep_fashion.py",
                 "console": "integratedTerminal",
+                "cwd": "${workspaceFolder}",
                 "env": {
+                    "PYTHONPATH": "${cwd}",
                     "DEBUG": "True",
-                    "DATASET_BASE_DIR": "${PROJECT_ROOT}/Project/Fashion_Product_Full/",
-                    "WORK_DIR": "${PROJECT_ROOT}/Project/Fashion_Product_Full/processed_datalab/",
-                    "LOG_DIR": "${PROJECT_ROOT}/Project/Fashion_Product_Full/processed_datalab/log/"
+                    "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/DeepFashion",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/imageretrieval/resources/deep_fashion/deep_fashion_with_article_type.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/",
+                "TOP_K_IMAGE": "15",
+                    "QUERIES_PER_LABEL": "100"
                 }
             }
         ]

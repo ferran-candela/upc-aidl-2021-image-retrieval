@@ -210,3 +210,4 @@ class RetrievalEvalConfig:
     MAP_N_QUERIES = int(os.environ.get("MAP_N_QUERIES")) if (os.environ.get("MAP_N_QUERIES") is not None) else 0
     TOP_K_IMAGE = int(os.environ.get("TOP_K_IMAGE")) if (os.environ.get("TOP_K_IMAGE") is not None) else 0
     PCA_ACCURACY_TYPE = os.environ.get("PCA_ACCURACY_TYPE")
+    QUERIES_PER_LABEL = int(os.environ.get("QUERIES_PER_LABEL")) if (os.environ.get("QUERIES_PER_LABEL") is not None) else 0

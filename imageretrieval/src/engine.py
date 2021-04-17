@@ -6,7 +6,7 @@ from imageretrieval.src.models import ModelManager
 from imageretrieval.src.config import DebugConfig, FoldersConfig, DeviceConfig
 from imageretrieval.src.features import FeaturesManager
 from imageretrieval.src.features import postprocess_features
-from imageretrieval.src.dataset import FashionProductDataset
+from imageretrieval.src.dataset import FashionProductDataset, DeepFashionDataset
 
 device = DeviceConfig.DEVICE
 DEBUG = DebugConfig.DEBUG
@@ -108,7 +108,7 @@ class RetrievalEngine:
 
     def get_image_deep_fashion_path(self, img_id):
         base_dir = FoldersConfig.DATASET_BASE_DIR
-        images_path = os.path.join(base_dir, FashionProductDataset.IMAGE_DIR_NAME)
+        images_path = os.path.join(base_dir, DeepFashionDataset.IMAGE_DIR_NAME)
         return os.path.join(images_path, f"{img_id}")
         
 
