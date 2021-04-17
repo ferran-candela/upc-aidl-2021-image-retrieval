@@ -118,15 +118,14 @@ def features_evaluation(scores, full_df, test_df, num_queries):
     return mAP
 
 
-def evaluation_hits(full_df, test_df, id_img, ranking, indx):
+def evaluation_hits(full_df, test_df, id_img, ranking):
     # Calculate how many images returned in the ranking are "correct" of the total
 
     queries = create_ground_truth_queries(full_df, test_df, "List", 0 , [id_img])
-
     y_true = make_ground_truth_matrix(test_df, full_df, queries)
 
     imagesIdx = ranking.tolist()
-    return round(np.mean(y_true[0][indx]), 4)
+    return round(np.mean(y_true[0][imagesIdx]), 4)
 
 
 def evaluate_models():
@@ -201,7 +200,7 @@ def evaluate_models():
             score = scores[:,i].numpy()
             top_k = RetrievalEvalConfig.TOP_K_IMAGE
             ranking = (-score).argsort()[1:top_k + 1]
-            precision = evaluation_hits(full_df, test_df, id_img, ranking, i)
+            precision = evaluation_hits(full_df, test_df, id_img, ranking)
             accuracy.append(precision)
 
         precision = np.mean(accuracy)
