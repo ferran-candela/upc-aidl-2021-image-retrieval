@@ -223,6 +223,9 @@ def train_scratch_model(model, train_loader, val_loader=None, test_loader=None):
                     'Time': processtime
                     } 
             logfile.writeLogFile(values)
+            #Print and save logfile    
+            logfile.printLogFile()
+            logfile.saveLogFile_to_csv(model.get_name() + '_scratch_model_' + str(epoch) + "_")
 
             if epochs_no_improve == ModelTrainConfig.PATIENCE: #patience: Number of epochs to wait if no improvement and then stop the training.
                 print('Early stopping!' )
@@ -237,9 +240,6 @@ def train_scratch_model(model, train_loader, val_loader=None, test_loader=None):
                 } 
         logfile.writeLogFile(values)
     
-    #Print and save logfile    
-    logfile.printLogFile()
-    logfile.saveLogFile_to_csv(model.get_name() + '_scratch_model')
 
 
 def train_transferlearning_model(model, train_loader, val_loader=None, test_loader=None):
