@@ -10,6 +10,8 @@ import numpy as np
 
 from imageretrieval.src.config import DebugConfig, DeviceConfig
 
+Image.MAX_IMAGE_PIXELS = None
+
 device = DeviceConfig.DEVICE
 DEBUG = DebugConfig.DEBUG
 
@@ -55,7 +57,7 @@ class FashionProductDataset(Dataset):
         return sample
 
 class DeepFashionDataset(Dataset):
-    IMAGE_DIR_NAME = 'img'
+    IMAGE_DIR_NAME = 'Img'
     IMAGE_FORMAT = '.jpg'
 
     def __init__(self, base_dir, labels_df, transform=None):
@@ -116,6 +118,7 @@ class DatasetManager():
             path = os.path.join(image_basedir, imagepath)
             if not os.path.isfile(path):
                 delete_index.append(index)
+                print('Image not found: ' + path)
         df.drop(df.index[delete_index],inplace=True)
         return df
 

@@ -1,4 +1,5 @@
 import os
+import traceback
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
@@ -228,6 +229,7 @@ def train_scratch_model(model, train_loader, val_loader=None, test_loader=None):
                 break
     except Exception as e:
         print('\n', e)
+        traceback.print_exc()
         processtime = proctimer.stop()
         values = {  
                     'ModelName': model.get_name(),
@@ -267,6 +269,7 @@ def train_transferlearning_model(model, train_loader, val_loader=None, test_load
         logfile.writeLogFile(values)
     except Exception as e:
         print('\n', e)
+        traceback.print_exc()
         processtime = proctimer.stop()
         values = {  'ModelName': model.get_name(), 
                     'DataSetSize': len(train_loader), 
