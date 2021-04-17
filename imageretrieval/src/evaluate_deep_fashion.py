@@ -96,10 +96,15 @@ def prepare_data_to_evaluate(dataset_base_dir, article_types):
     print(article_types)
 
     test_subset_df = pd.DataFrame()
-    for acticle_type in article_types:
-        is_type = test_df['articleType'] == acticle_type
+    for article_type in article_types:
+        is_type = test_df['articleType'] == article_type
         
-        test_subset_df = pd.concat([test_subset_df, test_df[is_type].sample(RetrievalEvalConfig.QUERIES_PER_LABEL)])
+        samples = test_df[is_type]
+
+        if(len(samples) > RetrievalEvalConfig.QUERIES_PER_LABEL):
+            samples = samples.sample(RetrievalEvalConfig.QUERIES_PER_LABEL)
+
+        test_subset_df = pd.concat([test_subset_df, samples])
 
     return test_subset_df
 
@@ -199,7 +204,7 @@ def evaluate_models():
         for i,id_img in enumerate(test_df.id.values.tolist()):
             score = scores[:,i].numpy()
             top_k = RetrievalEvalConfig.TOP_K_IMAGE
-            ranking = (-score).argsort()[1:top_k + 1]
+            ranking = (-score).argsort()[:top_k]
             precision = evaluation_hits(full_df, test_df, id_img, ranking)
             accuracy.append(precision)
 
