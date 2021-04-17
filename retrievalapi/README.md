@@ -144,6 +144,10 @@ This endpoint returns an image given the correspoding `id`.
     **Content:** 
         None
 
-## Postman project
+# Postman project
 
 In the folder `docs` it is included a Postman collection file with an example for each endpoint. Just use the `Import` feature in Postman application, run the API in the `localhost:5000` and try it by yourself.
+
+# Execution in VS Code
+
+# Execution in Docker

@@ -1,11 +1,30 @@
-# upc-jmc-project
+# Deep Learning Image retrieval with Fashion Product database
 
-## Image retrieval first approach
-We will try to use VGG16 to train a network that classifies if is shirt or not.
+The aim of the project is the creation of a tool that allows the full implementation and evaluation of an image retrieval web application using the [Fashion Product](https://www.kaggle.com/paramaggarwal/fashion-product-images-dataset) dataset as the database. DuSeveral existing pre-trained models are evaluated and also custom models are created from applying Transfer Learning from them.
+
+The main idea is that a user can obtain the topK ranking products more similar to an image using one of the different models available.
+
+The [Deep Fashion](http://mmlab.ie.cuhk.edu.hk/projects/DeepFashion.html) database is used to evaluate the system with more heterogeneous images (real world images) and finally used to obtain the best model as it is depicted in the evaluation results.
+
+The original code is the Final Project delivery for the UPC [Artificial Intelligence with Deep Learning Postgraduate Course](https://www.talent.upc.edu/ing/estudis/formacio/curs/310401/postgraduate-course-artificial-intelligence-deep-learning/) 2020-2021 edition, authored by:
+
+* Melania Sánchez
+* Jordi Montaner
+* Ferran Candela
+
+Advised by professor Kevin McGuinness
+
+## Project overview
+
+   <img src="docs/imgs/similarity_engine_diagram.png" width="400">
+
+
+## General configuration
+
 
 ## Fashion product dataset
 
-It is necessary to remove the following lines in the 'styles.csv' since they are misssing images.
+It is necessary to remove the following lines in the 'styles.csv' since they are missing images.
 
 ```
 39425,Men,Apparel,Topwear,Tshirts,Red,Spring,2013,Casual,U.S. Polo Assn. Men Red Polo T-Shirt

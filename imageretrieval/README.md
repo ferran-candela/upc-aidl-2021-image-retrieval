@@ -362,6 +362,18 @@ Here an example of the values obatained for the different evaluation systems:
         python ${PROJECT_ROOT}/imageretrieval/src/evaluation.py
         ```
 
+        ```
+        export PYTHONPATH=${PROJECT_ROOT} &&
+        export DEVICE=cpu &&
+        export DEBUG=True &&
+        export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/DeepFashion &&
+        export DATASET_LABELS_DIR=${PROJECT_ROOT}/imageretrieval/resources/deep_fashion/deep_fashion_with_article_type.csv &&
+        export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+        export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
+        export TOP_K_IMAGE=15 &&
+        export QUERIES_PER_LABEL=100 &&
+        python ${PROJECT_ROOT}/imageretrieval/src/evaluate_deep_fashion.py
+        ```
 # Data preparation
 
 Diagram to show the data flow of the prepare data functions  
