@@ -249,8 +249,8 @@ python ${PROJECT_ROOT}/imageretrieval/src/tSNE.py
 
 # Evaluation
 
-Diagram of the evaluation components
-![Diagram](../docs/imgs/Evaluation.png)
+Diagram of the evaluation components  
+<img src="../docs/imgs/Evaluation.png" width="400">
 
 In order to evaluate our retrieval engine we have decide to focus the attention on precision and recall. 
 * For precision we hace used the mAP since it is the most common way to evaluate retreival systems
@@ -263,7 +263,7 @@ We have build evaluation for the different models that we use to train, but also
 Here an example of the values:
 
 | ModelName   |   DataSetSize   |  UsedFeatures |   FeaturesSize |  ProcessTime  |  mAP  |  PrecisionHits  |
-|-------------|:---------------:|--------------:|----------------|:-------------:|------:|-----------------:|
+|-------------|:---------------:|--------------:|----------------|:-------------:|------:|----------------:|
 | vgg16 |  390 | NormalizedFeatures |  128 | 0:10:22.166937 |  0.090003 |  0.0489 |
 | resnet50 |    390   |   NormalizedFeatures |  128 | 0:09:35.969118 |  0.060651 |  0.0489 |
 | inception_v3 | 390 |    NormalizedFeatures |  128 | 0:09:13.525337 |  0.062526 |  0.0489 |
