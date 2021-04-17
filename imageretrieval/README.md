@@ -279,21 +279,27 @@ The results are saved in two ways and in the folder of each model.
 1. If using visual studio
 # Evaluation
 
-Diagram of the evaluation components
-![Diagram](../docs/imgs/Evaluation.png)
+Diagram of the evaluation components that shows data flow when running evaluation for fashion product and deep fashion:   
+    <img src="../docs/imgs/evaluation_diagram.png" width="400">   
+    Evaluation diagram
+  
+In order to evaluate our retrieval engine we have decide to focus the attention on precision and recall.   
+    <img src="../docs/imgs/precision_recall.png" width="150">  
+    Precision and recall provided by Wikipedia
+* For precision we have used the mAP algorithm, since it is the most common way to evaluate retreival systems  
+    <img src="../docs/imgs/mAP_formula.jpeg" width="200">  
+    Mean average precision formula given provided by Wikipedia  
 
-In order to evaluate our retrieval engine we have decide to focus the attention on precision and recall. 
-* For precision we hace used the mAP since it is the most common way to evaluate retreival systems
-* For recall we have use precision hits of the top 15 results.
+* For recall we have use precision hits of the top 15 clothing images.
 
-On the other hand we have also used speed of the executions tu measure our system and compare different models.
+On the other hand we have also used speed of the executions to measure our system and compare different models.
 
-We have build evaluation for the different models that we use to train, but also for two different data sets, `fashion product` and `deep fashion`.
+We have run the evaluation on each of the models that we have trained. Moreover we have run the evaluation on two different datasets, `fashion product` and `deep fashion`.
 
-Here an example of the values:
+Here an example of the values obatained for the different evaluation systems:
 
 | ModelName   |   DataSetSize   |  UsedFeatures |   FeaturesSize |  ProcessTime  |  mAP  |  PrecisionHits  |
-|-------------|:---------------:|--------------:|----------------|:-------------:|------:|-----------------:|
+|-------------|:---------------:|--------------:|----------------|:-------------:|------:|----------------:|
 | vgg16 |  390 | NormalizedFeatures |  128 | 0:10:22.166937 |  0.090003 |  0.0489 |
 | resnet50 |    390   |   NormalizedFeatures |  128 | 0:09:35.969118 |  0.060651 |  0.0489 |
 | inception_v3 | 390 |    NormalizedFeatures |  128 | 0:09:13.525337 |  0.062526 |  0.0489 |
@@ -301,7 +307,7 @@ Here an example of the values:
 | resnet50_custom | 390 |    NormalizedFeatures |  128 | 0:09:33.012131 |  0.057209 |  0.0489 |
 | vgg16_custom | 390 |    NormalizedFeatures |  128 | 0:10:07.504492 |  0.097952 |  0.0489 |
 | densenet161_custom | 390 |    NormalizedFeatures |  128 | 0:10:37.180019 |  0.102703 |  0.0489 |
-
+  
 
 ## Run evaluations
 1. If using visual studio 
