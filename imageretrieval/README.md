@@ -245,8 +245,38 @@ export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
 export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
 python ${PROJECT_ROOT}/imageretrieval/src/tSNE.py
 ```
+# Train
+Diagram of the train components
 
+![Diagram](../docs/imgs/Train.png)
 
+## What models do we use?
+In all cases we use pre-trained models.
+
+## Train Types
+We use two different types of training:
+1. We have named it "Transfer Learning". It is not exactly a training method. We use a trick to make batch norm statistics for the model to match our data set. The idea is to put the network into train mode and do a pass over the dataset without doing any backpropagation.
+2. We have named it "scratch". The trained models have most of the layers frozen and we unfrozen only some, usually the last or others that we believe are adequate for our objective. In this case is a complete training method with all phases: train, evaluate and test.
+
+## Train Datasets
+We can use two datasets for train. We can use two datasets to train. The environment variable DATASET_USEDNAME defines which one to use: "fashionproduct" or "deepfashion"
+
+## Train Results
+The results are saved in two ways and in the folder of each model.
+
+1. File: csv format log file
+
+2. Graphics: loss plot and accuracy plot 
+
+3. Model. Saved in each epoch if we consider that it has learned
+
+## Train graphics example
+
+<img src="../docs/imgs/resnet_loss_plot_18.png" width="400"/>>
+<img src="../docs/imgs/resnet_acc_plot_18.png" width="400"/>
+
+## Run train
+1. If using visual studio
 # Evaluation
 
 Diagram of the evaluation components
