@@ -6,10 +6,10 @@ from sklearn.metrics import average_precision_score
 
 from imageretrieval.src.models import ModelManager
 
-from features import FeaturesManager
-from dataset import DatasetManager
-from config import DebugConfig, FoldersConfig, DeviceConfig, RetrievalEvalConfig, ModelTrainConfig
-from engine import RetrievalEngine
+from imageretrieval.src.features import FeaturesManager
+from imageretrieval.src.dataset import DatasetManager
+from imageretrieval.src.config import DebugConfig, FoldersConfig, DeviceConfig, RetrievalEvalConfig, ModelTrainConfig
+from imageretrieval.src.engine import RetrievalEngine
 
 from utils import ProcessTime, LogFile
 
@@ -104,7 +104,7 @@ def prepare_data_to_evaluate(dataset_base_dir, article_types):
     return test_subset_df
 
 
-def features_evaluation(features, full_df, test_df, num_queries):
+def features_evaluation(scores, full_df, test_df, num_queries):
 
     queries = create_ground_truth_queries(full_df, test_df, "None", 0, [])
 
@@ -112,23 +112,10 @@ def features_evaluation(features, full_df, test_df, num_queries):
 
     # Compute mean Average Precision (mAP)
     print('\nComputing mean Average Precision (mAP)...')
-    mAP = evaluate_deep_fashion(features, y_true)
+    mAP = evaluate_deep_fashion(scores, y_true)
     print(f'\nmAP: {mAP:0.04f}')
 
     return mAP
-
-
-def cosine_similarity(features, imgidx, top_k):
-   # This gives the same rankings as (negative) Euclidean distance 
-    # when the features are L2 normalized (as ours are).
-    # The cosine similarity can be efficiently computed for all images 
-    # in the dataset using a matrix multiplication!
-
-    query = features[imgidx]
-    scores = features @ query 
-    # Return top K ids
-    ranking = (-scores).argsort()[1:top_k + 1]
-    return ranking
 
 
 def evaluation_hits(full_df, test_df, id_img, ranking):
@@ -194,12 +181,14 @@ def evaluate_models():
         engine = RetrievalEngine(device, FoldersConfig.WORK_DIR)
         engine.load_models_and_precomputed_features()
 
-        for img_path in test_df.path.values.tolist():
+        test_paths = test_df.path.values.tolist()
+
+        for i, img_path in enumerate(test_paths):
             query_path = engine.get_image_deep_fashion_path(img_path)
 
             query_features = engine.get_query_features(model_name, query_path)
             queries.append(query_features)
-            print(query_features)
+            print(f'\rCalculate features... {i}/{len(test_paths)}', end='', flush=True)
 
         queries = np.vstack(queries)
 
@@ -209,7 +198,9 @@ def evaluate_models():
         print('\nComputing evaluation Hits...')
         accuracy = []
         for i,id_img in enumerate(test_df.id.values.tolist()):
-            ranking = cosine_similarity(features, i, RetrievalEvalConfig.TOP_K_IMAGE)
+            score = scores[:,i].numpy()
+            top_k = RetrievalEvalConfig.TOP_K_IMAGE
+            ranking = (-score).argsort()[1:top_k + 1]
             precision = evaluation_hits(full_df, test_df, id_img, ranking)
             accuracy.append(precision)
 
