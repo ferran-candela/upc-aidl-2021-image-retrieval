@@ -108,24 +108,6 @@
             }
         },
         {
-            "name": "Prepare datasets",
-            "type": "python",
-            "request": "launch",
-            "program": "${PROJECT_ROOT}/imageretrieval/src/prepare_datasets.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${cwd}",
-                "DEVICE": "cuda",
-                "DEBUG": "True",
-                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
-                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
-                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
-                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
-                "RESOURCES_DIR": "${PROJECT_ROOT}/imageretrieval/resources/",
-            }
-        },
-        {
             "name": "t-SNE graphs",
             "type": "python",
             "request": "launch",
@@ -380,8 +362,8 @@ Here an example of the values obatained for the different evaluation systems:
 | vgg16_custom | 390 |    NormalizedFeatures |  128 | 0:10:07.504492 |  0.097952 |  0.0489 |
 | densenet161_custom | 390 |    NormalizedFeatures |  128 | 0:10:37.180019 |  0.102703 |  0.0489 |
   
-
-## Run evaluations
+  
+### How to run evaluations
 1. If using visual studio 
     * Include this two configurations
     ```
@@ -417,11 +399,16 @@ Here an example of the values obatained for the different evaluation systems:
                 "request": "launch",
                 "program": "${PROJECT_ROOT}/imageretrieval/src/evaluate_deep_fashion.py",
                 "console": "integratedTerminal",
+                "cwd": "${workspaceFolder}",
                 "env": {
+                    "PYTHONPATH": "${cwd}",
                     "DEBUG": "True",
-                    "DATASET_BASE_DIR": "${PROJECT_ROOT}/Project/Fashion_Product_Full/",
-                    "WORK_DIR": "${PROJECT_ROOT}/Project/Fashion_Product_Full/processed_datalab/",
-                    "LOG_DIR": "${PROJECT_ROOT}/Project/Fashion_Product_Full/processed_datalab/log/"
+                    "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/DeepFashion",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/imageretrieval/resources/deep_fashion/deep_fashion_with_article_type.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/",
+                "TOP_K_IMAGE": "15",
+                    "QUERIES_PER_LABEL": "100"
                 }
             }
         ]
@@ -445,4 +432,89 @@ Here an example of the values obatained for the different evaluation systems:
         export MAP_N_QUERIES=600 &&
         export TOP_K_IMAGE=15 &&
         python ${PROJECT_ROOT}/imageretrieval/src/evaluation.py
+        ```
+
+        ```
+        export PYTHONPATH=${PROJECT_ROOT} &&
+        export DEVICE=cpu &&
+        export DEBUG=True &&
+        export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/DeepFashion &&
+        export DATASET_LABELS_DIR=${PROJECT_ROOT}/imageretrieval/resources/deep_fashion/deep_fashion_with_article_type.csv &&
+        export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+        export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
+        export TOP_K_IMAGE=15 &&
+        export QUERIES_PER_LABEL=100 &&
+        python ${PROJECT_ROOT}/imageretrieval/src/evaluate_deep_fashion.py
+        ```
+# Data preparation
+
+Diagram to show the data flow of the prepare data functions  
+    <img src="../docs/imgs/data_preparation.png" width="200">  
+    Data preparation diagram
+
+
+This functions as the name is indicating perform different operations necessary to be able to work with the different dataset structures.  
+We started working with a dataset called fashion product which contains a `.csv` with the description of each image and the characteristics. You can take a look at a sample of the content of the mentioned `.csv` [here](../docs/files/sample_fashion_product.csv)
+When using deep fashion dataset we needed to adapt the way images are stored and also using the same characteristics as in fashion product. We created a mapping `.csv` to adapt the article type of the clothes. You can take a look [here](docs/files/sample_fashion_product.csv) to this mapping file.  
+
+The main operations that we have included are:  
+* Splitter to divide the images into train, validate and test. In this way we use different images for each of this steps of our retrieval system.
+* Create a `.csv` for deep fashion with the same characteristics that we use for product fashion. Example:  
+
+| id   |   path   |  categoryName |   articleType |  dataset  |
+|------|:--------:|--------------:|---------------|:---------:|
+|100000|img/Sheer_Pleated-Front_Blouse/img_00000001.jpg|Blouse|Shirts|deep_fashion|
+|100001|img/Sheer_Pleated-Front_Blouse/img_00000002.jpg|Blouse|Shirts|deep_fashion|
+|184526|img/Dreaming_And_Scheming_Hoodie/img_00000026.jpg|Hoodie|Sweaters|deep_fashion|
+|184527|img/Dreaming_And_Scheming_Hoodie/img_00000027.jpg|Hoodie|Sweaters|deep_fashion|
+|184528|img/Drop-Sleeve_Heathered_Tee/img_00000001.jpg|Tee|Tshirts|deep_fashion|
+|184529|img/Drop-Sleeve_Heathered_Tee/img_00000002.jpg|Tee|Tshirts|deep_fashion|
+|243124|img/Marled_Terrycloth_Joggers/img_00000033.jpg|Joggers|Lounge Pants|deep_fashion|
+|243125|img/Marled_Terrycloth_Joggers/img_00000034.jpg|Joggers|Lounge Pants|deep_fashion|
+|243126|img/Marled_Terrycloth_PJ_Sweatpants/img_00000026.jpg|Sweatpants|Lounge Pants|deep_fashion|
+|243127|img/Marled_Terrycloth_PJ_Sweatpants/img_00000027.jpg|Sweatpants|Lounge Pants|deep_fashion|
+
+### How to run prepare datasets
+1. If using visual studio 
+    * Include this two configurations 
+    ```
+        {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Prepare datasets",
+                "type": "python",
+                "request": "launch",
+                "program": "${PROJECT_ROOT}/imageretrieval/src/prepare_datasets.py",
+                "console": "integratedTerminal",
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "PYTHONPATH": "${cwd}",
+                    "DEVICE": "cuda",
+                    "DEBUG": "True",
+                    "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                    "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                    "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                    "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
+                    "RESOURCES_DIR": "${PROJECT_ROOT}/imageretrieval/resources/",
+                }
+            }
+        ]
+        }
+
+    ```
+
+2. If using terminal:
+    * Activate the conda environment, setup environment vars and execute evaluation.py.
+
+        ```
+        export PYTHONPATH=${PROJECT_ROOT} &&
+        export DEVICE=cuda &&
+        export DEBUG=True &&
+        export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
+        export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
+        export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+        export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
+        export RESOURCES_DIR=${PROJECT_ROOT}/imageretrieval/resources/ &&
+        python ${PROJECT_ROOT}/imageretrieval/src/prepare_datasets.py
         ```

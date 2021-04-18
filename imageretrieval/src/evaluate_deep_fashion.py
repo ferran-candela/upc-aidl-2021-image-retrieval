@@ -91,20 +91,25 @@ def evaluate_deep_fashion(scores, y_true):
 
 
 def prepare_data_to_evaluate(dataset_base_dir, article_types):
-    test_df = pd.read_csv(os.path.join(dataset_base_dir, "deep_fashion_with_article_type.csv"), error_bad_lines=False)
+    test_df = pd.read_csv(FoldersConfig.DATASET_LABELS_DIR, error_bad_lines=False)
     
     print(article_types)
 
     test_subset_df = pd.DataFrame()
-    for acticle_type in article_types:
-        is_type = test_df['articleType'] == acticle_type
+    for article_type in article_types:
+        is_type = test_df['articleType'] == article_type
         
-        test_subset_df = pd.concat([test_subset_df, test_df[is_type].head(30)])
+        samples = test_df[is_type]
+
+        if(len(samples) > RetrievalEvalConfig.QUERIES_PER_LABEL):
+            samples = samples.sample(RetrievalEvalConfig.QUERIES_PER_LABEL)
+
+        test_subset_df = pd.concat([test_subset_df, samples])
 
     return test_subset_df
 
 
-def features_evaluation(scores, full_df, test_df, num_queries):
+def features_evaluation(scores, full_df, test_df):
 
     queries = create_ground_truth_queries(full_df, test_df, "None", 0, [])
 
@@ -164,7 +169,7 @@ def evaluate_models():
         article_types = dataset_labels.tolist()
         test_df = prepare_data_to_evaluate(dataset_base_dir=dataset_base_dir, article_types=article_types)
 
-        num_queries = RetrievalEvalConfig.MAP_N_QUERIES
+        num_queries = len(test_df)
         print('\n\n## Evaluating model ', model_name, "with num_queries=", str(num_queries))
 
         print('\n\n## Evaluating NormalizedFeatures ', model_name)
@@ -199,7 +204,7 @@ def evaluate_models():
         for i,id_img in enumerate(test_df.id.values.tolist()):
             score = scores[:,i].numpy()
             top_k = RetrievalEvalConfig.TOP_K_IMAGE
-            ranking = (-score).argsort()[1:top_k + 1]
+            ranking = (-score).argsort()[:top_k]
             precision = evaluation_hits(full_df, test_df, id_img, ranking)
             accuracy.append(precision)
 
@@ -207,7 +212,7 @@ def evaluate_models():
         print(f'\nPrecision Hits: {precision:0.04f}')
 
         # Compute mAP
-        mAP = features_evaluation(scores, full_df, test_df, num_queries)
+        mAP = features_evaluation(scores, full_df, test_df)
 
         #LOG
         processtime = proctimer.stop()
