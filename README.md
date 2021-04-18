@@ -35,8 +35,9 @@ Documentation of the [experiments](#experiments):
 2. [Custom model Densenet161](#densenet161custom)
 3. [Custom model Densenet161 with PCA finetune](#densenet161custompca)
 4. [Evaluation with deep fashion](#evaluationdeepfashion)
-5. [Custom model with deep fashion](#custommodeldeepfashion)
-6. [Custom model with batchnorm](#custommodelbatchnorm)
+5. [Custom model with batchnorm](#custommodelbatchnorm)
+6. [Custom model with deep fashion](#custommodeldeepfashion)
+
 
 
 ## General configuration
@@ -193,7 +194,7 @@ Our system is a retrieval engine for clothes when we will show 5, 10 or 15 sugge
 
 </br>
 
-## <a name="densenet161custom">Second experiment - Custom model Densenet161
+## <a name="densenet161custom"></a>Second experiment - Custom model Densenet161
 
 In this experiment we use DesNet161 model with transfer learning as well, however we will freezing some layers, to be able to retrain them a get better results.
 We will use the feature extracted form the pretrained models and then train the classification layer.
@@ -249,7 +250,7 @@ Again as in the previous result we can see that the model that performs the best
 
 But not only that, we also can see that the evaluation metrics have improved comparing to the previous experiment.
 
-## <a name="densenet161custompca">Third experiment - Customer model with finetune PCA
+## <a name="densenet161custompca"></a>Third experiment - Customer model with finetune PCA
 
 Principal Components Analysis (PCA) is a mathematical formulation used in the reduction of data dimensions. Thus, the PCA technique allows the identification of standards in data and their expression in such a way that their similarities and differences are emphasized. Once patterns are found, they can be compressed, i.e., their dimensions can be reduced without much loss of information. In summary, the PCA formulation may be used as a digital image compression algorithm with a low level of loss.
 
@@ -268,6 +269,7 @@ In the first experiments we used a `fixed` dimensionality for all models equal t
 Principal Component Analysis (PCA) is used for preprocessing. If we remove redundant and unwanted data maybe the models improve.
 </br>
 </br>
+
 ### Experiment setup
 
 We need to analyze the PCA for each model. To achieve this, we have created a procedure that evaluates the different possibilities of PCA(n_components) based on two metrics and choose the best dimesion. (finetune.py)
@@ -291,7 +293,30 @@ We need to analyze the PCA for each model. To achieve this, we have created a pr
 
 The PCA finetune has greatly improved the metrics we use to evaluate our models.  
 It is necessary to finetun each PCA to find the value of n_component of the PCA and perform the best possible post-processing of the features.
-## <a name="evaluationdeepfashion">Fourth experiment - Evaluation for deep fashion
+## <a name="evaluationdeepfashion"></a>Fourth experiment - Evaluation for deep fashion
+
+### Hypothesis
+### Experiment setup
+### Results
+### Conclusions
+
+## <a name="custommodelbatchnorm"></a>Fifth experiment - Custom model batch norm with Deep Fashion dataset
+
+### Hypothesis
+
+As have been already explained in the training section, there is a trick that can be used with pretrained models to make the model match the norm statistics of the target dataset. We wanted to try if using the already pretrained model 'densenet161_custom', with which we obtained pretty good results, and making the pass over the Deep Fashion dataset, without doing any backpropagation, the model generalizes better and obtain better results for both Fashion Product evaluation as well as Deep Fashion evaluation.
+
+### Experiment setup
+
+We need to modify the DATASET_BASE_DIR and DATASET_LABELS_DIR to point the Deep Fashion dataset and the precomputed Deep Fashion labels mapping CSV already used in the Fourth Experiment.
+
+
+
+### Results
+### Conclusions
+
+
+## <a name="custommodeldeepfashion"></a>Sixth experiment - Evaluation for deep fashion
 
 ### Hypothesis
 ### Experiment setup
@@ -299,20 +324,7 @@ It is necessary to finetun each PCA to find the value of n_component of the PCA 
 ### Conclusions
 
 
-## <a name="custommodeldeepfashion">Fifth experiment - Evaluation for deep fashion
 
-### Hypothesis
-### Experiment setup
-### Results
-### Conclusions
-
-
-## <a name="custommodelbatchnorm">Sixth experiment - Evaluation for deep fashion
-
-### Hypothesis
-### Experiment setup
-### Results
-### Conclusions
 
 # Bibliography
 * Resnet50 diagram from [cv-tricks](https://cv-tricks.com/keras/understand-implement-resnets/)
