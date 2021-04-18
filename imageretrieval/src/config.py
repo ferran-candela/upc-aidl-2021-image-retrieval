@@ -51,6 +51,9 @@ class ModelBatchSizeConfig:
         if model_name == 'densenet161_custom_20':
             batch_size = 20
 
+        if model_name == 'densenet161_custom_deep_retrain':
+            batch_size = 20
+
         return batch_size
     
     @staticmethod

@@ -170,7 +170,8 @@ class ModelManager:
                             'densenet161_custom_deep',
                             'densenet161_custom_deep_batchnorm',
                             'densenet161_custom_20',
-                            'vgg16_custom_44'
+                            'vgg16_custom_44',
+                            'densenet161_custom_deep_retrain'
                             ]
         
         self.device = device
@@ -233,7 +234,9 @@ class ModelManager:
 
             model.output_features = 1888
 
-        if model_name == 'densenet161' or model_name == 'densenet161_custom' or model_name == 'densenet161_custom_deep' or model_name == 'densenet161_custom_deep_batchnorm' or model_name == 'densenet161_custom_20':
+        if model_name == 'densenet161' or model_name == 'densenet161_custom' \
+            or model_name == 'densenet161_custom_deep' or model_name == 'densenet161_custom_deep_batchnorm' \
+            or model_name == 'densenet161_custom_20' or model_name == 'densenet161_custom_deep_retrain':
             #Just use the output of feature extractor and ignore the classifier
             model.model.classifier = nn.Identity()
 
@@ -330,7 +333,6 @@ class ModelManager:
             params_to_train = filter(lambda p: p.requires_grad, model.parameters())
             optimizer = optim.SGD(params_to_train, lr=lr, momentum=0.9)
             #optimizer = optim.AdamW(params_to_train, lr=lr, weight_decay=0.01)
-
 
             is_pretrained = False
             input_resize = 224
@@ -451,6 +453,19 @@ class ModelManager:
             model = model_pretrained.get_model()
             # Convert to pretrained
             is_pretrained = True
+            input_resize = 224
+
+        if model_name == 'densenet161_custom_deep_retrain':
+            # Train from custom densenet161 pretrained with Fashion Product
+            model_pretrained = self.get_classifier('densenet161_custom', load_from_checkpoint=True)
+            
+            model = model_pretrained.get_model()
+
+            criterion = nn.CrossEntropyLoss()
+            lr = ModelTrainConfig.get_learning_rate(model_name=model_name)
+            optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
+
+            is_pretrained = False
             input_resize = 224
 
         if model_name == 'efficient_net_b4_custom':

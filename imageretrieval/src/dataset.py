@@ -156,15 +156,15 @@ class DatasetManager():
                             'Clothing Set', 'Belts']
 
         is_clothes = labels_df['masterCategory'] == 'Apparel'
-        is_shoes = labels_df['masterCategory'] == 'Footwear'
+        # is_shoes = labels_df['masterCategory'] == 'Footwear'
         is_differenet_clothes = labels_df['articleType'].isin(different_clothes)
 
-        df_clothes_shoes = labels_df[(is_clothes | is_shoes) & ~is_differenet_clothes]
+        df_clothes = labels_df[(is_clothes) & ~is_differenet_clothes]
 
-        if DEBUG: print(df_clothes_shoes.count())
-        if DEBUG: print(df_clothes_shoes.articleType.unique().size)
+        if DEBUG: print(df_clothes.count())
+        if DEBUG: print(df_clothes.articleType.unique().size)
 
-        return df_clothes_shoes
+        return df_clothes
 
     def filter_deep_fashion(self, labels_df):
         filter_articles_type = ['Shirts', 'Jeans', 'Track Pants', 'Tshirts', 'Casual Shoes', 'Flip Flops', 'Tops', 'Sandals', 'Sweatshirts', 'Formal Shoes', 'Flats', 'Sports Shoes', 'Shorts', 'Heels','Dresses','Night suits','Skirts','Trousers','Jackets','Sweaters','Nightdress','Leggings']
