@@ -84,9 +84,9 @@ docker-compose -p imageretrieval build
 
 This will creaate the Docker image for the API and the Frontend (that also acts as a proxy for the API in the port 80).
 
-# Experiments
+# <a name="experiments">Experiments
 
-## <a name="pretrainedmodel"></a>First experiment - Pretrained model Resnet50
+## <a name="pretrainedmodel"></a>First experiment - Pretrained models
 This experiment was the first step of our retrieval engine, we build a system that used pretrained models.
 The expectation was to first of all get to know the dataset `product fashion` and train it with pretrained model to be able to identify the best model. Also we took this opportunity to improve the transform operations that we need to apply to the input images to improve the accuracy.
 We have performed this experiment over 6 different models:
@@ -97,18 +97,92 @@ We have performed this experiment over 6 different models:
 * densenet161
 * efficient_net_b4
 
+</br>
 
 ### Hypothesis
-The expectation from what we read is that the model that would behaves the best is resnet50
+The expectation for the first experiment is that resnet50 and DenseNet161 would be the models to behave the best, based on some papers. For example in [this paper](https://www.ingentaconnect.com/contentone/ist/ei/2019/00002019/00000008/art00008?crawler=true&mimetype=application/pdf), resnet, vgg16 and densenet161 are mentioned as the most used models and with better performance. in this paper it is used as texture retrieval, something similar to our clothe retrieval system.
+
+</br>
 
 ### Experiment setup
-   <img src="docs/imgs/resnet50_architecture.webp" width="100"/>  
-   Diagram from resnet50 architecture
+We have use as dataset Product Fashion, you have see a sample of the content in the following table.
+id,gender,masterCategory,subCategory,articleType,baseColour,season,year,usage,productDisplayName
+| id   | gender |  masterCategory |   subCategory |  articleType  | baseColour   |   season   |  year |   usage |  productDisplayName  |
+|------|-------:|----------------:|--------------:|--------------:|-------------:|-----------:|------:|------:|:---------:|
+|15970|Men|Apparel|Topwear|Shirts|Navy Blue|Fall|2011|Casual|Turtle Check Men Navy Blue Shirt
+|39386|Men|Apparel|Bottomwear|Jeans|Blue|Summer|2012|Casual|Peter England Men Party Blue Jeans|
+|59263|Women|Accessories|Watches|Watches|Silver|Winter|2016|Casual|Titan Women Silver Watch|
+|21379|Men|Apparel|Bottomwear|Track Pants|Black|Fall|2011|Casual|Manchester United Men Solid Black Track Pants|
+|53759|Men|Apparel|Topwear|Tshirts|Grey|Summer|2012|Casual|Puma Men Grey T-shirt|
+|1855|Men|Apparel|Topwear|Tshirts|Grey|Summer|2011|Casual|Inkfruit Mens Chain Reaction T-shirt|
+|30805|Men|Apparel|Topwear|Shirts|Green|Summer|2012|Ethnic|Fabindia Men Striped Green Shirt|
+|26960|Women|Apparel|Topwear|Shirts|Purple|Summer|2012|Casual|Jealous 21 Women Purple Shirt|
+|29114|Men|Accessories|Socks|Socks|Navy Blue|Summer|2012|Casual|Puma Men Pack of 3 Socks|
+|30039|Men|Accessories|Watches|Watches|Black|Winter|2016|Casual|Skagen Men Black Watch|
+|9204|Men|Footwear|Shoes|Casual Shoes|Black|Summer|2011|Casual|Puma Men Future Cat Remix SF Black Casual Shoes|
+|48123|Women|Accessories|Belts|Belts|Black|Summer|2012|Casual|Fossil Women Black Huarache Weave Belt|
+|18653|Men|Footwear|Flip Flops|Flip Flops|Black|Fall|2011|Casual|Fila Men Cush Flex Black Slippers|  
+
+The architecture of the models we have used is the described on the following images. 
+   <img src="docs/imgs/vgg16_architecture.jpeg" width="100"/> 
+   <img src="docs/imgs/resnet50_architecture.jpeg" width="100"/>
+   <img src="docs/imgs/densenet161_architecture.jpeg" width="100"/>  
+   (a) VGG-16, (b) ResNet-50, and (c) DenseNet-161 architectures
+and feature extraction locations. 
+
+However we included some customizations based on the results we so for our particular case of clothe retrieval.
+* Changes that included in vgg16 model:
+   ```
+   model.model = nn.Sequential(
+      model.model.features,
+      nn.AdaptiveAvgPool2d((1,1)),
+      nn.Flatten()
+   )
+
+   model.output_features = 512
+   ```
+
+* Changes that included in resnet50 model:
+   ```
+   model.model.fc = nn.Identity()
+
+   model.model.layer4[2].relu = nn.Identity()
+
+   model.output_features = 2048
+   ```
+* Changes that included in densenet161 model:
+   ```
+   model.model.classifier = nn.Identity()
+
+   model.output_features = 2208
+   ```
+As you can see we have removed the classification layer fom all of the model in order convert them in feature extractors and also we have included the output_features value after using the feature extractor.
+
+</br>
 
 ### Results
+
+In the following table you can see what are the results based on mAP and precision hit, the results are sorted by precision hit.
+
+As we expected the model that behave the best are densenet161, vgg16, resnet50. And we can also see that inception_v3 is on the top 3 models.
+The model that gives best mAP is vgg16 and the model with best precision hit is densenet161.
+
+| Model | DataSetSize | UsedFeatures | FeaturesSize | ProcessTime | mAPqueries | mAP | PrecisionHits |
+|-------|------------:|-------------:|-------------:|------------:|-----------:|----:|--------------:|
+|densenet161|5021|NormalizedFeatures|128|0:11:15|600|0,256|0,7514|
+|vgg16|5021|NormalizedFeatures|128|0:10:25|600|0,273|0,7159|
+|resnet50|5021|NormalizedFeatures|128|0:11:04|600|0,221|0,7133|
+|inception_v3|5021|NormalizedFeatures|128|0:11:25|600|0,246|0,7016|
+|inception_resnet_v2|5021|NormalizedFeatures|128|0:11:45|600|0,187|0,5892|
+|efficient_net_b4|5021|NormalizedFeatures|128|0:11:45|600|0,173|0,5293|  
+
+</br>  
+
 ### Conclusions
 
-# <a name="experiments">Experiments
+As a result we can see that the model that 
+
+</br>
 
 ## <a name="densenet161custom">Second experiment - Customer model Densenet161
 
