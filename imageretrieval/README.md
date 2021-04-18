@@ -228,8 +228,8 @@ The results are saved in three ways and in the folder of each model.
 
 ## Train graphics example
 
-<img src="../docs/imgs/resnet_loss_plot_18.png" width="400"/>
-<img src="../docs/imgs/resnet_acc_plot_18.png" width="400"/>
+<img src="../docs/imgs/resnet_loss_plot_18.png" width="300"/>
+<img src="../docs/imgs/resnet_acc_plot_18.png" width="300"/>
 
 ## HIGHLIGHTS
 
@@ -322,8 +322,8 @@ The results are saved in two ways and in the folder of each model.
 
 ## Finetune graphics example
 
-<img src="../docs/imgs/pca_indiv_variance_plot_220.png" width="400"/>
-<img src="../docs/imgs/pca_cumul_variance_plot_220.png" width="400"/>
+<img src="../docs/imgs/pca_indiv_variance_plot_220.png" width="300"/>
+<img src="../docs/imgs/pca_cumul_variance_plot_220.png" width="300"/>
 
 ## HIGHLIGHTS
 
@@ -457,6 +457,52 @@ The class manage all tasks related to the maintenance of these checkpoints, savi
         export TOP_K_AQE=5 &&
         python ${PROJECT_ROOT}/imageretrieval/src/features.py
         ```
+
+
+# Models Manager (models.py)
+
+Diagram of the model manipulating
+
+<img src="../docs/imgs/.png"/>
+
+
+This is the master class that is responsible for managing everything related to models, manipulating, save, ...  
+It's not an execution file. It's the main class shared by all processes. All functions or methods are used in all other processes of this Image Retrieval system
+
+## Models used
+
+We have worked using these pretrained models:
+* vgg16
+* resnet50
+* densenet161
+* inception_v3
+* efficient_net_b4
+
+## Transform to Feature Extractor
+
+This method transforms every different model to a Feature Extractor. It means that we adapt any layers to improve extraction features.
+
+## Prepare to classifier
+
+To improve the pretrained models for our ImageRetrieval task and with our dataset, we train the models with our dataset and recalculate the weights of some layers.  
+We use same models classifier that proposed but we adapt with our num. classes and focus or unfreeze the training weights in specific layers.
+
+## Image Transformations
+
+We use two image transformations:
+
+1. Train transformation. Used for train only. Data augmentation technique: Resize, RandomCrop and Horizontal Flip  
+2. Input transformation. Used for all other tasks. Data augmentation technique: Resize, CenterCrop
+
+## Optimizer and Criterion
+
+We use SGD (Stochastic Gradient Descent) optimizer in all models. You can modify the optimizer in this class. Also, you can modify the SGD parameters (learning rate, momentum,...)  
+We use CrossEntropyLoss as a criterion.
+
+## HIGHLIGHTS
+
+ModelTrainConfig.NUM_CLASSES (config.py): Very important to configure. Number of classes that we have in our dataset and we want to classify.
+
 
 # <a name="evaluation"></a>Evaluation
 
