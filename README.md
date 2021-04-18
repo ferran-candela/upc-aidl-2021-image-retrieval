@@ -30,6 +30,14 @@ Documentation of the different parts of the project:
 * [API](/retrievalapi/README.md)
 * [Frontend](/retrieval-app/README.md)
 
+Documentation of the [experiments](#experiments):
+1. [Pretrained model](#pretrainedmodel)
+2. [Custom model Densenet161](#densenet161custom)
+3. [Custom model Densenet161 with PCA finetune](#densenet161custompca)
+4. [Evaluation with deep fashion](#evaluationdeepfashion)
+5. [Custom model with deep fashion](#custommodeldeepfashion)
+6. [Custom model with batchnorm](#custommodelbatchnorm)
+
 
 ## General configuration
 
@@ -75,3 +83,71 @@ docker-compose -p imageretrieval build
 ```
 
 This will creaate the Docker image for the API and the Frontend (that also acts as a proxy for the API in the port 80).
+
+# Experiments
+
+## <a name="pretrainedmodel"></a>First experiment - Pretrained model Resnet50
+This experiment was the first step of our retrieval engine, we build a system that used pretrained models.
+The expectation was to first of all get to know the dataset `product fashion` and train it with pretrained model to be able to identify the best model. Also we took this opportunity to improve the transform operations that we need to apply to the input images to improve the accuracy.
+We have performed this experiment over 6 different models:
+* vgg16
+* resnet50
+* inception_v3
+* inception_resnet_v2
+* densenet161
+* efficient_net_b4
+
+
+### Hypothesis
+The expectation from what we read is that the model that would behaves the best is resnet50
+
+### Experiment setup
+   <img src="docs/imgs/resnet50_architecture.webp" width="100"/>  
+   Diagram from resnet50 architecture
+
+### Results
+### Conclusions
+
+# <a name="experiments">Experiments
+
+## <a name="densenet161custom">Second experiment - Customer model Densenet161
+
+### Hypothesis
+### Experiment setup
+### Results
+### Conclusions
+
+
+## <a name="densenet161custompca">Third experiment - Customer model Densenet161 with finetune PCA
+
+### Hypothesis
+### Experiment setup
+### Results
+### Conclusions
+
+
+## <a name="evaluationdeepfashion">Fourth experiment - Evaluation for deep fashion
+
+### Hypothesis
+### Experiment setup
+### Results
+### Conclusions
+
+
+## <a name="custommodeldeepfashion">Fifth experiment - Evaluation for deep fashion
+
+### Hypothesis
+### Experiment setup
+### Results
+### Conclusions
+
+
+## <a name="custommodelbatchnorm">Sixth experiment - Evaluation for deep fashion
+
+### Hypothesis
+### Experiment setup
+### Results
+### Conclusions
+
+# Bibliography
+* Resnet50 diagram from [cv-tricks](https://cv-tricks.com/keras/understand-implement-resnets/)
