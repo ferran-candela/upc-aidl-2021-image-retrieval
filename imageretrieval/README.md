@@ -299,11 +299,12 @@ The first approach was a list values of PCA that we need to calculate the two me
 Diagram of the evaluation components that shows data flow when running evaluation for fashion product and deep fashion:   
     <img src="../docs/imgs/evaluation_diagram.png" width="400">   
     Evaluation diagram
-  
+In order to calculate the evaluation for product fashion we have used the subset of data that we have called test dataset as it is explained in the training section. Then we have used normalized featured for one of the results and in order to compare we also have calculated the evaluation with the average query expansion features.
+
 In order to evaluate our retrieval engine we have decide to focus the attention on precision and recall.   
     <img src="../docs/imgs/precision_recall.png" width="150">  
     Precision and recall provided by Wikipedia
-* For precision we have used the mAP algorithm, since it is the most common way to evaluate retreival systems  
+* For precision we have used the mAP algorithm, since it is the most common way to evaluate retrieval systems  
     <img src="../docs/imgs/mAP_formula.jpeg" width="200">  
     Mean average precision formula given provided by Wikipedia  
 
@@ -313,17 +314,17 @@ On the other hand we have also used speed of the executions to measure our syste
 
 We have run the evaluation on each of the models that we have trained. Moreover we have run the evaluation on two different datasets, `fashion product` and `deep fashion`.
 
-Here an example of the values obatained for the different evaluation systems:
+Here an example of the values obtained for the different evaluation systems:
 
 | ModelName   |   DataSetSize   |  UsedFeatures |   FeaturesSize |  ProcessTime  |  mAP  |  PrecisionHits  |
 |-------------|:---------------:|--------------:|----------------|:-------------:|------:|----------------:|
-| vgg16 |  390 | NormalizedFeatures |  128 | 0:10:22.166937 |  0.090003 |  0.0489 |
-| resnet50 |    390   |   NormalizedFeatures |  128 | 0:09:35.969118 |  0.060651 |  0.0489 |
-| inception_v3 | 390 |    NormalizedFeatures |  128 | 0:09:13.525337 |  0.062526 |  0.0489 |
-| densenet161 | 390 |    NormalizedFeatures |  128 | 0:11:24.438227 |  0.066571 |  0.0489 |
-| resnet50_custom | 390 |    NormalizedFeatures |  128 | 0:09:33.012131 |  0.057209 |  0.0489 |
-| vgg16_custom | 390 |    NormalizedFeatures |  128 | 0:10:07.504492 |  0.097952 |  0.0489 |
-| densenet161_custom | 390 |    NormalizedFeatures |  128 | 0:10:37.180019 |  0.102703 |  0.0489 |
+| vgg16 |  390 | NormalizedFeatures |  128 | 0:10:22.166937 |  0.090003 |  0.160686 |
+| resnet50 |    390   |   NormalizedFeatures |  128 | 0:09:35.969118 |  0.060651 |  0.111287 |
+| inception_v3 | 390 |    NormalizedFeatures |  128 | 0:09:13.525337 |  0.062526 |  0.126841 |
+| densenet161 | 390 |    NormalizedFeatures |  128 | 0:11:24.438227 |  0.066571 |  0.155388 |
+| resnet50_custom | 390 |    NormalizedFeatures |  128 | 0:09:33.012131 |  0.057209 |  0.114533 |
+| vgg16_custom | 390 |    NormalizedFeatures |  128 | 0:10:07.504492 |  0.097952 |  0.178293 |
+| densenet161_custom | 390 |    NormalizedFeatures |  128 | 0:10:37.180019 |  0.102703 |  0.215557 |
   
   
 ### How to run evaluations
