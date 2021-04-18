@@ -160,7 +160,7 @@ The model that gives best mAP is vgg16 and the model with best precision hit is 
 | Model | DataSetSize | UsedFeatures | FeaturesSize | ProcessTime | mAPqueries | mAP | PrecisionHits |
 |-------|------------:|-------------:|-------------:|------------:|-----------:|----:|--------------:|
 |densenet161|5021|NormalizedFeatures|128|0:11:15|600|0,256|0,7514|
-|vgg16|5021|NormalizedFeatures|128|0:10:25|600|0,273|0,7159|
+|vgg16|5021|NormalizedFeatures|128|0:10:25|600|0,293|0,7742|
 |resnet50|5021|NormalizedFeatures|128|0:11:04|600|0,221|0,7133|
 |inception_v3|5021|NormalizedFeatures|128|0:11:25|600|0,246|0,7016|
 |inception_resnet_v2|5021|NormalizedFeatures|128|0:11:45|600|0,187|0,5892|
@@ -217,8 +217,8 @@ We need to analyze the PCA for each model. To achieve this, we have created a pr
 |-------|------------:|-------------:|-------------:|------------:|-----------:|----:|--------------:|
 |densenet161_custom|NormalizedFeatures|128|0,310|0,8217|20|0,665|0,8467|
 |densenet161_custom|AQEFeatures|128|0,386|0,7872|20|0,692|0,8234|
-|vgg16_custom|NormalizedFeatures|128|0,273|0,7159|44|0,401|0,7821|
-|vgg16_custom|AQEFeatures|128|0,308|0,5739|44|0,490|0,7930|
+|vgg16_custom|NormalizedFeatures|128|0,293|0,7742|44|0,401|0,7821|
+|vgg16_custom|AQEFeatures|128|0,352|0,6424|44|0,490|0,7930|
 </br>
 
 
