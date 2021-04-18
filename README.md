@@ -112,16 +112,6 @@ id,gender,masterCategory,subCategory,articleType,baseColour,season,year,usage,pr
 |15970|Men|Apparel|Topwear|Shirts|Navy Blue|Fall|2011|Casual|Turtle Check Men Navy Blue Shirt
 |39386|Men|Apparel|Bottomwear|Jeans|Blue|Summer|2012|Casual|Peter England Men Party Blue Jeans|
 |59263|Women|Accessories|Watches|Watches|Silver|Winter|2016|Casual|Titan Women Silver Watch|
-|21379|Men|Apparel|Bottomwear|Track Pants|Black|Fall|2011|Casual|Manchester United Men Solid Black Track Pants|
-|53759|Men|Apparel|Topwear|Tshirts|Grey|Summer|2012|Casual|Puma Men Grey T-shirt|
-|1855|Men|Apparel|Topwear|Tshirts|Grey|Summer|2011|Casual|Inkfruit Mens Chain Reaction T-shirt|
-|30805|Men|Apparel|Topwear|Shirts|Green|Summer|2012|Ethnic|Fabindia Men Striped Green Shirt|
-|26960|Women|Apparel|Topwear|Shirts|Purple|Summer|2012|Casual|Jealous 21 Women Purple Shirt|
-|29114|Men|Accessories|Socks|Socks|Navy Blue|Summer|2012|Casual|Puma Men Pack of 3 Socks|
-|30039|Men|Accessories|Watches|Watches|Black|Winter|2016|Casual|Skagen Men Black Watch|
-|9204|Men|Footwear|Shoes|Casual Shoes|Black|Summer|2011|Casual|Puma Men Future Cat Remix SF Black Casual Shoes|
-|48123|Women|Accessories|Belts|Belts|Black|Summer|2012|Casual|Fossil Women Black Huarache Weave Belt|
-|18653|Men|Footwear|Flip Flops|Flip Flops|Black|Fall|2011|Casual|Fila Men Cush Flex Black Slippers|  
 
 The architecture of the models we have used is the described on the following images.  
  
@@ -180,7 +170,9 @@ The model that gives best mAP is vgg16 and the model with best precision hit is 
 
 ### Conclusions
 
-As a result we can see that the model that 
+As result we can see that the model that performs the best for our specific use case is densenet161.
+
+Our system is a retrieval engine for clothes when we will show 5, 10 or 15 suggestions to the end user, therefore the precision hit of top 15 is the evaluation metrics that drives our final decision to choose the best model.
 
 </br>
 
