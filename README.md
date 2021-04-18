@@ -105,7 +105,7 @@ The expectation for the first experiment is that resnet50 and DenseNet161 would 
 </br>
 
 ### Experiment setup
-We have use as dataset Product Fashion, you have see a sample of the content in the following table.
+We have use as dataset Product Fashion, you can see a sample of the content in the following table.
 id,gender,masterCategory,subCategory,articleType,baseColour,season,year,usage,productDisplayName
 | id   | gender |  masterCategory |   subCategory |  articleType  | baseColour   |   season   |  year |   usage |  productDisplayName  |
 |------|-------:|----------------:|--------------:|--------------:|-------------:|-----------:|------:|------:|:---------:|
@@ -113,7 +113,10 @@ id,gender,masterCategory,subCategory,articleType,baseColour,season,year,usage,pr
 |39386|Men|Apparel|Bottomwear|Jeans|Blue|Summer|2012|Casual|Peter England Men Party Blue Jeans|
 |59263|Women|Accessories|Watches|Watches|Silver|Winter|2016|Casual|Titan Women Silver Watch|
 
-The architecture of the models we have used is the described on the following images.  
+The architecture of the models we have used is the described on the following documentation pages. We have use `torchvision.model` library.
+* [Resnet model](https://pytorch.org/vision/0.8/_modules/torchvision/models/resnet.html)
+* [DenseNet model](https://pytorch.org/vision/stable/_modules/torchvision/models/densenet.html)
+* [VGG16 model](https://pytorch.org/vision/stable/_modules/torchvision/models/vgg.html)
  
    <img src="docs/imgs/vgg16_architecture.jpeg" width="100"/> <img src="docs/imgs/resnet50_architecture.jpeg" width="100"/> <img src="docs/imgs/densenet161_architecture.jpeg" width="100"/>
 
@@ -148,6 +151,20 @@ However we included some customizations based on the results we so for our parti
    ```
 As you can see we have removed the classification layer fom all of the model in order convert them in feature extractors and also we have included the output_features value after using the feature extractor.
 
+We also included the this transformation for the input data
+   ```
+   transforms.Compose([
+         transforms.Resize(image_resized_size),
+         transforms.CenterCrop(image_resized_size),
+         transforms.ToTensor(),
+         self.normalize
+   ])
+   ```
+Resized images to 224 when using vgg16 and densenet161 and 299 when using inception_v3 and resnet50.
+We CenterCrop and then we normalize.
+
+Finally we have ready our transfer learning model.
+
 </br>
 
 ### Results
@@ -176,13 +193,61 @@ Our system is a retrieval engine for clothes when we will show 5, 10 or 15 sugge
 
 </br>
 
-## <a name="densenet161custom">Second experiment - Customer model Densenet161
+## <a name="densenet161custom">Second experiment - Custom model Densenet161
+
+In this experiment we use DesNet161 model with transfer learning as well, however we will freezing some layers, to be able to retrain them a get better results.
+We will use the feature extracted form the pretrained models and then train the classification layer.
+
+Although we will focus our improvements on densenet161 we have perform the comparative for the same model that we have use before:
+* vgg16
+* resnet50
+* inception_v3
+* inception_resnet_v2
+* densenet161
+* efficient_net_b4
 
 ### Hypothesis
+We expect that the precision hits and the mean average precision (mAP) is going to improve when we train some layer of the transfer learning models that we are using. We expect again that the model that will give a better evaluation is DenseNet161.
+
 ### Experiment setup
+We have use as dataset Product Fashion, you can see a sample of the content in the previous experiment table.
+
+The architecture of the models in this experiment is slightly different to the one presented in the first experiment. We decided to froze some of the initial layers, so the last layer would be train again by our system. For each of the models:
+
+* **DenseNet161**: we have retrained the layer `denseblock4`, so we freeze the rest of layers from this model.
+* **VGG16**: we have retrained from the 24th to the 30th layer, then used same classifier that proposed in vgg16 but with our num_classes as output, and only pass to the optimizers the parameters that require grads.
+* **ResNet50**: in this case we have 4 layer so we just train the last layer, the 4th one, the rest of them remain frozen.
+* **Inception v3**: in this case we have mixed layers and we decided to train `Mixed_7a`, `Mixed_7b` and `Mixed_7c`, so the rest of the layer would be frozen.
+
 ### Results
+In the following table you can see what are the results based on mAP and precision hit, the results are sorted by precision hit.
+
+As we expected the model that behave the best are densenet161.
+The model that gives best mAP is vgg16 and the model with best precision hit is densenet161.
+
+| Model | DataSetSize | UsedFeatures | FeaturesSize | ProcessTime | mAPqueries | mAP | PrecisionHits |
+|-------|------------:|-------------:|-------------:|------------:|-----------:|----:|--------------:|
+|densenet161_custom|5021|NormalizedFeatures|128|0:11:15|600|0,310|0,8217|
+|resnet50_custom|5021|NormalizedFeatures|128|0:11:42|600|0,225|0,7862|
+|vgg16_custom|5021|NormalizedFeatures|44|0:11:06|600|0,401|0,7821|
+|inception_v3_custom|5021|NormalizedFeatures|128|0:09:52|600|0,265|0,7797|
+
+We have calculated as well the confusion matrix for the best model to see how it looks. 
+Here the confusion matrix for DenseNet161  
+<img src="docs/imgs/densenet_custom_confusion_matrix.png" width="400"/>
+
+As you can appreciate in the matrix the precision is very high for all of the classes, with specific mention to shirt and tshirt.
+
+Also we have created a tsne graph representation of the feature visualization for DesneNet161 in the following image  
+<img src="docs/imgs/tsne_normalizedfeatures_128.png" width="400"/>
+
+We can also appreciate a clear distribution of the features fo the classes that we have in our dataset.
+
 ### Conclusions
 
+Again as in the previous result we can see that the model that performs the best for our specific use case is densenet161.
+
+But not only that, we also can see that the evaluation metrics have improved comparing to the previous experiment.
 
 ## <a name="densenet161custompca">Third experiment - Customer model with finetune PCA
 
@@ -251,3 +316,5 @@ It is necessary to finetun each PCA to find the value of n_component of the PCA 
 
 # Bibliography
 * Resnet50 diagram from [cv-tricks](https://cv-tricks.com/keras/understand-implement-resnets/)
+* [Paper](https://www.ingentaconnect.com/contentone/ist/ei/2019/00002019/00000008/art00008?crawler=true&mimetype=application/pdf) with description of models to use
+* [DenseNet model description](https://pytorch.org/hub/pytorch_vision_densenet/)
