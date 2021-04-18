@@ -48,6 +48,9 @@ class ModelBatchSizeConfig:
         if model_name == 'vgg16_custom':
             batch_size = 20
 
+        if model_name == 'densenet161_custom_20':
+            batch_size = 20
+
         return batch_size
     
     @staticmethod
@@ -74,6 +77,9 @@ class ModelBatchSizeConfig:
 
         if model_name == 'resnet50_custom':
             batch_size = 10
+        
+        if model_name == 'densenet161_custom_20':
+            batch_size = 20
 
         return batch_size
 
@@ -100,11 +106,14 @@ class FeaturesConfig:
         if model_name == 'efficient_net_b4':
             pass
 
-        if model_name == 'vgg16_custom':
+        if model_name == 'vgg16_custom_44':
             PCA = 44
 
         if model_name == 'resnet50_custom':
             pass
+        
+        if model_name == 'densenet161_custom_20':
+            PCA=20
 
         return PCA
 
