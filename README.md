@@ -87,10 +87,24 @@ This will creaate the Docker image for the API and the Frontend (that also acts 
 # Experiments
 
 ## <a name="pretrainedmodel"></a>First experiment - Pretrained model Resnet50
+This experiment was the first step of our retrieval engine, we build a system that used pretrained models.
+The expectation was to first of all get to know the dataset `product fashion` and train it with pretrained model to be able to identify the best model. Also we took this opportunity to improve the transform operations that we need to apply to the input images to improve the accuracy.
+We have performed this experiment over 6 different models:
+* vgg16
+* resnet50
+* inception_v3
+* inception_resnet_v2
+* densenet161
+* efficient_net_b4
+
 
 ### Hypothesis
+The expectation from what we read is that the model that would behaves the best is resnet50
 
 ### Experiment setup
+   <img src="docs/imgs/resnet50_architecture.webp" width="100"/>  
+   Diagram from resnet50 architecture
+
 ### Results
 ### Conclusions
 
@@ -134,3 +148,6 @@ This will creaate the Docker image for the API and the Frontend (that also acts 
 ### Experiment setup
 ### Results
 ### Conclusions
+
+# Bibliography
+* Resnet50 diagram from [cv-tricks](https://cv-tricks.com/keras/understand-implement-resnets/)
