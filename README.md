@@ -293,11 +293,46 @@ We need to analyze the PCA for each model. To achieve this, we have created a pr
 
 The PCA finetune has greatly improved the metrics we use to evaluate our models.  
 It is necessary to finetun each PCA to find the value of n_component of the PCA and perform the best possible post-processing of the features.
+
 ## <a name="evaluationdeepfashion"></a>Fourth experiment - Evaluation for deep fashion
 
+We have been using to train and evaluate the models of our neural network the same dataset, Fashion Product. So we want to use a a different dataset with more realistic images. We have selected Deep Fashion as our second dataset, it is a very famous dataset for clothing retrieval systems.
+The structure of this dataset it is different from Fashion Product. So the first thing that we needed to do is prepare the data to ve able to work with it in our system.
+You can check this out in the section for [data preparation](/imageretrieval/README.md/#datapreparation) form our documentation.
+
 ### Hypothesis
+We want to evaluate our models with a different dataset to see if the model is just specialized on our images. We think that the models are going to decrease precision hits and mAP, since the dataset that we are using contains images with white background and with a clear focused on the clothes that is referring to.
+
 ### Experiment setup
+We have prepared the dataset to match the same structure as Fashion Product dataset. And we have run the evaluation getting a subset of the 
+data. We have used 100 clothes from each time of clothe that we have in the new datset, Deep Fashion.
+We have applied the evaluation to the following models:
+* densenet161_custom
+* vgg16_custom
+* vgg16
+* densenet161
+* inception_v3
+* resnet50_custom
+* resnet50
+* efficient_net_b4
+
+The models just with the transfer learning have not special name and the models with the frozen layers with we have trained some of the layers we have called them `_custom`
+
 ### Results
+In the following table we will compare sorted by precision hits both the custom and simple models. 
+
+|Model|DataSetSize|UsedFeatures|FeaturesSize|mAPqueries|mAP|PrecisionHits|
+|-----|----------:|-----------:|-----------:|---------:|--:|------------:|
+|densenet161_custom|1245|NormalizedFeatures|128|1245|0,131|0,267|
+|vgg16_custom|1245|NormalizedFeatures|128|1245|0,115|0,216|
+|vgg16|1245|NormalizedFeatures|128|1245|0,108|0,211|
+|densenet161|1245|NormalizedFeatures|128|1245|0,077|0,192|
+|inception_v3|1245|NormalizedFeatures|128|1245|0,073|0,163|
+|resnet50_custom|1245|NormalizedFeatures|128|1245|0,063|0,157|
+|resnet50|1245|NormalizedFeatures|128|1245|0,061|0,127|
+|efficient_net_b4|1245|NormalizedFeatures|128|1245|0,045|0,055|
+
+
 ### Conclusions
 
 ## <a name="custommodelbatchnorm"></a>Fifth experiment - Custom model batch norm with Deep Fashion dataset

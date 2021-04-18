@@ -660,7 +660,15 @@ Here an example of the values obtained for the different evaluation systems:
 | resnet50_custom | 390 |    NormalizedFeatures |  128 | 0:09:33.012131 |  0.057209 |  0.114533 |
 | vgg16_custom | 390 |    NormalizedFeatures |  128 | 0:10:07.504492 |  0.097952 |  0.178293 |
 | densenet161_custom | 390 |    NormalizedFeatures |  128 | 0:10:37.180019 |  0.102703 |  0.215557 |
-  
+
+Here we explain the technical details on how we have implemented the evaluation.  
+
+In order to calculate mAP and precision hit as it is shown in the image we need the to define the predictions and the ground truth.
+In order to calculate the ground truth we have decided to use `articleType` to identify which are the similar clothes, although it might seem a bit lax, it is perfect for our use case, since we want to recommend similar clothes.  
+
+On the oder hand we have also define the prediction. To do this we have calculated scores based on the feature extraction.
+
+After having this too values we can calculate mAP and precision hits.
   
 ### How to run evaluations
 1. If using visual studio 
