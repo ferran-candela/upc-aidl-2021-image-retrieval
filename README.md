@@ -305,7 +305,7 @@ We want to evaluate our models with a different dataset to see if the model is j
 
 ### Experiment setup
 We have prepared the dataset to match the same structure as Fashion Product dataset. And we have run the evaluation getting a subset of the 
-data. We have used 100 clothes from each time of clothe that we have in the new datset, Deep Fashion.
+data. We have used 100 clothes from each time of clothe that we have in the new dataset, Deep Fashion.
 We have applied the evaluation to the following models:
 * densenet161_custom
 * vgg16_custom
@@ -334,6 +334,8 @@ In the following table we will compare sorted by precision hits both the custom 
 
 
 ### Conclusions
+
+
 
 ## <a name="custommodelbatchnorm"></a>Fifth experiment - Custom model batch norm with Deep Fashion dataset
 
