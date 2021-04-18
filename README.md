@@ -14,6 +14,12 @@ The original code is the Final Project delivery for the UPC [Artificial Intellig
 
 Advised by professor Kevin McGuinness 
 
+The final application looks like this  
+
+<img src="docs/imgs/frontend-example-t-shirt-product_fashion.gif" width="600"/>
+
+The user can select the image to input, the model to use and also the number of top similar clothes. In this demo you can see how good it behaves with 30 output clothes.
+
 
 ## Project overview
 
