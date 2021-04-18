@@ -3,6 +3,8 @@ import traceback
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import itertools
 from torch.utils.data import DataLoader
 
 from imageretrieval.src.dataset import DatasetManager, FashionProductDataset, DeepFashionDataset
@@ -304,13 +306,74 @@ def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validat
         
     return train_df, test_df, validate_df
 
-def test_model(model, criterion, test_loader, modelname ):
+def plot_confusion_matrix(cm, classes, normalize=False, title='Confusion matrix', cmap=plt.cm.Blues, output_dir=''):
+    cm_type = ''
+    if normalize:
+        cm = cm.cpu().numpy()
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        cm_type = 'normalized'
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(cm)
+    plt.figure(figsize=(12,12))
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=90)
+    plt.yticks(tick_marks, classes)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt), horizontalalignment="center", color="white" if cm[i, j] > thresh else "black")
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    plt.savefig(os.path.join(output_dir, 'confusion_matrix_' + cm_type + '.png'), bbox_inches = "tight")
+
+def confusion_matrix(model, targets, predictions):
+    stacked = torch.stack((targets, predictions), dim=1)
+    num_classes = ModelTrainConfig.NUM_CLASSES
+    cmt = torch.zeros(num_classes, num_classes, dtype=torch.int64)
+
+    # fill matrix with counts
+    for p in stacked:
+        tl, pl = p.tolist()
+        cmt[tl, pl] = cmt[tl, pl] + 1
+    
+    return cmt
+
+def get_labels_map(classes_df):
+    encoded_labels = classes_df['articleTypeEncoded'].values
+    num_classes = len(encoded_labels)
+
+    mapper = {}
+
+    for i, label in enumerate(encoded_labels):
+        mapper[label] = i
+    
+    return mapper
+
+def map_labels(labels_map, labels_to_map):
+    labels_to_map = labels_to_map.cpu()
+    labels_to_map.apply_(lambda label: labels_map[label])
+    return labels_to_map.to(device)
+
+def test_model(model, criterion, test_loader, modelname, classes_df, output_dir):
     #create logfile for testing statistics
     fields = ['ModelName','Criterion','Step','Loss','Accuracy', 'Time']
     logfile = LogFile(fields) 
     
     # switch to eval mode
-    model.eval()         
+    model.eval()
+    model.to(device)  
 
     total_test_images = 0
     loader_len = len(test_loader)
@@ -323,6 +386,8 @@ def test_model(model, criterion, test_loader, modelname ):
     proctimer.start()
 
     with torch.no_grad():
+        test_targets = torch.tensor([], dtype=torch.long, device=device)
+        test_preds = torch.tensor([], dtype=torch.long, device=device)
         for batch_idx, (images_batch, labels_batch) in enumerate(test_loader):
 
             # move images to gpu
@@ -330,6 +395,8 @@ def test_model(model, criterion, test_loader, modelname ):
             labels_batch = labels_batch.to(device)
 
             outputs = model(images_batch)
+            test_targets = torch.cat((test_targets, labels_batch), dim=0)
+            test_preds = torch.cat((test_preds, outputs), dim=0)
             # loss            
             loss = criterion(outputs, labels_batch)
 
@@ -357,8 +424,25 @@ def test_model(model, criterion, test_loader, modelname ):
         test_loss = batch_loss / total_test_images
         test_acc = batch_corrects / total_test_images
 
-        return test_loss, test_acc
+    # Build and print confusion matrix
+    labels_map = get_labels_map(classes_df)
+    classes = classes_df['articleType'].values
 
+    test_targets = map_labels(labels_map, test_targets)
+
+    test_predictions = test_preds.argmax(dim=1).long()
+    test_predictions = map_labels(labels_map, test_predictions)
+
+    cmt = confusion_matrix(modelname, test_targets.long(), test_predictions.long())
+    plot_confusion_matrix(cmt, classes, normalize=True, output_dir=output_dir)
+
+    return test_loss, test_acc
+
+def get_classes(train_df, test_df, validate_df):
+    full_df = pd.concat([train_df, test_df, validate_df])
+    labels_df = full_df[['articleType', 'articleTypeEncoded']]
+    labels_unique = labels_df.drop_duplicates(subset=['articleType', 'articleTypeEncoded'], keep='last')
+    return labels_unique
 
 def train():
 
@@ -445,7 +529,10 @@ def train():
             test_dataset = FashionProductDataset(dataset_base_dir, test_df, transform=input_transform)
             test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
             
-            test_loss, test_acc = test_model(model=model.get_model(), criterion=model.get_criterion(), test_loader=test_loader, modelname=model.get_name()) 
+            model_path = model_manager.get_model_dir(model_name=model_name)
+            test_results_path = os.path.join(model_path, 'test_confusion_matrix')
+
+            test_loss, test_acc = test_model(model=model.get_model(), criterion=model.get_criterion(), test_loader=test_loader, modelname=model.get_name(), classes_df=get_classes(train_df, test_df, validate_df), output_dir=test_results_path) 
             print ('Test (Overall), Loss: {:.4f}, Accuracy: {:.4f}'.format(test_loss,test_acc))
 
 

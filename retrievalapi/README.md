@@ -148,6 +148,122 @@ This endpoint returns an image given the correspoding `id`.
 
 In the folder `docs` it is included a Postman collection file with an example for each endpoint. Just use the `Import` feature in Postman application, run the API in the `localhost:5000` and try it by yourself.
 
+# Project structure
+
+```
+    .
+    ├── docs                            # Documentation  
+    │   └── postman                     # Postman project to import  
+    ├── src                             # Source files  
+    │   ├── app                         
+    │   │   ├── api                     
+    │   │   │   ├── controller.py       # API endpoints  
+    │   │   │   └── schemas.py          # Model schemas  
+    │   │   ├── common                  
+    │   │   │   └── error_handling.py   # Error handling  
+    │   │   ├── __init__.py             # Flask app creation   
+    │   │   └── ext.py                  # Marshmallow config
+    │   └── config                      
+    │       └── default.py              # Config variables
+    └── README.md                       # API Readme
+```
+
 # Execution in VS Code
 
+```
+    {
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Image Retrieval API Rest",
+            "type": "python",
+            "request": "launch",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "entrypoint.py",
+                "FLASK_ENV": "development",
+                "FLASK_DEBUG": "0",
+                "DEVICE": "cpu",
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/"
+            },
+            "args": [
+                "run",
+                "--no-debugger",
+                "--no-reload"
+            ],
+            "jinja": true
+        }]
+    }
+```
 # Execution in Docker
+
+## Preconditions
+
+### Step 1: Get Docker
+
+The first step is installing the Docker Engine. Follow the steps in the
+official page: 
+
+[https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/)  
+  
+  
+### Step 2: Get Docker Compose
+Then install Docker Compose. 
+
+[https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/)
+
+
+## Build API 
+
+Generate the API docker image individually by executing the following command in the repository root:
+```
+docker build -f Dockerfile.api .
+```
+
+It is also possible to build the image with Docker Compose by executing the following command in the repository root:
+
+```
+docker-compose build api
+```
+
+## Execute API standalone
+
+Execute the API with Docker Compose.
+
+First of all export the environment variables DATASET_ROOT and WORKDIR_ROOT.
+
+* DATASET_ROOT: environment variable that must point to the Fashion Product dataset root (see main README.md). It should be: ${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset
+* WORKDIR_ROOT: environment variable that must point to the workdir. It should be: ${PROJECT_ROOT}/dataset/Fashion_Product_Full_Workir
+* PROJECT_ROOT: environment variable pointing to the root of the repository.
+
+So before, executing the docker-compose up, execute:
+
+```
+export PROJECT_ROOT= {POINT TO THE REPOSITORY ROOT}
+
+export DATASET_ROOT=${PROJECT_ROOT}/datasets/Fashion_Product_Full/ && export WORKDIR_ROOT=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir
+
+docker-compose up api
+
+```
+
+# Retrieval Engine
+
+The API makes use of the Image Retrieval engine, the core of the  retrieval system. The Engine is connected with the ModelManager and the FeatureManager to start up the different models and features stored during the training and database preprocessing. So the output of the feature extraction step is the Image Database that will be used to retrieve similar results to user requests.
+
+The API controller exposes the `query` method to perform a retrieval that basically perform the following steps:
+
+1. Select the model to be used from memory.
+2. Preprocess the query image with the sizes configured for the selected model.
+    1. Resizes the image to fit the model input size.
+    2. Center crop with the model input size.
+    3. Normalize.
+3. Compute the image features using the selected feature extractor model.
+4. Compute the cosine similarity between the query image and all the precomputed features of the Database.
+5. Rank and select the first topK.
+6. Return an array of database image ids.
+

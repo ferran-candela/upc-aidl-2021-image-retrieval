@@ -17,8 +17,8 @@ services:
             - WORK_DIR=/opt/datasets/Fashion_Product_Full_Workdir
             - LOG_DIR=/opt/datasets/Fashion_Product_Full_Workdir/log/
         volumes:
-            - ${DATASET_ROOT}/datasets/Fashion_Product_Full:/opt/datasets/Fashion_Product_Full
-            - ${WORKDIR_ROOT}/datasets/Fashion_Product_Full_Workdir:/opt/datasets/Fashion_Product_Full_Workdir
+            - ${DATASET_ROOT}:/opt/datasets/Fashion_Product_Full
+            - ${WORKDIR_ROOT}:/opt/datasets/Fashion_Product_Full_Workdir
             # Stores the pretrained checkpoints
             - ${WORKDIR_ROOT}/pretrained_checkpoints:/root/.cache/torch/hub/checkpoints
     app:

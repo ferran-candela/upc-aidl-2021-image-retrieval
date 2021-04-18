@@ -15,27 +15,24 @@ Documentation of the different parts of image retrieval engine:
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Image Retrieval API Rest test",
+            "name": "Train",
             "type": "python",
             "request": "launch",
-            "module": "flask",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/train.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
             "env": {
-                "FLASK_APP": "entrypoint.py",
-                "FLASK_ENV": "development",
-                "FLASK_DEBUG": "0",
-                "DEVICE": "cpu",
+                "PYTHONPATH": "${cwd}",
+                "DEVICE": "cuda",
                 "DEBUG": "True",
+                "DATASET_USEDNAME": "deepfashion", // deepfashion / fashionproduct
                 "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
                 "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
-                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir",
-                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/"
-            },
-            "args": [
-                "run",
-                "--no-debugger",
-                "--no-reload"
-            ],
-            "jinja": true
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
+                "TRAIN_SIZE": "500",
+                "TEST_VALIDATE_SIZE": "500"
+            }
         },
         {
             "name": "Extract features",
@@ -106,7 +103,7 @@ Documentation of the different parts of image retrieval engine:
             "cwd": "${workspaceFolder}",
             "env": {
                 "PYTHONPATH": "${cwd}",
-                "DEVICE": "gpu",
+                "DEVICE": "cuda",
                 "DEBUG": "True",
                 "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
                 "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
@@ -187,12 +184,12 @@ python ${PROJECT_ROOT}/imageretrieval/src/engine.py
 ```
 
 
-# Command line execution for finetuning
+# Command line execution for tSNE
 Activate the conda environment, setup environment vars and execute tSNE.py.
 
 ```
 export PYTHONPATH=${PROJECT_ROOT} &&
-export DEVICE=gpu &&
+export DEVICE=cuda &&
 export DEBUG=True &&
 export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
 export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
@@ -666,7 +663,7 @@ Here an example of the values obtained for the different evaluation systems:
 
         ```
         export PYTHONPATH=${PROJECT_ROOT} &&
-        export DEVICE=cuda &&
+        export DEVICE=cpu &&
         export DEBUG=True &&
         export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
         export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
