@@ -30,6 +30,14 @@ Documentation of the different parts of the project:
 * [API](/retrievalapi/README.md)
 * [Frontend](/retrieval-app/README.md)
 
+Documentation of the [experiments](#experiments):
+1. [Pretrained model](#pretrainedmodel)
+2. [Custom model Densenet161](#densenet161custom)
+3. [Custom model Densenet161 with PCA finetune](#densenet161custompca)
+4. [Evaluation with deep fashion](#evaluationdeepfashion)
+5. [Custom model with deep fashion](#custommodeldeepfashion)
+6. [Custom model with batchnorm](#custommodelbatchnorm)
+
 
 ## General configuration
 
@@ -75,3 +83,54 @@ docker-compose -p imageretrieval build
 ```
 
 This will creaate the Docker image for the API and the Frontend (that also acts as a proxy for the API in the port 80).
+
+# Experiments
+
+## <a name="pretrainedmodel"></a>First experiment - Pretrained model Resnet50
+
+### Hypothesis
+
+### Experiment setup
+### Results
+### Conclusions
+
+# <a name="experiments">Experiments
+
+## <a name="densenet161custom">Second experiment - Customer model Densenet161
+
+### Hypothesis
+### Experiment setup
+### Results
+### Conclusions
+
+
+## <a name="densenet161custompca">Third experiment - Customer model Densenet161 with finetune PCA
+
+### Hypothesis
+### Experiment setup
+### Results
+### Conclusions
+
+
+## <a name="evaluationdeepfashion">Fourth experiment - Evaluation for deep fashion
+
+### Hypothesis
+### Experiment setup
+### Results
+### Conclusions
+
+
+## <a name="custommodeldeepfashion">Fifth experiment - Evaluation for deep fashion
+
+### Hypothesis
+### Experiment setup
+### Results
+### Conclusions
+
+
+## <a name="custommodelbatchnorm">Sixth experiment - Evaluation for deep fashion
+
+### Hypothesis
+### Experiment setup
+### Results
+### Conclusions
