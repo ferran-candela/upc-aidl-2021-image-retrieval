@@ -214,12 +214,12 @@ The results are saved in three ways and in the folder of each model.
 Confusion matrix gives the information about predicted classes. The diagonal elements of the
 confusion matrix gives the information about the all true positive rate.
 
-<img src="../docs/imgs/densenet161_custom_confusion_matrix_normalized.png"  width="300"/>
+<img src="../docs/imgs/densenet161_custom_confusion_matrix_normalized.png"  width="500"/>
 
 ## Train graphics example
 
-<img src="../docs/imgs/resnet_loss_plot_18.png" width="250"/>
-<img src="../docs/imgs/resnet_acc_plot_18.png" width="250"/>
+<img src="../docs/imgs/resnet_loss_plot_18.png" width="500"/>
+<img src="../docs/imgs/resnet_acc_plot_18.png" width="500"/>
 
 ## HIGHLIGHTS
 
@@ -312,8 +312,8 @@ The results are saved in two ways and in the folder of each model.
 
 ## Finetune graphics example
 
-<img src="../docs/imgs/pca_indiv_variance_plot_220.png" width="300"/>
-<img src="../docs/imgs/pca_cumul_variance_plot_220.png" width="300"/>
+<img src="../docs/imgs/pca_indiv_variance_plot_220.png" width="500"/>
+<img src="../docs/imgs/pca_cumul_variance_plot_220.png" width="500"/>
 
 ## HIGHLIGHTS
 
@@ -373,7 +373,7 @@ The results are saved in two ways and in the folder of each model.
 
 Diagram of the features extractor
 
-<img src="../docs/imgs/Feature extraction.png" width="300"/>
+<img src="../docs/imgs/Feature extraction.png" width="500"/>
 
 This is the master class that is responsible for managing everything related to the images features, extract, calculation, save, ...
 
@@ -500,8 +500,8 @@ ModelTrainConfig.NUM_CLASSES (config.py): Very important to configure. Number of
 
 # Feature Visualization (tSNE.py)
 
-<img src="../docs/imgs/tsne_normalizedfeatures_128.png" width="300"/>
-<img src="../docs/imgs/tsne_aqefeatures_128.png" width="300"/>
+<img src="../docs/imgs/tsne_normalizedfeatures_128.png" width="500"/>
+<img src="../docs/imgs/tsne_aqefeatures_128.png" width="500"/>
 
 Left to Right: tSNE representation of densenet161 custom model features extraction and classification. Normalized features and AQE features
 
