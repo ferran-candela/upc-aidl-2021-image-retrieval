@@ -123,10 +123,12 @@ id,gender,masterCategory,subCategory,articleType,baseColour,season,year,usage,pr
 |48123|Women|Accessories|Belts|Belts|Black|Summer|2012|Casual|Fossil Women Black Huarache Weave Belt|
 |18653|Men|Footwear|Flip Flops|Flip Flops|Black|Fall|2011|Casual|Fila Men Cush Flex Black Slippers|  
 
-The architecture of the models we have used is the described on the following images. 
+The architecture of the models we have used is the described on the following images.  
+ 
    <img src="docs/imgs/vgg16_architecture.jpeg" width="100"/> 
    <img src="docs/imgs/resnet50_architecture.jpeg" width="100"/>
-   <img src="docs/imgs/densenet161_architecture.jpeg" width="100"/>  
+   <img src="docs/imgs/densenet161_architecture.jpeg" width="100"/> 
+    
    (a) VGG-16, (b) ResNet-50, and (c) DenseNet-161 architectures
 and feature extraction locations. 
 
