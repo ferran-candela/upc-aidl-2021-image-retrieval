@@ -192,14 +192,47 @@ As a result we can see that the model that
 ### Conclusions
 
 
-## <a name="densenet161custompca">Third experiment - Customer model Densenet161 with finetune PCA
+## <a name="densenet161custompca">Third experiment - Customer model with finetune PCA
+
+Principal Components Analysis (PCA) is a mathematical formulation used in the reduction of data dimensions. Thus, the PCA technique allows the identification of standards in data and their expression in such a way that their similarities and differences are emphasized. Once patterns are found, they can be compressed, i.e., their dimensions can be reduced without much loss of information. In summary, the PCA formulation may be used as a digital image compression algorithm with a low level of loss.
+
+[Wikipedia Reference](https://en.wikipedia.org/wiki/Dimensionality_reduction)
 
 ### Hypothesis
+For features extracted from the models, we perform a post-processing that consists of a normalization and a reduction of the dimensionality. To reduce dimensionality we use the PCA technique.
+
+<img src="./docs/imgs/post-precessing-pipeline.png" width="400"/>
+
+*[1] Jégou, H., & Chum, O. (2012).
+Negative evidences and co occurrences in image retrieval: the benefit of PCA and whitening Lecture Notes in Computer Science, 7573 LNCS (PART 2), 774 787*
+
+In the first experiments we used a `fixed` dimensionality for all models equal to 128.
+
+Principal Component Analysis (PCA) is used for preprocessing. If we remove redundant and unwanted data maybe the models improve.
+</br>
+</br>
 ### Experiment setup
+
+We need to analyze the PCA for each model. To achieve this, we have created a procedure that evaluates the different possibilities of PCA based on two metrics and choose the best dimesion. (finetune.py)
+1. mAP (mean Average Precision)
+2. precision Hits (average of the number of correct classes in the ranking returned by each query)
+</br>
+</br>
 ### Results
+
+| Model | UsedFeatures | Initial n_component | mAP | PrecisionHits | New n_component calculated | New mAP | New PrecisionHits |
+|-------|------------:|-------------:|-------------:|------------:|-----------:|----:|--------------:|
+|densenet161_custom|NormalizedFeatures|128|0,310|0,8217|20|0,665|0,8467|
+|densenet161_custom|AQEFeatures|128|0,386|0,7872|20|0,692|0,8234|
+|vgg16_custom|NormalizedFeatures|128|0,401|0,7821|44|0,407|0,7873|
+|vgg16_custom|AQEFeatures|128|0,491|0,7930|44|0,483|0,8018|
+</br>
+
+
 ### Conclusions
 
-
+The PCA finetune has greatly improved the metrics we use to evaluate our models.  
+It is necessary to finetun each PCA to find the value of n_component of the PCA and perform the best possible post-processing of the features.
 ## <a name="evaluationdeepfashion">Fourth experiment - Evaluation for deep fashion
 
 ### Hypothesis
