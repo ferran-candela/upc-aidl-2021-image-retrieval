@@ -125,10 +125,8 @@ id,gender,masterCategory,subCategory,articleType,baseColour,season,year,usage,pr
 
 The architecture of the models we have used is the described on the following images.  
  
-   <img src="docs/imgs/vgg16_architecture.jpeg" width="100"/> 
-   <img src="docs/imgs/resnet50_architecture.jpeg" width="100"/>
-   <img src="docs/imgs/densenet161_architecture.jpeg" width="100"/> 
-    
+   <img src="docs/imgs/vgg16_architecture.jpeg" width="100"/> <img src="docs/imgs/resnet50_architecture.jpeg" width="100"/> <img src="docs/imgs/densenet161_architecture.jpeg" width="100"/>
+
    (a) VGG-16, (b) ResNet-50, and (c) DenseNet-161 architectures
 and feature extraction locations. 
 
