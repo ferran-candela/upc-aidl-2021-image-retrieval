@@ -28,26 +28,6 @@
             "jinja": true
         },
         {
-            "name": "Train",
-            "type": "python",
-            "request": "launch",
-            "program": "${PROJECT_ROOT}/imageretrieval/src/train.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${cwd}",
-                "DEVICE": "cuda",
-                "DEBUG": "True",
-                "DATASET_USEDNAME": "deepfashion", // deepfashion / fashionproduct
-                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
-                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
-                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
-                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
-                "TRAIN_SIZE": "500",
-                "TEST_VALIDATE_SIZE": "500"
-            }
-        },
-        {
             "name": "Extract features",
             "type": "python",
             "request": "launch",
@@ -142,23 +122,6 @@ Then activate the environment.
 ```
 source /home/fcandela/opt/miniconda3/bin/activate &&
 conda activate image-retrieval-v1
-```
-
-## Command line execution for training
-
-Activate the conda environment, setup environment vars and execute train.py.
-
-```
-export PYTHONPATH=${PROJECT_ROOT} &&
-export DEVICE=cuda &&
-export DEBUG=True &&
-export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
-export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
-export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
-export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
-export TRAIN_SIZE=divide &&
-export TEST_VALIDATE_SIZE=0 &&
-python ${PROJECT_ROOT}/imageretrieval/src/train.py
 ```
 
 # Command line execution for feature extraction
