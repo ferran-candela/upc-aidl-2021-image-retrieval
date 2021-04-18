@@ -167,6 +167,8 @@ class ModelManager:
                             #'inception_resnet_v2_custom',
                             'densenet161_custom',
                             #'efficient_net_b4_custom'
+                            'densenet161_custom_deep',
+                            'densenet161_custom_deep_batchnorm'
                             ]
         
         self.device = device
@@ -229,7 +231,7 @@ class ModelManager:
 
             model.output_features = 1888
 
-        if model_name == 'densenet161' or model_name == 'densenet161_custom':
+        if model_name == 'densenet161' or model_name == 'densenet161_custom' or model_name == 'densenet161_custom_deep' or model_name == 'densenet161_custom_deep_batchnorm':
             #Just use the output of feature extractor and ignore the classifier
             model.model.classifier = nn.Identity()
 
@@ -411,7 +413,7 @@ class ModelManager:
             is_pretrained = False
             input_resize = 299
 
-        if model_name == 'densenet161_custom':            
+        if model_name == 'densenet161_custom' or model_name == 'densenet161_custom_deep':            
             from torchvision.models import densenet161
             model = densenet161(pretrained=True)
             
@@ -438,6 +440,15 @@ class ModelManager:
             optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
 
             is_pretrained = False
+            input_resize = 224
+        
+        if model_name == 'densenet161_custom_deep_batchnorm':
+            # Train from custom densenet161 pretrained with Fashion Product
+            model_pretrained = self.get_classifier('densenet161_custom', load_from_checkpoint=True)
+            
+            model = model_pretrained.get_model()
+            # Convert to pretrained
+            is_pretrained = True
             input_resize = 224
 
         if model_name == 'efficient_net_b4_custom':

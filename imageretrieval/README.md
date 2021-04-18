@@ -381,7 +381,7 @@ Here an example of the values obtained for the different evaluation systems:
 
         ```
         export PYTHONPATH=${PROJECT_ROOT} &&
-        export DEVICE=cuda &&
+        export DEVICE=cpu &&
         export DEBUG=True &&
         export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
         export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&

@@ -139,8 +139,8 @@ class ModelTrainConfig:
     # Leggings         177
     # Night suits      141
     # Skirts           128
-    #NUM_CLASSES = 22
-    NUM_CLASSES = 54 # used only for train
+    NUM_CLASSES = 22
+    # NUM_CLASSES = 54 # used only for train
     PATIENCE = 1000  #Number of epochs to wait if no improvement and then stop the training.
     TOP_K_AQE = 15
 
