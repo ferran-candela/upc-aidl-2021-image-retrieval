@@ -261,6 +261,9 @@ The API controller exposes the `query` method to perform a retrieval that basica
 2. Preprocess the query image with the sizes configured for the selected model.
     1. Resizes the image to fit the model input size.
     2. Center crop with the model input size.
-    3. Normalize
-3. 
+    3. Normalize.
+3. Compute the image features using the selected feature extractor model.
+4. Compute the cosine similarity between the query image and all the precomputed features of the Database.
+5. Rank and select the first topK.
+6. Return an array of database image ids.
 
