@@ -503,6 +503,78 @@ We use CrossEntropyLoss as a criterion.
 
 ModelTrainConfig.NUM_CLASSES (config.py): Very important to configure. Number of classes that we have in our dataset and we want to classify.
 
+# Feature Visualization (tSNE.py)
+
+<img src="../docs/imgs/tsne_normalizedfeatures_128.png" width="300"/>
+<img src="../docs/imgs/tsne_aqefeatures_128.png" width="300"/>
+
+Left to Right: tSNE representation of densenet161 custom model features extraction and classification. Normalized features and AQE features
+
+## tSNE Plot
+
+We use display our learned features in a 2D space using t-SNE.  
+This process generates two tSNE plots for every model and save it. One, using the Normalized features and the other using the AQE features.
+
+## HIGHLIGHTS
+
+* model_manager.get_model_names (models.py): Model list used for generate plots.
+
+## Run feature visualization
+1. If using visual studio.
+    ```
+        {
+            "name": "t-SNE graphs",
+            "type": "python",
+            "request": "launch",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/tSNE.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${cwd}",
+                "DEVICE": "gpu",
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/"
+            }
+    ```
+
+2. If using terminal:
+    * Activate the conda environment, setup environment vars and execute evaluation.py.
+
+        ```
+        export PYTHONPATH=${PROJECT_ROOT} &&
+        export DEVICE=cuda &&
+        export DEBUG=True &&
+        export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
+        export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
+        export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+        export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
+        python ${PROJECT_ROOT}/imageretrieval/src/tSNE.py
+        ```
+
+
+
+# Config (config.py)
+
+It's equivalent to HyperParameters.  
+Defines all parameters used for all processes.
+
+* Folders path
+* Models batch size
+* PCA size
+* DataSet used
+* Training parameters: num. classes, patience, learning rate, max. num. epochs to train,..
+* Evaluation parameters: Num. queries, top k images, ... 
+
+# Utils (utils.py)
+
+* ProcessTime: Class for calculate processed time
+* LogFile: Class for generate CSV log files 
+
+
+
 
 # <a name="evaluation"></a>Evaluation
 
