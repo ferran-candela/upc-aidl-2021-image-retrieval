@@ -320,7 +320,7 @@ The results are saved in two ways and in the folder of each model.
 2. Graphics: variance plots
 
 
-## Train graphics example
+## Finetune graphics example
 
 <img src="../docs/imgs/pca_indiv_variance_plot_220.png" width="400"/>
 <img src="../docs/imgs/pca_cumul_variance_plot_220.png" width="400"/>
