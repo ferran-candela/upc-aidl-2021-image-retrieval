@@ -219,9 +219,16 @@ The results are saved in three ways and in the folder of each model.
 
 1. File: csv format log file
 
-2. Graphics: loss plot and accuracy plot 
+2. Graphics: loss plot, accuracy plot, confusion matrix
 
 3. Model. Saved in each epoch if we consider that it has learned
+
+## Confusion Matrix
+
+Confusion matrix gives the information about predicted classes. The diagonal elements of the
+confusion matrix gives the information about the all true positive rate.
+
+<img src="../docs/imgs/densenet161_custom_confusion_matrix_normalized.png"  width="300"/>
 
 ## Train graphics example
 
@@ -378,8 +385,13 @@ The results are saved in two ways and in the folder of each model.
 
 # Features Manager (features.py)
 
+Diagram of the features extractor
+
+<img src="../docs/imgs/Feature extraction.png" width="300"/>
 
 This is the master class that is responsible for managing everything related to the images features, extract, calculation, save, ...
+
+
 
 ## Feature calculation type
 
@@ -460,7 +472,7 @@ The class manage all tasks related to the maintenance of these checkpoints, savi
 
 Diagram of the model manipulating
 
-<img src="../docs/imgs/.png"/>
+<img src="../docs/imgs/Model management.png" height="400"/>  
 
 
 This is the master class that is responsible for managing everything related to models, manipulating, save, ...  
@@ -551,8 +563,6 @@ This process generates two tSNE plots for every model and save it. One, using th
         python ${PROJECT_ROOT}/imageretrieval/src/tSNE.py
         ```
 
-
-
 # Config (config.py)
 
 It's equivalent to HyperParameters.  
@@ -571,6 +581,66 @@ Defines all parameters used for all processes.
 * LogFile: Class for generate CSV log files 
 
 
+# Retrieval Engine (engine.py)
+
+It's the main class to run the engine.  
+It allows executing the query for an image and returns the top k results of similar images.
+It allows choosing a model from those available and extracts the features of the image according to the model used, and postprocessing them according to the best configuration.
+Finally, calculate the top k most similar images and print de results.  
+
+You can do a test and make a query, assigning the "img_id" variable in main code, and assigning the top_k result you wish.
+
+These methods are called from API.
+
+
+## HIGHLIGHTS
+
+For testing the retrieval engine, you need define two variables directly in main code:  
+top_k = xx  
+img_id = xxxx
+
+
+## Execution test
+
+Query image  
+<img src="../docs/imgs/engine_query.png" width="200"/>  
+Top k 15 results  
+<img src="../docs/imgs/engine_top_k_similarity.png" width="600"/> 
+
+## Run retrieval engine
+1. If using visual studio.
+    ```
+        {
+            "name": "Engine test",
+            "type": "python",
+            "request": "launch",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/engine.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${cwd}",
+                "DEVICE": "gpu",
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/"
+            }
+    ```
+
+2. If using terminal:
+    * Activate the conda environment, setup environment vars and execute evaluation.py.
+
+        ```
+        export PYTHONPATH=${PROJECT_ROOT} &&
+        export DEVICE=cuda &&
+        export DEBUG=True &&
+        export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
+        export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
+        export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+        export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
+        python ${PROJECT_ROOT}/imageretrieval/src/engine.py
+        ```
 
 
 # <a name="evaluation"></a>Evaluation
