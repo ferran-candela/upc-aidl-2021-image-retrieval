@@ -14,6 +14,12 @@ The original code is the Final Project delivery for the UPC [Artificial Intellig
 
 Advised by professor Kevin McGuinness 
 
+The final application looks like this  
+
+<img src="docs/imgs/frontend-example-t-shirt-product_fashion.gif" width="600"/>
+
+The user can select the image to input, the model to use and also the number of top similar clothes. In this demo you can see how good it behaves with 30 output clothes.
+
 
 ## Project overview
 
@@ -335,7 +341,9 @@ In the following table we will compare sorted by precision hits both the custom 
 
 ### Conclusions
 
+From this results we can see that as we expected the models that we have trained does not work for very well for the more realistic data coming from Deep Fashion dataset. DenseNet161 is still the model that performs the best, but the result is not very low. This means that in average it will give as 5 correct result out of the 15 that we show as similar.
 
+Therefore we can say that we need to include more realistic images in the dataset that we use for training.
 
 ## <a name="custommodelbatchnorm"></a>Fifth experiment - Custom model batch norm with Deep Fashion dataset
 
