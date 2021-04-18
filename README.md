@@ -12,11 +12,17 @@ The original code is the Final Project delivery for the UPC [Artificial Intellig
 * Jordi Montaner
 * Ferran Candela
 
-Advised by professor Kevin McGuinness
+Advised by professor Kevin McGuinness 
+
 
 ## Project overview
 
-   <img src="docs/imgs/similarity_engine_diagram.png" width="400">
+   <img src="docs/imgs/similarity_engine_diagram.png" width="800">
+
+Documentation of the different parts of the project:
+* [Image retrieval](/imageretrieval/README.md)
+* [API](/retrievalapi/README.md)
+* [Frontend](/retrieval-app/README.md)
 
 
 ## General configuration
