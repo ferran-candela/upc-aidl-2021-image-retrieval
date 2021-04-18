@@ -1,4 +1,41 @@
-# Flask API for image retrieval
+# Retrieval System
+
+The image retrieval system requires from an entry point that allow users execute an image retrieval query by providing the desired image to search for. Using a Rest API allows exposing the search engine to the exterior so other applications can integrate with like mobile apps or web applications. The following diagram depicts the different actors that are used to interact with the system:
+
+<img src="../docs/imgs/API_Frontend.png" width="300"/>  
+
+## Retrieval Engine
+
+The API makes use of the Image Retrieval engine, the core of the  retrieval system. The Engine is connected with the ModelManager and the FeatureManager to start up the different models and features stored during the training and database preprocessing. So the output of the feature extraction step is the Image Database that will be used to retrieve similar results to user requests.
+
+The API controller exposes the `query` method to perform a retrieval that basically perform the following steps:
+
+1. Select the model to be used from memory.
+2. Preprocess the query image with the sizes configured for the selected model.
+    1. Resizes the image to fit the model input size.
+    2. Center crop with the model input size.
+    3. Normalize.
+3. Compute the image features using the selected feature extractor model.
+4. Compute the cosine similarity between the query image and all the precomputed features of the Database.
+5. Rank and select the first topK.
+6. Return an array of database image ids.
+
+
+### Command line execution for engine test
+Activate the conda environment, setup environment vars and execute engine.py.
+
+```
+export PYTHONPATH=${PROJECT_ROOT} &&
+export DEVICE=cpu &&
+export DEBUG=True &&
+export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
+export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
+export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
+python ${PROJECT_ROOT}/imageretrieval/src/engine.py
+```
+
+## Flask API for image retrieval
 
 The Rest API for image retrieval has been implemented using Flask and Flask-RESTful. It is composed by 3 endpoints:
 
@@ -6,7 +43,7 @@ The Rest API for image retrieval has been implemented using Flask and Flask-REST
 * Search endpoint
 * Image endpoint
 
-## Models endpoint
+### Models endpoint
 
 This endpoint returns the available models that can be used to perform a retrieval.
 
@@ -52,7 +89,7 @@ This endpoint returns the available models that can be used to perform a retriev
 
   None
 
-## Search endpoint
+### Search endpoint
 
 This endpoint returns the `topK` ranking of database image ids for the selected `model` and the provided `image`.
 
@@ -108,7 +145,7 @@ This endpoint returns the `topK` ranking of database image ids for the selected 
         }
         ```
 
-## Images endpoint
+### Images endpoint
 
 This endpoint returns an image given the correspoding `id`.
 
@@ -144,11 +181,11 @@ This endpoint returns an image given the correspoding `id`.
     **Content:** 
         None
 
-# Postman project
+## Postman project
 
 In the folder `docs` it is included a Postman collection file with an example for each endpoint. Just use the `Import` feature in Postman application, run the API in the `localhost:5000` and try it by yourself.
 
-# Project structure
+## Project structure
 
 ```
     .
@@ -168,7 +205,7 @@ In the folder `docs` it is included a Postman collection file with an example fo
     └── README.md                       # API Readme
 ```
 
-# Execution in VS Code
+## Execution in VS Code
 
 ```
     {
@@ -199,11 +236,11 @@ In the folder `docs` it is included a Postman collection file with an example fo
         }]
     }
 ```
-# Execution in Docker
+## Execution in Docker
 
-## Preconditions
+### Preconditions
 
-### Step 1: Get Docker
+#### Step 1: Get Docker
 
 The first step is installing the Docker Engine. Follow the steps in the
 official page: 
@@ -211,13 +248,13 @@ official page:
 [https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/)  
   
   
-### Step 2: Get Docker Compose
+#### Step 2: Get Docker Compose
 Then install Docker Compose. 
 
 [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/)
 
 
-## Build API 
+### Build API 
 
 Generate the API docker image individually by executing the following command in the repository root:
 ```
@@ -230,7 +267,7 @@ It is also possible to build the image with Docker Compose by executing the foll
 docker-compose build api
 ```
 
-## Execute API standalone
+### Execute API standalone
 
 Execute the API with Docker Compose.
 
@@ -250,20 +287,4 @@ export DATASET_ROOT=${PROJECT_ROOT}/datasets/Fashion_Product_Full/ && export WOR
 docker-compose up api
 
 ```
-
-# Retrieval Engine
-
-The API makes use of the Image Retrieval engine, the core of the  retrieval system. The Engine is connected with the ModelManager and the FeatureManager to start up the different models and features stored during the training and database preprocessing. So the output of the feature extraction step is the Image Database that will be used to retrieve similar results to user requests.
-
-The API controller exposes the `query` method to perform a retrieval that basically perform the following steps:
-
-1. Select the model to be used from memory.
-2. Preprocess the query image with the sizes configured for the selected model.
-    1. Resizes the image to fit the model input size.
-    2. Center crop with the model input size.
-    3. Normalize.
-3. Compute the image features using the selected feature extractor model.
-4. Compute the cosine similarity between the query image and all the precomputed features of the Database.
-5. Rank and select the first topK.
-6. Return an array of database image ids.
 

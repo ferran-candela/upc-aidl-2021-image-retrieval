@@ -169,20 +169,6 @@ python ${PROJECT_ROOT}/imageretrieval/src/finetune.py
 ```
 
 
-# Command line execution for engine test
-Activate the conda environment, setup environment vars and execute engine.py.
-
-```
-export PYTHONPATH=${PROJECT_ROOT} &&
-export DEVICE=cpu &&
-export DEBUG=True &&
-export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
-export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
-export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
-export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
-python ${PROJECT_ROOT}/imageretrieval/src/engine.py
-```
-
 
 # Command line execution for tSNE
 Activate the conda environment, setup environment vars and execute tSNE.py.
@@ -733,7 +719,7 @@ Here an example of the values obtained for the different evaluation systems:
 
         ```
         export PYTHONPATH=${PROJECT_ROOT} &&
-        export DEVICE=cpu &&
+        export DEVICE=cuda &&
         export DEBUG=True &&
         export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
         export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
