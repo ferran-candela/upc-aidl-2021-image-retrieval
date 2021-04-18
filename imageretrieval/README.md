@@ -186,7 +186,7 @@ python ${PROJECT_ROOT}/imageretrieval/src/tSNE.py
 # <a name="training"></a>Train (train.py)
 Diagram of the train components
 
-<img src="../docs/imgs/training_diagram.png"/>
+<img src="../docs/imgs/training_diagram.png" width="500"/>
 
 
 ## What models do we use?
@@ -198,21 +198,28 @@ We use two different types of training:
 2. We have named it "scratch". The trained models have most of the layers frozen and we unfrozen only some, usually the last or others that we believe are adequate for our objective. In this case is a complete training method with all phases: train, evaluate and test.
 
 ## Train Datasets
-We can use two datasets for train. We can use two datasets to train. The environment variable DATASET_USEDNAME defines which one to use: "fashionproduct" or "deepfashion"
+We can use two datasets to train. The environment variable DATASET_USEDNAME defines which one to use: "fashionproduct" or "deepfashion"
 
 ## Train Results
 The results are saved in three ways and in the folder of each model.
 
 1. File: csv format log file
 
-2. Graphics: loss plot and accuracy plot 
+2. Graphics: loss plot, accuracy plot, confusion matrix
 
 3. Model. Saved in each epoch if we consider that it has learned
 
+## Confusion Matrix
+
+Confusion matrix gives the information about predicted classes. The diagonal elements of the
+confusion matrix gives the information about the all true positive rate.
+
+<img src="../docs/imgs/densenet161_custom_confusion_matrix_normalized.png"  width="500"/>
+
 ## Train graphics example
 
-<img src="../docs/imgs/resnet_loss_plot_18.png" width="300"/>
-<img src="../docs/imgs/resnet_acc_plot_18.png" width="300"/>
+<img src="../docs/imgs/resnet_loss_plot_18.png" width="500"/>
+<img src="../docs/imgs/resnet_acc_plot_18.png" width="500"/>
 
 ## HIGHLIGHTS
 
@@ -305,8 +312,8 @@ The results are saved in two ways and in the folder of each model.
 
 ## Finetune graphics example
 
-<img src="../docs/imgs/pca_indiv_variance_plot_220.png" width="300"/>
-<img src="../docs/imgs/pca_cumul_variance_plot_220.png" width="300"/>
+<img src="../docs/imgs/pca_indiv_variance_plot_220.png" width="500"/>
+<img src="../docs/imgs/pca_cumul_variance_plot_220.png" width="500"/>
 
 ## HIGHLIGHTS
 
@@ -364,8 +371,13 @@ The results are saved in two ways and in the folder of each model.
 
 # Features Manager (features.py)
 
+Diagram of the features extractor
+
+<img src="../docs/imgs/Feature extraction.png" width="500"/>
 
 This is the master class that is responsible for managing everything related to the images features, extract, calculation, save, ...
+
+
 
 ## Feature calculation type
 
@@ -446,7 +458,7 @@ The class manage all tasks related to the maintenance of these checkpoints, savi
 
 Diagram of the model manipulating
 
-<img src="../docs/imgs/.png"/>
+<img src="../docs/imgs/Model management.png" height="400"/>  
 
 
 This is the master class that is responsible for managing everything related to models, manipulating, save, ...  
@@ -488,8 +500,8 @@ ModelTrainConfig.NUM_CLASSES (config.py): Very important to configure. Number of
 
 # Feature Visualization (tSNE.py)
 
-<img src="../docs/imgs/tsne_normalizedfeatures_128.png" width="300"/>
-<img src="../docs/imgs/tsne_aqefeatures_128.png" width="300"/>
+<img src="../docs/imgs/tsne_normalizedfeatures_128.png" width="500"/>
+<img src="../docs/imgs/tsne_aqefeatures_128.png" width="500"/>
 
 Left to Right: tSNE representation of densenet161 custom model features extraction and classification. Normalized features and AQE features
 
@@ -537,8 +549,6 @@ This process generates two tSNE plots for every model and save it. One, using th
         python ${PROJECT_ROOT}/imageretrieval/src/tSNE.py
         ```
 
-
-
 # Config (config.py)
 
 It's equivalent to HyperParameters.  
@@ -557,6 +567,66 @@ Defines all parameters used for all processes.
 * LogFile: Class for generate CSV log files 
 
 
+# Retrieval Engine (engine.py)
+
+It's the main class to run the engine.  
+It allows executing the query for an image and returns the top k results of similar images.
+It allows choosing a model from those available and extracts the features of the image according to the model used, and postprocessing them according to the best configuration.
+Finally, calculate the top k most similar images and print the results.  
+
+You can do a test and make a query, assigning the "img_id" variable in main code, and assigning the top_k result you wish.
+
+These methods are called from API.
+
+
+## HIGHLIGHTS
+
+For testing the retrieval engine, you need define two variables directly in main code:  
+top_k = xx  
+img_id = xxxx
+
+
+## Execution test
+
+Query image  
+<img src="../docs/imgs/engine_query.png" width="200"/>  
+Top k 15 results  
+<img src="../docs/imgs/engine_top_k_similarity.png" width="600"/> 
+
+## Run retrieval engine
+1. If using visual studio.
+    ```
+        {
+            "name": "Engine test",
+            "type": "python",
+            "request": "launch",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/engine.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${cwd}",
+                "DEVICE": "gpu",
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/"
+            }
+    ```
+
+2. If using terminal:
+    * Activate the conda environment, setup environment vars and execute evaluation.py.
+
+        ```
+        export PYTHONPATH=${PROJECT_ROOT} &&
+        export DEVICE=cuda &&
+        export DEBUG=True &&
+        export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
+        export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
+        export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+        export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
+        python ${PROJECT_ROOT}/imageretrieval/src/engine.py
+        ```
 
 
 # <a name="evaluation"></a>Evaluation
