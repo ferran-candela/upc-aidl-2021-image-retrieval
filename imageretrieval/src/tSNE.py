@@ -10,25 +10,6 @@ from imageretrieval.src.config import DebugConfig, FoldersConfig, DeviceConfig, 
 device = DeviceConfig.DEVICE
 DEBUG = DebugConfig.DEBUG
 
-def prepare_data(dataset_base_dir, labels_file, process_dir, train_size, validate_test_size, clean_process_dir):
-    dataset_manager = DatasetManager()      
-
-    train_df, test_df, validate_df = dataset_manager.split_dataset(dataset_base_dir=dataset_base_dir,
-                                                    original_labels_file=labels_file,
-                                                    process_dir=process_dir,
-                                                    clean_process_dir=clean_process_dir,
-                                                    train_size=train_size,
-                                                    fixed_validate_test_size=validate_test_size
-                                                    )
-        
-    train_df.reset_index(drop=True, inplace=True)
-    if DEBUG:print(train_df.head(10))
-    if not test_df is None:
-        test_df.reset_index(drop=True, inplace=True)
-        validate_df.reset_index(drop=True, inplace=True)
-
-    return train_df, test_df, validate_df
-
 def compute_tsne(features):
     print('\nComputing tsne...')
     n_iter = 800
@@ -71,23 +52,9 @@ def print_models_tsne():
 
     model_names = model_manager.get_model_names()
 
-    # The path of original dataset
-    dataset_base_dir = FoldersConfig.DATASET_BASE_DIR
-    labels_file = FoldersConfig.DATASET_LABELS_DIR
-
-    # Work directory
-    work_dir = FoldersConfig.WORK_DIR
-    train_df, test_df, validate_df = prepare_data(dataset_base_dir=dataset_base_dir,
-                                        labels_file=labels_file,
-                                        process_dir=work_dir,
-                                        clean_process_dir=False,
-                                        train_size='all',
-                                        validate_test_size=0)
-    num_queries = RetrievalEvalConfig.MAP_N_QUERIES
-
     for model_name in model_names:
         try:
-            print('\n\n## Printing t-SNE for model ', model_name, "with num_queries=", str(num_queries))
+            print('\n\n## Printing t-SNE for model ', model_name)
 
             model_path = model_manager.get_model_dir(model_name=model_name)
             tsnePath = os.path.join(model_path, 'tsne')

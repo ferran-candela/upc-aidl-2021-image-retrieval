@@ -5,29 +5,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Image Retrieval API Rest test",
-            "type": "python",
-            "request": "launch",
-            "module": "flask",
-            "env": {
-                "FLASK_APP": "entrypoint.py",
-                "FLASK_ENV": "development",
-                "FLASK_DEBUG": "0",
-                "DEVICE": "cpu",
-                "DEBUG": "True",
-                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
-                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
-                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir",
-                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/"
-            },
-            "args": [
-                "run",
-                "--no-debugger",
-                "--no-reload"
-            ],
-            "jinja": true
-        },
-        {
             "name": "Train",
             "type": "python",
             "request": "launch",
@@ -116,7 +93,7 @@
             "cwd": "${workspaceFolder}",
             "env": {
                 "PYTHONPATH": "${cwd}",
-                "DEVICE": "gpu",
+                "DEVICE": "cuda",
                 "DEBUG": "True",
                 "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
                 "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
@@ -214,12 +191,12 @@ python ${PROJECT_ROOT}/imageretrieval/src/engine.py
 ```
 
 
-# Command line execution for finetuning
+# Command line execution for tSNE
 Activate the conda environment, setup environment vars and execute tSNE.py.
 
 ```
 export PYTHONPATH=${PROJECT_ROOT} &&
-export DEVICE=gpu &&
+export DEVICE=cuda &&
 export DEBUG=True &&
 export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
 export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
