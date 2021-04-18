@@ -1,3 +1,13 @@
+# Image retrieval - similarity engine
+Documentation of the different parts of image retrieval engine:
+* [Data preparation](#datapreparation)
+* [Training](#training)
+* [Model](#model)
+* [Feature extraction](#featureextraction)
+* [Finetune](#finetune)
+* [Evaluation](#evaluation)
+* [Feature visualization](#featurevisualization)
+
 # Settings for VSCode
 
 ```
@@ -26,26 +36,6 @@
                 "--no-reload"
             ],
             "jinja": true
-        },
-        {
-            "name": "Train",
-            "type": "python",
-            "request": "launch",
-            "program": "${PROJECT_ROOT}/imageretrieval/src/train.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${cwd}",
-                "DEVICE": "cuda",
-                "DEBUG": "True",
-                "DATASET_USEDNAME": "deepfashion", // deepfashion / fashionproduct
-                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
-                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
-                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
-                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
-                "TRAIN_SIZE": "500",
-                "TEST_VALIDATE_SIZE": "500"
-            }
         },
         {
             "name": "Extract features",
@@ -144,23 +134,6 @@ source /home/fcandela/opt/miniconda3/bin/activate &&
 conda activate image-retrieval-v1
 ```
 
-## Command line execution for training
-
-Activate the conda environment, setup environment vars and execute train.py.
-
-```
-export PYTHONPATH=${PROJECT_ROOT} &&
-export DEVICE=cuda &&
-export DEBUG=True &&
-export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
-export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
-export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
-export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
-export TRAIN_SIZE=divide &&
-export TEST_VALIDATE_SIZE=0 &&
-python ${PROJECT_ROOT}/imageretrieval/src/train.py
-```
-
 # Command line execution for feature extraction
 
 Activate the conda environment, setup environment vars and execute features.py.
@@ -227,7 +200,7 @@ export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
 export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
 python ${PROJECT_ROOT}/imageretrieval/src/tSNE.py
 ```
-# Train (train.py)
+# <a name="training"></a>Train (train.py)
 Diagram of the train components
 
 <img src="../docs/imgs/training_diagram.png"/>
@@ -315,7 +288,7 @@ The results are saved in three ways and in the folder of each model.
         python ${PROJECT_ROOT}/imageretrieval/src/train.py
         ```
 
-# PCA Finetune (finetune.py)
+# <a name="finetune"></a>PCA Finetune (finetune.py)
 
 For features extracted from the models, we perform a post-processing that consists of a normalization and a reduction of the dimensionality. To reduce dimensionality we use the PCA technique (Principal Component Analysis)
 
@@ -485,16 +458,17 @@ The class manage all tasks related to the maintenance of these checkpoints, savi
         python ${PROJECT_ROOT}/imageretrieval/src/features.py
         ```
 
-# Evaluation
+# <a name="evaluation"></a>Evaluation
 
 Diagram of the evaluation components that shows data flow when running evaluation for fashion product and deep fashion:   
     <img src="../docs/imgs/evaluation_diagram.png" width="400">   
     Evaluation diagram
-  
+In order to calculate the evaluation for product fashion we have used the subset of data that we have called test dataset as it is explained in the training section. Then we have used normalized featured for one of the results and in order to compare we also have calculated the evaluation with the average query expansion features.
+
 In order to evaluate our retrieval engine we have decide to focus the attention on precision and recall.   
     <img src="../docs/imgs/precision_recall.png" width="150">  
     Precision and recall provided by Wikipedia
-* For precision we have used the mAP algorithm, since it is the most common way to evaluate retreival systems  
+* For precision we have used the mAP algorithm, since it is the most common way to evaluate retrieval systems  
     <img src="../docs/imgs/mAP_formula.jpeg" width="200">  
     Mean average precision formula given provided by Wikipedia  
 
@@ -504,17 +478,17 @@ On the other hand we have also used speed of the executions to measure our syste
 
 We have run the evaluation on each of the models that we have trained. Moreover we have run the evaluation on two different datasets, `fashion product` and `deep fashion`.
 
-Here an example of the values obatained for the different evaluation systems:
+Here an example of the values obtained for the different evaluation systems:
 
 | ModelName   |   DataSetSize   |  UsedFeatures |   FeaturesSize |  ProcessTime  |  mAP  |  PrecisionHits  |
 |-------------|:---------------:|--------------:|----------------|:-------------:|------:|----------------:|
-| vgg16 |  390 | NormalizedFeatures |  128 | 0:10:22.166937 |  0.090003 |  0.0489 |
-| resnet50 |    390   |   NormalizedFeatures |  128 | 0:09:35.969118 |  0.060651 |  0.0489 |
-| inception_v3 | 390 |    NormalizedFeatures |  128 | 0:09:13.525337 |  0.062526 |  0.0489 |
-| densenet161 | 390 |    NormalizedFeatures |  128 | 0:11:24.438227 |  0.066571 |  0.0489 |
-| resnet50_custom | 390 |    NormalizedFeatures |  128 | 0:09:33.012131 |  0.057209 |  0.0489 |
-| vgg16_custom | 390 |    NormalizedFeatures |  128 | 0:10:07.504492 |  0.097952 |  0.0489 |
-| densenet161_custom | 390 |    NormalizedFeatures |  128 | 0:10:37.180019 |  0.102703 |  0.0489 |
+| vgg16 |  390 | NormalizedFeatures |  128 | 0:10:22.166937 |  0.090003 |  0.160686 |
+| resnet50 |    390   |   NormalizedFeatures |  128 | 0:09:35.969118 |  0.060651 |  0.111287 |
+| inception_v3 | 390 |    NormalizedFeatures |  128 | 0:09:13.525337 |  0.062526 |  0.126841 |
+| densenet161 | 390 |    NormalizedFeatures |  128 | 0:11:24.438227 |  0.066571 |  0.155388 |
+| resnet50_custom | 390 |    NormalizedFeatures |  128 | 0:09:33.012131 |  0.057209 |  0.114533 |
+| vgg16_custom | 390 |    NormalizedFeatures |  128 | 0:10:07.504492 |  0.097952 |  0.178293 |
+| densenet161_custom | 390 |    NormalizedFeatures |  128 | 0:10:37.180019 |  0.102703 |  0.215557 |
   
   
 ### How to run evaluations
@@ -600,7 +574,9 @@ Here an example of the values obatained for the different evaluation systems:
         export QUERIES_PER_LABEL=100 &&
         python ${PROJECT_ROOT}/imageretrieval/src/evaluate_deep_fashion.py
         ```
-# Data preparation
+# <a name="datapreparation"></a>Data preparation
+[dataset.py](src/dataset.py)  
+[prepare_datasets.py](src/prepare_datasets.py)
 
 Diagram to show the data flow of the prepare data functions  
     <img src="../docs/imgs/data_preparation.png" width="200">  
