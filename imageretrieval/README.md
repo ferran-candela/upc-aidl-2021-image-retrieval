@@ -198,7 +198,7 @@ We use two different types of training:
 2. We have named it "scratch". The trained models have most of the layers frozen and we unfrozen only some, usually the last or others that we believe are adequate for our objective. In this case is a complete training method with all phases: train, evaluate and test.
 
 ## Train Datasets
-We can use two datasets for train. We can use two datasets to train. The environment variable DATASET_USEDNAME defines which one to use: "fashionproduct" or "deepfashion"
+We can use two datasets to train. The environment variable DATASET_USEDNAME defines which one to use: "fashionproduct" or "deepfashion"
 
 ## Train Results
 The results are saved in three ways and in the folder of each model.
@@ -572,7 +572,7 @@ Defines all parameters used for all processes.
 It's the main class to run the engine.  
 It allows executing the query for an image and returns the top k results of similar images.
 It allows choosing a model from those available and extracts the features of the image according to the model used, and postprocessing them according to the best configuration.
-Finally, calculate the top k most similar images and print de results.  
+Finally, calculate the top k most similar images and print the results.  
 
 You can do a test and make a query, assigning the "img_id" variable in main code, and assigning the top_k result you wish.
 
