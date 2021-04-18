@@ -53,7 +53,7 @@ def PCA_VarianceDimension_Plot(model_name,features,PCAdimension,save_path):
 
 def PCA_Tune(model_name,features,dataframe,querylist,pca_dimensions,save_path,accuracy_type="pHits"):
 
-    patiente = 2
+    patiente = 1
 
     pca_accuracy = []
     pca_time = []
