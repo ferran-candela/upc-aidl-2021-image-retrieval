@@ -210,6 +210,7 @@ We need to analyze the PCA for each model. To achieve this, we have created a pr
 2. precision Hits (average of the number of correct classes in the ranking returned by each query)
 </br>
 </br>
+
 ### Results
 
 | Model | UsedFeatures | Initial n_component | mAP | PrecisionHits | New n_component calculated | New mAP | New PrecisionHits |
