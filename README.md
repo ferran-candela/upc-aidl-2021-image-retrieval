@@ -250,7 +250,7 @@ Again as in the previous result we can see that the model that performs the best
 
 But not only that, we also can see that the evaluation metrics have improved comparing to the previous experiment.
 
-## <a name="densenet161custompca"></a>Third experiment - Customer model with finetune PCA
+## <a name="densenet161custompca"></a>Third experiment - Custom model with finetune PCA
 
 Principal Components Analysis (PCA) is a mathematical formulation used in the reduction of data dimensions. Thus, the PCA technique allows the identification of standards in data and their expression in such a way that their similarities and differences are emphasized. Once patterns are found, they can be compressed, i.e., their dimensions can be reduced without much loss of information. In summary, the PCA formulation may be used as a digital image compression algorithm with a low level of loss.
 
@@ -292,7 +292,7 @@ We need to analyze the PCA for each model. To achieve this, we have created a pr
 ### Conclusions
 
 The PCA finetune has greatly improved the metrics we use to evaluate our models.  
-It is necessary to finetun each PCA to find the value of n_component of the PCA and perform the best possible post-processing of the features.
+It is necessary to finetune each PCA to find the value of n_component of the PCA and perform the best possible post-processing of the features.
 
 ## <a name="evaluationdeepfashion"></a>Fourth experiment - Evaluation for deep fashion
 
@@ -339,17 +339,48 @@ In the following table we will compare sorted by precision hits both the custom 
 
 ### Hypothesis
 
-As have been already explained in the training section, there is a trick that can be used with pretrained models to make the model match the norm statistics of the target dataset. We wanted to try if using the already pretrained model 'densenet161_custom', with which we obtained pretty good results, and making the pass over the Deep Fashion dataset, without doing any backpropagation, the model generalizes better and obtain better results for both Fashion Product evaluation as well as Deep Fashion evaluation.
+As have been already explained in the training section, there is a trick that can be used with pretrained models to make the model match the norm statistics of the target dataset. This is called [Batch normalization](https://en.wikipedia.org/wiki/Batch_normalization).
+
+We wanted to try if using the already pretrained model 'densenet161_custom', with which we obtained pretty good results, and making the pass over the Deep Fashion dataset, without doing any backpropagation, the model generalizes better and obtain better results for both Fashion Product evaluation as well as Deep Fashion evaluation.
 
 ### Experiment setup
 
 We need to modify the DATASET_BASE_DIR and DATASET_LABELS_DIR to point the Deep Fashion dataset and the precomputed Deep Fashion labels mapping CSV already used in the Fourth Experiment.
 
-
+Set up the new model to train in the Model Manager, in this case named as `densenet161_custom_deep_batchnorm`. This model is loading the `densenet161_custom` model, loading their weights, bias and norms. Then a `batch norm training` is executed just passing over the Deep Fashion dataset without propagating gradients. So we are treating this model as the pretrained models in the first experiment.
 
 ### Results
+
+1. Evaluation with Fashion Product
+
+   Results ordered by precision.
+
+   |Model|DataSetSize|UsedFeatures|FeaturesSize|mAPqueries|mAP|PrecisionHits|
+   |-----|----------:|-----------:|-----------:|---------:|--:|------------:|
+   |densenet161_custom|NormalizedFeatures|128|0,310|0,8217|20|0,665|0,8467|
+   |densenet161_custom|AQEFeatures|128|0,386|0,7872|20|0,692|0,8234|
+   ...
+   |densenet161_custom_deep_batchnorm|1245|NormalizedFeatures|128|1245|0,301|0,7282|
+   |densenet161_custom_deep_batchnorm|1245|AQEFeatures|128|1245|0,320|0,5762|
+
+   As can be seen in the results the model does not perform as well as the custom model finetuned with PCA.
+
+2. Evaluation with Deep Fashion
+
+   Results ordered by precision.
+
+   |Model|DataSetSize|UsedFeatures|FeaturesSize|mAPqueries|mAP|PrecisionHits|
+   |-----|----------:|-----------:|-----------:|---------:|--:|------------:|
+   |densenet161_custom_20|1245|NormalizedFeatures|20|1245|0,218|0,292|
+   |densenet161_custom|1245|NormalizedFeatures|128|1245|0,131|0,267|
+   |densenet161_custom_deep_batchnorm|1245|NormalizedFeatures|128|1245|0,114|0,244|
+   ...
+
+   The model does not improved neither when using Deep fashion data to evaluate.
+
 ### Conclusions
 
+The batch norm trick does not perform as expected in this case, so other models still perform so much better, including the model from which we have begun.
 
 ## <a name="custommodeldeepfashion"></a>Sixth experiment - Evaluation for deep fashion
 
