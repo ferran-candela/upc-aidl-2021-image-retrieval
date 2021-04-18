@@ -186,7 +186,7 @@ python ${PROJECT_ROOT}/imageretrieval/src/tSNE.py
 # <a name="training"></a>Train (train.py)
 Diagram of the train components
 
-<img src="../docs/imgs/training_diagram.png"/>
+<img src="../docs/imgs/training_diagram.png" width="500"/>
 
 
 ## What models do we use?
@@ -218,8 +218,8 @@ confusion matrix gives the information about the all true positive rate.
 
 ## Train graphics example
 
-<img src="../docs/imgs/resnet_loss_plot_18.png" width="300"/>
-<img src="../docs/imgs/resnet_acc_plot_18.png" width="300"/>
+<img src="../docs/imgs/resnet_loss_plot_18.png" width="250"/>
+<img src="../docs/imgs/resnet_acc_plot_18.png" width="250"/>
 
 ## HIGHLIGHTS
 
