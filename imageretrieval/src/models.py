@@ -168,7 +168,9 @@ class ModelManager:
                             'densenet161_custom',
                             #'efficient_net_b4_custom'
                             'densenet161_custom_deep',
-                            'densenet161_custom_deep_batchnorm'
+                            'densenet161_custom_deep_batchnorm',
+                            'densenet161_custom_20',
+                            'vgg16_custom_44'
                             ]
         
         self.device = device
@@ -199,7 +201,7 @@ class ModelManager:
         model_name = model.get_name()
         model.model_type = ModelType.FEATURE_EXTRACTOR
 
-        if model_name == 'vgg16' or model_name == 'vgg16_custom':
+        if model_name == 'vgg16' or model_name == 'vgg16_custom' or model_name == 'vgg16_custom_44':
             # Just use the output of feature extractor and a globalAveragePooling
             model.model = nn.Sequential(
                 model.model.features,
@@ -231,7 +233,7 @@ class ModelManager:
 
             model.output_features = 1888
 
-        if model_name == 'densenet161' or model_name == 'densenet161_custom' or model_name == 'densenet161_custom_deep' or model_name == 'densenet161_custom_deep_batchnorm':
+        if model_name == 'densenet161' or model_name == 'densenet161_custom' or model_name == 'densenet161_custom_deep' or model_name == 'densenet161_custom_deep_batchnorm' or model_name == 'densenet161_custom_20':
             #Just use the output of feature extractor and ignore the classifier
             model.model.classifier = nn.Identity()
 
@@ -295,7 +297,7 @@ class ModelManager:
 
             input_resize = 224
 
-        if model_name == 'vgg16_custom':
+        if model_name == 'vgg16_custom' or model_name == 'vgg16_custom_44':
             from torchvision.models import vgg16
             # Input must be 224x224
             model = vgg16(pretrained=True)
@@ -413,7 +415,7 @@ class ModelManager:
             is_pretrained = False
             input_resize = 299
 
-        if model_name == 'densenet161_custom' or model_name == 'densenet161_custom_deep':            
+        if model_name == 'densenet161_custom' or model_name == 'densenet161_custom_deep' or model_name == 'densenet161_custom_20':            
             from torchvision.models import densenet161
             model = densenet161(pretrained=True)
             

@@ -303,7 +303,7 @@ def extract_models_features():
 
                 # Define input transformations
                 transform = model.get_input_transform()
-                batch_size = ModelBatchSizeConfig.get_batch_size(model_name)
+                batch_size = ModelBatchSizeConfig.get_feature_extraction_batch_size(model_name)
                 train_dataset = FashionProductDataset(dataset_base_dir, train_df, transform=transform)
                 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
 
