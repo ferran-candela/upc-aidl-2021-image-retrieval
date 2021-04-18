@@ -205,7 +205,7 @@ Principal Component Analysis (PCA) is used for preprocessing. If we remove redun
 </br>
 ### Experiment setup
 
-We need to analyze the PCA for each model. To achieve this, we have created a procedure that evaluates the different possibilities of PCA based on two metrics and choose the best dimesion. (finetune.py)
+We need to analyze the PCA for each model. To achieve this, we have created a procedure that evaluates the different possibilities of PCA(n_components) based on two metrics and choose the best dimesion. (finetune.py)
 1. mAP (mean Average Precision)
 2. precision Hits (average of the number of correct classes in the ranking returned by each query)
 </br>
@@ -216,8 +216,8 @@ We need to analyze the PCA for each model. To achieve this, we have created a pr
 |-------|------------:|-------------:|-------------:|------------:|-----------:|----:|--------------:|
 |densenet161_custom|NormalizedFeatures|128|0,310|0,8217|20|0,665|0,8467|
 |densenet161_custom|AQEFeatures|128|0,386|0,7872|20|0,692|0,8234|
-|vgg16_custom|NormalizedFeatures|128|0,401|0,7821|44|0,407|0,7873|
-|vgg16_custom|AQEFeatures|128|0,491|0,7930|44|0,483|0,8018|
+|vgg16_custom|NormalizedFeatures|128|0,273|0,7159|44|0,401|0,7821|
+|vgg16_custom|AQEFeatures|128|0,308|0,5739|44|0,490|0,7930|
 </br>
 
 
