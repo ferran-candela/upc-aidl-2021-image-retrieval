@@ -7,114 +7,9 @@ Documentation of the different parts of image retrieval engine:
 * [Finetune](#finetune)
 * [Evaluation](#evaluation)
 * [Feature visualization](#featurevisualization)
-
-# Settings for VSCode
-
-```
-    {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Train",
-            "type": "python",
-            "request": "launch",
-            "program": "${PROJECT_ROOT}/imageretrieval/src/train.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${cwd}",
-                "DEVICE": "cuda",
-                "DEBUG": "True",
-                "DATASET_USEDNAME": "deepfashion", // deepfashion / fashionproduct
-                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
-                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
-                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
-                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
-                "TRAIN_SIZE": "500",
-                "TEST_VALIDATE_SIZE": "500"
-            }
-        },
-        {
-            "name": "Extract features",
-            "type": "python",
-            "request": "launch",
-            "program": "${PROJECT_ROOT}/imageretrieval/src/features.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${cwd}",
-                "DEVICE": "cuda",
-                "DEBUG": "True",
-                "DATASET_USEDNAME": "deepfashion", // deepfashion / fashionproduct
-                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
-                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
-                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
-                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
-                "TRAIN_SIZE": "500",
-                "TEST_VALIDATE_SIZE": "500"
-            }
-        },
-        {
-            "name": "Finetuning",
-            "type": "python",
-            "request": "launch",
-            "program": "${PROJECT_ROOT}/imageretrieval/src/finetune.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${cwd}",
-                "DEVICE": "cuda",
-                "DEBUG": "True",
-                "DATASET_USEDNAME": "deepfashion", // deepfashion / fashionproduct
-                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
-                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
-                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
-                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
-                "TRAIN_SIZE": "all",
-                "MAP_N_QUERIES" : "600",
-                "TOP_K_IMAGE": "15",
-                "PCA_ACCURACY_TYPE" : "pHits" // mAP / pHits
-            }
-        },
-        {
-            "name": "Engine test",
-            "type": "python",
-            "request": "launch",
-            "program": "${PROJECT_ROOT}/imageretrieval/src/engine.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${cwd}",
-                "DEVICE": "cpu",
-                "DEBUG": "True",
-                "DATASET_USEDNAME": "deepfashion", // deepfashion / fashionproduct
-                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
-                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
-                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
-                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/"
-            }
-        },
-        {
-            "name": "t-SNE graphs",
-            "type": "python",
-            "request": "launch",
-            "program": "${PROJECT_ROOT}/imageretrieval/src/tSNE.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${cwd}",
-                "DEVICE": "cuda",
-                "DEBUG": "True",
-                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
-                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
-                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
-                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/"
-            }
-        }
-    ]
-}
-
-```
+* [Engine](#engine)
+* [Config](#config)
+* [Utils](#utils)
 
 # Command line execution
 
@@ -131,58 +26,81 @@ source /home/fcandela/opt/miniconda3/bin/activate &&
 conda activate image-retrieval-v1
 ```
 
-# Command line execution for feature extraction
+# <a name="datapreparation"></a>Data preparation
+[dataset.py](src/dataset.py)  
+[prepare_datasets.py](src/prepare_datasets.py)
 
-Activate the conda environment, setup environment vars and execute features.py.
-
-```
-export PYTHONPATH=${PROJECT_ROOT} &&
-export DEVICE=cuda &&
-export DEBUG=True &&
-export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
-export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
-export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
-export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
-export TRAIN_SIZE=all &&
-export TEST_VALIDATE_SIZE=0 &&
-python ${PROJECT_ROOT}/imageretrieval/src/features.py
-```
+Diagram to show the data flow of the prepare data functions  
+    <img src="../docs/imgs/data_preparation.png" width="400">  
+    Data preparation diagram
 
 
-# Command line execution for finetuning
-Activate the conda environment, setup environment vars and execute finetune.py.
+This functions as the name is indicating perform different operations necessary to be able to work with the different dataset structures.  
+We started working with a dataset called fashion product which contains a `.csv` with the description of each image and the characteristics. You can take a look at a sample of the content of the mentioned `.csv` [here](../docs/files/sample_fashion_product.csv)
+When using deep fashion dataset we needed to adapt the way images are stored and also using the same characteristics as in fashion product. We created a mapping `.csv` to adapt the article type of the clothes. You can take a look [here](docs/files/sample_fashion_product.csv) to this mapping file.  
 
-PCA_ACCURACY_TYPE: // mAP / pHits
+The main operations that we have included are:  
+* Splitter to divide the images into train, validate and test. In this way we use different images for each of this steps of our retrieval system.
+* Create a `.csv` for deep fashion with the same characteristics that we use for product fashion. Example:  
 
-```
-export PYTHONPATH=${PROJECT_ROOT} &&
-export DEVICE=cpu &&
-export DEBUG=True &&
-export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
-export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
-export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
-export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
-export TRAIN_SIZE=all,
-export MAP_N_QUERIES=600 &&
-export PCA_ACCURACY_TYPE=pHits
-python ${PROJECT_ROOT}/imageretrieval/src/finetune.py
-```
+| id   |   path   |  categoryName |   articleType |  dataset  |
+|------|:--------:|--------------:|---------------|:---------:|
+|100000|img/Sheer_Pleated-Front_Blouse/img_00000001.jpg|Blouse|Shirts|deep_fashion|
+|100001|img/Sheer_Pleated-Front_Blouse/img_00000002.jpg|Blouse|Shirts|deep_fashion|
+|184526|img/Dreaming_And_Scheming_Hoodie/img_00000026.jpg|Hoodie|Sweaters|deep_fashion|
+|184527|img/Dreaming_And_Scheming_Hoodie/img_00000027.jpg|Hoodie|Sweaters|deep_fashion|
+|184528|img/Drop-Sleeve_Heathered_Tee/img_00000001.jpg|Tee|Tshirts|deep_fashion|
+|184529|img/Drop-Sleeve_Heathered_Tee/img_00000002.jpg|Tee|Tshirts|deep_fashion|
+|243124|img/Marled_Terrycloth_Joggers/img_00000033.jpg|Joggers|Lounge Pants|deep_fashion|
+|243125|img/Marled_Terrycloth_Joggers/img_00000034.jpg|Joggers|Lounge Pants|deep_fashion|
+|243126|img/Marled_Terrycloth_PJ_Sweatpants/img_00000026.jpg|Sweatpants|Lounge Pants|deep_fashion|
+|243127|img/Marled_Terrycloth_PJ_Sweatpants/img_00000027.jpg|Sweatpants|Lounge Pants|deep_fashion|
 
+### How to run prepare datasets
+1. If using visual studio 
+    * Include this two configurations 
+    ```
+        {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Prepare datasets",
+                "type": "python",
+                "request": "launch",
+                "program": "${PROJECT_ROOT}/imageretrieval/src/prepare_datasets.py",
+                "console": "integratedTerminal",
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "PYTHONPATH": "${cwd}",
+                    "DEVICE": "cuda",
+                    "DEBUG": "True",
+                    "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                    "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                    "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                    "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
+                    "RESOURCES_DIR": "${PROJECT_ROOT}/imageretrieval/resources/",
+                }
+            }
+        ]
+        }
 
+    ```
 
-# Command line execution for tSNE
-Activate the conda environment, setup environment vars and execute tSNE.py.
+2. If using terminal:
+    * Activate the conda environment, setup environment vars and execute evaluation.py.
 
-```
-export PYTHONPATH=${PROJECT_ROOT} &&
-export DEVICE=cuda &&
-export DEBUG=True &&
-export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
-export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
-export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
-export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
-python ${PROJECT_ROOT}/imageretrieval/src/tSNE.py
-```
+        ```
+        export PYTHONPATH=${PROJECT_ROOT} &&
+        export DEVICE=cuda &&
+        export DEBUG=True &&
+        export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
+        export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
+        export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+        export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
+        export RESOURCES_DIR=${PROJECT_ROOT}/imageretrieval/resources/ &&
+        python ${PROJECT_ROOT}/imageretrieval/src/prepare_datasets.py
+        ```
+
 # <a name="training"></a>Train (train.py)
 Diagram of the train components
 
@@ -278,98 +196,51 @@ confusion matrix gives the information about the all true positive rate.
         python ${PROJECT_ROOT}/imageretrieval/src/train.py
         ```
 
-# <a name="finetune"></a>PCA Finetune (finetune.py)
+# <a name="model"></a>Models Manager (models.py)
 
-For features extracted from the models, we perform a post-processing that consists of a normalization and a reduction of the dimensionality. To reduce dimensionality we use the PCA technique (Principal Component Analysis)
+Diagram of the model manipulating
 
-<img src="../docs/imgs/post-precessing-pipeline.png" width="400"/>
-
-*[1] Jégou, H., & Chum, O. (2012).
-Negative evidences and co occurrences in image retrieval: the benefit of PCA and whitening Lecture Notes in Computer Science, 7573 LNCS (PART 2), 774 787*
-
-PCA finetune is the process that will find the best value for n_components in PCA (n_components)  through two metrics: 
-1. mAP (mean Average Precision)
-2. precision Hits (average of the number of correct classes in the ranking returned by each query)
-
-The process uses the raw features generated by the model and looks for the best PCA dimensionality. The process consists of dividing the initial dimensionality of the features (generated by the model) into intervals of initial_dimensionality/**interval**,  where interval in our case receives the value 10. 
-
-The first approach was a list values of PCA that we need to calculate for one of two metrics mentioned before. The best PCA values is used to generate the new interval of possible values of PCA Dimensions. The new evaluation interval will be each time more closed, until the best dimension is found.
-
-## Variance Plot
-
-The variance plot help us to know how important are the features of our dataset.
-
-1. Individual variance: The individual variance will tell us how important the newly added features are
-2. Cumulative variance: We visualize how much of the original data is explained by the limited number of features by finding the cumulative variance 
-
-## Finetune Results
-The results are saved in two ways and in the folder of each model.
-
-1. File: txt file with best dimension result and the accuracy calculated
-
-2. Graphics: variance plots
+<img src="../docs/imgs/Model management.png" height="400"/>  
 
 
-## Finetune graphics example
+This is the master class that is responsible for managing everything related to models, manipulating, save, ...  
+It's not an execution file. It's the main class shared by all processes. All functions or methods are used in all other processes of this Image Retrieval system
 
-<img src="../docs/imgs/pca_indiv_variance_plot_220.png" width="500"/>
-<img src="../docs/imgs/pca_cumul_variance_plot_220.png" width="500"/>
+## Models used
+
+We have worked using these pretrained models:
+* vgg16
+* resnet50
+* densenet161
+* inception_v3
+* efficient_net_b4
+
+## Transform to Feature Extractor
+
+This method transforms every different model to a Feature Extractor. It means that we adapt any layers to improve extraction features.
+
+## Prepare to classifier
+
+To improve the pretrained models for our ImageRetrieval task and with our dataset, we train the models with our dataset and recalculate the weights of some layers.  
+We use same models classifier that proposed but we adapt with our num. classes and focus or unfreeze the training weights in specific layers.
+
+## Image Transformations
+
+We use two image transformations:
+
+1. Train transformation. Used for train only. Data augmentation technique: Resize, RandomCrop and Horizontal Flip  
+2. Input transformation. Used for all other tasks. Data augmentation technique: Resize, CenterCrop
+
+## Optimizer and Criterion
+
+We use SGD (Stochastic Gradient Descent) optimizer in all models. You can modify the optimizer in this class. Also, you can modify the SGD parameters (learning rate, momentum,...)  
+We use CrossEntropyLoss as a criterion.
 
 ## HIGHLIGHTS
 
-* model_manager.get_model_names (models.py): Model list to pca dimension evaluate.
-* features_manager.load_from_raw_features_checkpoint (features.py): load raw features saved in the model checkpoint
-* RetrievalEvalConfig.PCA_ACCURACY_TYPE (config.py): Metrics used for accuracy calculation. (mAP / pHits)
+ModelTrainConfig.NUM_CLASSES (config.py): Very important to configure. Number of classes that we have in our dataset and we want to classify.
 
-## Run finetune
-1. If using visual studio.
-    ```
-    {  
-        "version": "0.2.0",  
-        "configurations": [  
-        {          
-            "name": "FineTune",  
-            "type": "python",  
-            "request": "launch",  
-            "program": "${PROJECT_ROOT}/imageretrieval/src/train.py",  
-            "console": "integratedTerminal",  
-            "cwd": "${workspaceFolder}",  
-            "env": {  
-                "PYTHONPATH": "${cwd}",  
-                "DEVICE": "cuda",  
-                "DEBUG": "True",  
-                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",  
-                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",  
-                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",  
-                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/  
-                "TOP_K_AQE" : "15",
-                "TOP_K_IMAGE" : "15",
-                "MAP_N_QUERIES" : "600",
-                "PCA_ACCURACY_TYPE" : "pHits" // mAP / pHits
-            }  
-        }  
-    }
-    ```
-
-2. If using terminal:
-    * Activate the conda environment, setup environment vars and execute evaluation.py.
-
-        ```
-        export PYTHONPATH=${PROJECT_ROOT} &&
-        export DEVICE=cuda &&
-        export DEBUG=True &&
-        export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
-        export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
-        export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
-        export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
-        export TOP_K_AQE=15 &&
-        export TOP_K_IMAGE=15 &&
-        export MAP_N_QUERIES=600 &&
-        export PCA_ACCURACY_TYPE=pHits &&
-        python ${PROJECT_ROOT}/imageretrieval/src/finetune.py
-        ```
-
-# Features Manager (features.py)
+# <a name="featureextraction"></a>Features Manager (features.py)
 
 Diagram of the features extractor
 
@@ -454,85 +325,77 @@ The class manage all tasks related to the maintenance of these checkpoints, savi
         ```
 
 
-# Models Manager (models.py)
+# <a name="finetune"></a>PCA Finetune (finetune.py)
 
-Diagram of the model manipulating
+For features extracted from the models, we perform a post-processing that consists of a normalization and a reduction of the dimensionality. To reduce dimensionality we use the PCA technique (Principal Component Analysis)
 
-<img src="../docs/imgs/Model management.png" height="400"/>  
+<img src="../docs/imgs/post-precessing-pipeline.png" width="400"/>
+
+*[1] Jégou, H., & Chum, O. (2012).
+Negative evidences and co occurrences in image retrieval: the benefit of PCA and whitening Lecture Notes in Computer Science, 7573 LNCS (PART 2), 774 787*
+
+PCA finetune is the process that will find the best value for n_components in PCA (n_components)  through two metrics: 
+1. mAP (mean Average Precision)
+2. precision Hits (average of the number of correct classes in the ranking returned by each query)
+
+The process uses the raw features generated by the model and looks for the best PCA dimensionality. The process consists of dividing the initial dimensionality of the features (generated by the model) into intervals of initial_dimensionality/**interval**,  where interval in our case receives the value 10. 
+
+The first approach was a list values of PCA that we need to calculate for one of two metrics mentioned before. The best PCA values is used to generate the new interval of possible values of PCA Dimensions. The new evaluation interval will be each time more closed, until the best dimension is found.
+
+## Variance Plot
+
+The variance plot help us to know how important are the features of our dataset.
+
+1. Individual variance: The individual variance will tell us how important the newly added features are
+2. Cumulative variance: We visualize how much of the original data is explained by the limited number of features by finding the cumulative variance 
+
+## Finetune Results
+The results are saved in two ways and in the folder of each model.
+
+1. File: txt file with best dimension result and the accuracy calculated
+
+2. Graphics: variance plots
 
 
-This is the master class that is responsible for managing everything related to models, manipulating, save, ...  
-It's not an execution file. It's the main class shared by all processes. All functions or methods are used in all other processes of this Image Retrieval system
+## Finetune graphics example
 
-## Models used
-
-We have worked using these pretrained models:
-* vgg16
-* resnet50
-* densenet161
-* inception_v3
-* efficient_net_b4
-
-## Transform to Feature Extractor
-
-This method transforms every different model to a Feature Extractor. It means that we adapt any layers to improve extraction features.
-
-## Prepare to classifier
-
-To improve the pretrained models for our ImageRetrieval task and with our dataset, we train the models with our dataset and recalculate the weights of some layers.  
-We use same models classifier that proposed but we adapt with our num. classes and focus or unfreeze the training weights in specific layers.
-
-## Image Transformations
-
-We use two image transformations:
-
-1. Train transformation. Used for train only. Data augmentation technique: Resize, RandomCrop and Horizontal Flip  
-2. Input transformation. Used for all other tasks. Data augmentation technique: Resize, CenterCrop
-
-## Optimizer and Criterion
-
-We use SGD (Stochastic Gradient Descent) optimizer in all models. You can modify the optimizer in this class. Also, you can modify the SGD parameters (learning rate, momentum,...)  
-We use CrossEntropyLoss as a criterion.
+<img src="../docs/imgs/pca_indiv_variance_plot_220.png" width="500"/>
+<img src="../docs/imgs/pca_cumul_variance_plot_220.png" width="500"/>
 
 ## HIGHLIGHTS
 
-ModelTrainConfig.NUM_CLASSES (config.py): Very important to configure. Number of classes that we have in our dataset and we want to classify.
+* model_manager.get_model_names (models.py): Model list to pca dimension evaluate.
+* features_manager.load_from_raw_features_checkpoint (features.py): load raw features saved in the model checkpoint
+* RetrievalEvalConfig.PCA_ACCURACY_TYPE (config.py): Metrics used for accuracy calculation. (mAP / pHits)
 
-# Feature Visualization (tSNE.py)
-
-<img src="../docs/imgs/tsne_normalizedfeatures_128.png" width="500"/>
-<img src="../docs/imgs/tsne_aqefeatures_128.png" width="500"/>
-
-Left to Right: tSNE representation of densenet161 custom model features extraction and classification. Normalized features and AQE features
-
-## tSNE Plot
-
-We use display our learned features in a 2D space using t-SNE.  
-This process generates two tSNE plots for every model and save it. One, using the Normalized features and the other using the AQE features.
-
-## HIGHLIGHTS
-
-* model_manager.get_model_names (models.py): Model list used for generate plots.
-
-## Run feature visualization
+## Run finetune
 1. If using visual studio.
     ```
+    {  
+        "version": "0.2.0",  
+        "configurations": [  
         {
-            "name": "t-SNE graphs",
+            "name": "Finetuning",
             "type": "python",
             "request": "launch",
-            "program": "${PROJECT_ROOT}/imageretrieval/src/tSNE.py",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/finetune.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "env": {
                 "PYTHONPATH": "${cwd}",
-                "DEVICE": "gpu",
+                "DEVICE": "cuda",
                 "DEBUG": "True",
+                "DATASET_USEDNAME": "deepfashion", // deepfashion / fashionproduct
                 "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
                 "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
                 "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
-                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/"
-            }
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
+                "TRAIN_SIZE": "all",
+                "MAP_N_QUERIES" : "600",
+                "TOP_K_IMAGE": "15",
+                "PCA_ACCURACY_TYPE" : "pHits" // mAP / pHits
+            }  
+    }
     ```
 
 2. If using terminal:
@@ -546,88 +409,12 @@ This process generates two tSNE plots for every model and save it. One, using th
         export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
         export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
         export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
-        python ${PROJECT_ROOT}/imageretrieval/src/tSNE.py
+        export TOP_K_AQE=15 &&
+        export TOP_K_IMAGE=15 &&
+        export MAP_N_QUERIES=600 &&
+        export PCA_ACCURACY_TYPE=pHits &&
+        python ${PROJECT_ROOT}/imageretrieval/src/finetune.py
         ```
-
-# Config (config.py)
-
-It's equivalent to HyperParameters.  
-Defines all parameters used for all processes.
-
-* Folders path
-* Models batch size
-* PCA size
-* DataSet used
-* Training parameters: num. classes, patience, learning rate, max. num. epochs to train,..
-* Evaluation parameters: Num. queries, top k images, ... 
-
-# Utils (utils.py)
-
-* ProcessTime: Class for calculate processed time
-* LogFile: Class for generate CSV log files 
-
-
-# Retrieval Engine (engine.py)
-
-It's the main class to run the engine.  
-It allows executing the query for an image and returns the top k results of similar images.
-It allows choosing a model from those available and extracts the features of the image according to the model used, and postprocessing them according to the best configuration.
-Finally, calculate the top k most similar images and print the results.  
-
-You can do a test and make a query, assigning the "img_id" variable in main code, and assigning the top_k result you wish.
-
-These methods are called from API.
-
-
-## HIGHLIGHTS
-
-For testing the retrieval engine, you need define two variables directly in main code:  
-top_k = xx  
-img_id = xxxx
-
-
-## Execution test
-
-Query image  
-<img src="../docs/imgs/engine_query.png" width="200"/>  
-Top k 15 results  
-<img src="../docs/imgs/engine_top_k_similarity.png" width="600"/> 
-
-## Run retrieval engine
-1. If using visual studio.
-    ```
-        {
-            "name": "Engine test",
-            "type": "python",
-            "request": "launch",
-            "program": "${PROJECT_ROOT}/imageretrieval/src/engine.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}",
-            "env": {
-                "PYTHONPATH": "${cwd}",
-                "DEVICE": "gpu",
-                "DEBUG": "True",
-                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
-                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
-                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
-                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/"
-            }
-    ```
-
-2. If using terminal:
-    * Activate the conda environment, setup environment vars and execute evaluation.py.
-
-        ```
-        export PYTHONPATH=${PROJECT_ROOT} &&
-        export DEVICE=cuda &&
-        export DEBUG=True &&
-        export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
-        export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
-        export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
-        export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
-        python ${PROJECT_ROOT}/imageretrieval/src/engine.py
-        ```
-
 
 # <a name="evaluation"></a>Evaluation
 
@@ -753,64 +540,42 @@ After having this too values we can calculate mAP and precision hits.
         export QUERIES_PER_LABEL=100 &&
         python ${PROJECT_ROOT}/imageretrieval/src/evaluate_deep_fashion.py
         ```
-# <a name="datapreparation"></a>Data preparation
-[dataset.py](src/dataset.py)  
-[prepare_datasets.py](src/prepare_datasets.py)
 
-Diagram to show the data flow of the prepare data functions  
-    <img src="../docs/imgs/data_preparation.png" width="200">  
-    Data preparation diagram
+# <a name="featurevisualization"></a>Feature Visualization (tSNE.py)
 
+<img src="../docs/imgs/tsne_normalizedfeatures_128.png" width="500"/>
+<img src="../docs/imgs/tsne_aqefeatures_128.png" width="500"/>
 
-This functions as the name is indicating perform different operations necessary to be able to work with the different dataset structures.  
-We started working with a dataset called fashion product which contains a `.csv` with the description of each image and the characteristics. You can take a look at a sample of the content of the mentioned `.csv` [here](../docs/files/sample_fashion_product.csv)
-When using deep fashion dataset we needed to adapt the way images are stored and also using the same characteristics as in fashion product. We created a mapping `.csv` to adapt the article type of the clothes. You can take a look [here](docs/files/sample_fashion_product.csv) to this mapping file.  
+Left to Right: tSNE representation of densenet161 custom model features extraction and classification. Normalized features and AQE features
 
-The main operations that we have included are:  
-* Splitter to divide the images into train, validate and test. In this way we use different images for each of this steps of our retrieval system.
-* Create a `.csv` for deep fashion with the same characteristics that we use for product fashion. Example:  
+## tSNE Plot
 
-| id   |   path   |  categoryName |   articleType |  dataset  |
-|------|:--------:|--------------:|---------------|:---------:|
-|100000|img/Sheer_Pleated-Front_Blouse/img_00000001.jpg|Blouse|Shirts|deep_fashion|
-|100001|img/Sheer_Pleated-Front_Blouse/img_00000002.jpg|Blouse|Shirts|deep_fashion|
-|184526|img/Dreaming_And_Scheming_Hoodie/img_00000026.jpg|Hoodie|Sweaters|deep_fashion|
-|184527|img/Dreaming_And_Scheming_Hoodie/img_00000027.jpg|Hoodie|Sweaters|deep_fashion|
-|184528|img/Drop-Sleeve_Heathered_Tee/img_00000001.jpg|Tee|Tshirts|deep_fashion|
-|184529|img/Drop-Sleeve_Heathered_Tee/img_00000002.jpg|Tee|Tshirts|deep_fashion|
-|243124|img/Marled_Terrycloth_Joggers/img_00000033.jpg|Joggers|Lounge Pants|deep_fashion|
-|243125|img/Marled_Terrycloth_Joggers/img_00000034.jpg|Joggers|Lounge Pants|deep_fashion|
-|243126|img/Marled_Terrycloth_PJ_Sweatpants/img_00000026.jpg|Sweatpants|Lounge Pants|deep_fashion|
-|243127|img/Marled_Terrycloth_PJ_Sweatpants/img_00000027.jpg|Sweatpants|Lounge Pants|deep_fashion|
+We use display our learned features in a 2D space using t-SNE.  
+This process generates two tSNE plots for every model and save it. One, using the Normalized features and the other using the AQE features.
 
-### How to run prepare datasets
-1. If using visual studio 
-    * Include this two configurations 
+## HIGHLIGHTS
+
+* model_manager.get_model_names (models.py): Model list used for generate plots.
+
+## Run feature visualization
+1. If using visual studio.
     ```
         {
-        "version": "0.2.0",
-        "configurations": [
-            {
-                "name": "Prepare datasets",
-                "type": "python",
-                "request": "launch",
-                "program": "${PROJECT_ROOT}/imageretrieval/src/prepare_datasets.py",
-                "console": "integratedTerminal",
-                "cwd": "${workspaceFolder}",
-                "env": {
-                    "PYTHONPATH": "${cwd}",
-                    "DEVICE": "cuda",
-                    "DEBUG": "True",
-                    "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
-                    "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
-                    "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
-                    "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/",
-                    "RESOURCES_DIR": "${PROJECT_ROOT}/imageretrieval/resources/",
-                }
+            "name": "t-SNE graphs",
+            "type": "python",
+            "request": "launch",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/tSNE.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${cwd}",
+                "DEVICE": "gpu",
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/"
             }
-        ]
-        }
-
     ```
 
 2. If using terminal:
@@ -824,6 +589,84 @@ The main operations that we have included are:
         export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
         export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
         export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
-        export RESOURCES_DIR=${PROJECT_ROOT}/imageretrieval/resources/ &&
-        python ${PROJECT_ROOT}/imageretrieval/src/prepare_datasets.py
+        python ${PROJECT_ROOT}/imageretrieval/src/tSNE.py
         ```
+
+
+# <a name="engine"></a>Retrieval Engine (engine.py)
+
+It's the main class to run the engine.  
+It allows executing the query for an image and returns the top k results of similar images.
+It allows choosing a model from those available and extracts the features of the image according to the model used, and postprocessing them according to the best configuration.
+Finally, calculate the top k most similar images and print the results.  
+
+You can do a test and make a query, assigning the "img_id" variable in main code, and assigning the top_k result you wish.
+
+These methods are called from API.
+
+
+## HIGHLIGHTS
+
+For testing the retrieval engine, you need define two variables directly in main code:  
+top_k = xx  
+img_id = xxxx
+
+
+## Execution test
+
+Query image  
+<img src="../docs/imgs/engine_query.png" width="200"/>  
+Top k 15 results  
+<img src="../docs/imgs/engine_top_k_similarity.png" width="600"/> 
+
+## Run retrieval engine
+1. If using visual studio.
+    ```
+        {
+            "name": "Engine test",
+            "type": "python",
+            "request": "launch",
+            "program": "${PROJECT_ROOT}/imageretrieval/src/engine.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${cwd}",
+                "DEVICE": "gpu",
+                "DEBUG": "True",
+                "DATASET_BASE_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset",
+                "DATASET_LABELS_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv",
+                "WORK_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test",
+                "LOG_DIR": "${PROJECT_ROOT}/datasets/Fashion_Product_Full_Subset_test/log/"
+            }
+    ```
+
+2. If using terminal:
+    * Activate the conda environment, setup environment vars and execute evaluation.py.
+
+        ```
+        export PYTHONPATH=${PROJECT_ROOT} &&
+        export DEVICE=cuda &&
+        export DEBUG=True &&
+        export DATASET_BASE_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset &&
+        export DATASET_LABELS_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset/styles.csv &&
+        export WORK_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir &&
+        export LOG_DIR=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir/log/ &&
+        python ${PROJECT_ROOT}/imageretrieval/src/engine.py
+        ```
+
+# <a name="config"></a>Config (config.py)
+
+It's equivalent to HyperParameters.  
+Defines all parameters used for all processes.
+
+* Folders path
+* Models batch size
+* PCA size
+* DataSet used
+* Training parameters: num. classes, patience, learning rate, max. num. epochs to train,..
+* Evaluation parameters: Num. queries, top k images, ... 
+
+# <a name="utils"></a>Utils (utils.py)
+
+* ProcessTime: Class for calculate processed time
+* LogFile: Class for generate CSV log files 
