@@ -20,7 +20,13 @@ Advised by professor Kevin McGuinness
    <img src="docs/imgs/similarity_engine_diagram.png" width="800">
 
 Documentation of the different parts of the project:
-* [Image retrieval](/imageretrieval/README.md/#datapreparation)
+* [Data preparation](/imageretrieval/README.md/#datapreparation)
+* [Training](/imageretrieval/README.md/#training)
+* [Model](/imageretrieval/README.md/#model)
+* [Feature extraction](/imageretrieval/README.md/#featureextraction)
+* [Finetune](/imageretrieval/README.md/#finetune)
+* [Evaluation](/imageretrieval/README.md/#evaluation)
+* [Feature visualization](/imageretrieval/README.md/#featurevisualization)
 * [API](/retrievalapi/README.md)
 * [Frontend](/retrieval-app/README.md)
 
