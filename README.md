@@ -341,9 +341,9 @@ In the following table we will compare sorted by precision hits both the custom 
 
 ### Hypothesis
 
-As have been already explained in the training section, there is a trick that can be used with pretrained models to make the model match the norm statistics of the target dataset. This is called [Batch normalization](https://en.wikipedia.org/wiki/Batch_normalization).
+As explained in the training section, there is a trick that can be used with pretrained models to make the model match the norm statistics of the target dataset. This is called [Batch normalization](https://en.wikipedia.org/wiki/Batch_normalization).
 
-We wanted to try if using the already pretrained model 'densenet161_custom', with which we obtained pretty good results, and making the pass over the Deep Fashion dataset, without doing any backpropagation, the model generalizes better and obtain better results for both Fashion Product evaluation as well as Deep Fashion evaluation.
+We wanted to try if using the already pretrained model `densenet161_custom`, with which we obtained pretty good results, and making the pass over the Deep Fashion dataset, without doing any backpropagation, the model generalizes better and obtain better results for both Fashion Product evaluation as well as Deep Fashion evaluation.
 
 ### Experiment setup
 
@@ -359,11 +359,11 @@ Set up the new model to train in the Model Manager, in this case named as `dense
 
    |Model|DataSetSize|UsedFeatures|FeaturesSize|mAPqueries|mAP|PrecisionHits|
    |-----|----------:|-----------:|-----------:|---------:|--:|------------:|
-   |densenet161_custom|NormalizedFeatures|128|0,310|0,8217|20|0,665|0,8467|
-   |densenet161_custom|AQEFeatures|128|0,386|0,7872|20|0,692|0,8234|
+   |densenet161_custom_20|5021|NormalizedFeatures|20|600|0,665|0,8467|
+   |densenet161_custom_20|5021|AQEFeatures|20|600|0,692|0,8234|
    ...
-   |densenet161_custom_deep_batchnorm|1245|NormalizedFeatures|128|1245|0,301|0,7282|
-   |densenet161_custom_deep_batchnorm|1245|AQEFeatures|128|1245|0,320|0,5762|
+   |densenet161_custom_deep_batchnorm|5021|NormalizedFeatures|128|600|0,301|0,7282|
+   |densenet161_custom_deep_batchnorm|5021|AQEFeatures|128|600|0,320|0,5762|
 
    As can be seen in the results the model does not perform as well as the custom model finetuned with PCA.
 
@@ -384,15 +384,59 @@ Set up the new model to train in the Model Manager, in this case named as `dense
 
 The batch norm trick does not perform as expected in this case, so other models still perform so much better, including the model from which we have begun.
 
-## <a name="custommodeldeepfashion"></a>Sixth experiment - Evaluation for deep fashion
+## <a name="custommodeldeepfashion"></a>Sixth experiment - Custom models with Deep Fashion
 
 ### Hypothesis
+
+ We know our models are good using images similar to the ones in the Fashion Product database. All are the same size, white background, pretty centered... We want to generalize so for that reason we created the Deep Fashion evaluation that helps us understand if our model generalize in a correct way.
+
+ We know that Deep Fashion product is a more heterogeneous database so we want to use the Deep Fashion data to train the models. We have proposed two options:
+
+ * **Option 1: `densenet161_custom_deep`** <br>
+ Do transfer learning with the pretrained model `densenet161` and use the Deep Fashion dataset instead of Fashion Product. We will freeze the same layers than in `densenet161` that we have checked are performing well. So we will the  model. 
+ * **Option 2: `densenet161_custom_deep_retrain`** <br>
+ Do transfer learning but beginning in the already trained model `densenet161_custom`, that we already seen that performs very well with Fashion Product but still not enough with Deep Fashion dataset.
+
 ### Experiment setup
+
+The dataset to use in both cases is the Deep Fashion divided in 60% train, 20% eval and 20% test.
+
+In the first option we created the new model in ModelManager with name `densenet161_custom_deep` and use the same layer freezing than the used to train the `densenet161_custom` model, so we are beginning from the densenet161 pretrained weights.
+
+I the second option, we begin from our custom pretrained model `densenet161_custom` but loading the weights and norms from training it with Fashion Product. After that, retrain the model with the Deep Fashion data to obtain the `densenet161_custom_deep_retrain`.
+
 ### Results
+
+Results ordered by precision for Fashion product evaluation.
+
+|Model|DataSetSize|UsedFeatures|FeaturesSize|mAPqueries|mAP|PrecisionHits|
+|-----|----------:|-----------:|-----------:|---------:|--:|------------:|
+|densenet161_custom|5021|NormalizedFeatures|20|600|0,665|0,8467|
+|densenet161_custom|5021|AQEFeatures|20|600|0,692|0,8234|
+...
+|densenet161_custom_deep|5021|NormalizedFeatures|128|600|0,293|0,7291|
+|densenet161_custom_deep|5021|AQEFeatures|128|600|0,336|0,6251|
+
+<br>
+We have calculated the confusion matrix and t-SNE for `densenet161_custom_deep` to see how it looks, so the results are not as we expected.
+<img src="docs/imgs/densenet161_custom_deep_confusion_matrix_normalized.png" width="400"/> 
+<img src="docs/imgs/densenet161_custom_deep_tsne_NormalizedFeatures_128.png" width="400"/> 
+
+Results ordered by precision for Deep Fashion evaluation.
+
+|Model|DataSetSize|UsedFeatures|FeaturesSize|mAPqueries|mAP|PrecisionHits|
+|-----|----------:|-----------:|-----------:|---------:|--:|------------:|
+|densenet161_custom_deep|1245|NormalizedFeatures|20|1245|0,136|0,344|
+|densenet161_custom_20|1245|NormalizedFeatures|20|1245|0,218|0,292|
+|densenet161_custom|1245|NormalizedFeatures|128|1245|0,131|0,267|
+|densenet161_custom_deep_batchnorm|1245|NormalizedFeatures|128|1245|0,114|0,244|
+...
+
 ### Conclusions
 
+As it was expected, the model `densenet161_custom_deep` performs better in Deep Learning evaluation, getting the first position. Although, the model has not a good mAP. In the contrary, this model is below in performance when evaluating it with Fashion Product data.
 
-
+The model `densenet161_custom_deep_retrain` option is still under training.
 
 # Bibliography
 * Resnet50 diagram from [cv-tricks](https://cv-tricks.com/keras/understand-implement-resnets/)
