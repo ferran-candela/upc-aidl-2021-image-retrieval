@@ -29,7 +29,7 @@ export class SearchComponent implements OnInit {
     this.uploadForm = this.formBuilder.group({
       fileName: 'Select image',
       searchImage: [''],
-      model: 'resnet50_custom',
+      model: 'densenet161_custom',
       topK: '15'
     });
   }
