@@ -526,7 +526,15 @@ def train():
             if DEBUG:print(f'Testing model {model_name} ....')
 
             # TEST
-            test_dataset = FashionProductDataset(dataset_base_dir, test_df, transform=input_transform)
+            if ModelTrainConfig.DATASET_USEDNAME=="fashionproduct":
+                test_dataset = FashionProductDataset(dataset_base_dir, test_df, transform=input_transform)           
+            elif ModelTrainConfig.DATASET_USEDNAME=="deepfashion":
+                test_dataset = DeepFashionDataset(dataset_base_dir, test_df, transform=input_transform)
+
+            else:
+                print('Dataset name ',ModelTrainConfig.DATASET_USEDNAME, ' not defined' )
+                return False
+            
             test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
             
             model_path = model_manager.get_model_dir(model_name=model_name)
@@ -534,7 +542,6 @@ def train():
 
             test_loss, test_acc = test_model(model=model.get_model(), criterion=model.get_criterion(), test_loader=test_loader, modelname=model.get_name(), classes_df=get_classes(train_df, test_df, validate_df), output_dir=test_results_path) 
             print ('Test (Overall), Loss: {:.4f}, Accuracy: {:.4f}'.format(test_loss,test_acc))
-
 
 if __name__ == "__main__":
 

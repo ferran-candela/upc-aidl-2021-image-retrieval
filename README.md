@@ -1,4 +1,4 @@
-# Deep Learning Image retrieval with Fashion Product database
+# Deep Learning Image retrieval for Fashion Product database
 
 The aim of the project is the creation of a tool that allows the full implementation and evaluation of an image retrieval web application using the [Fashion Product](https://www.kaggle.com/paramaggarwal/fashion-product-images-dataset) dataset as the database. DuSeveral existing pre-trained models are evaluated and also custom models are created from applying Transfer Learning from them.
 
@@ -48,8 +48,9 @@ Documentation of the [experiments](#experiments):
 
 ## General configuration
 
+### Fashion product dataset
 
-## Fashion product dataset
+Download from: [https://www.kaggle.com/paramaggarwal/fashion-product-images-dataset/download](https://www.kaggle.com/paramaggarwal/fashion-product-images-dataset/download)
 
 It is necessary to remove the following lines in the 'styles.csv' since they are missing images.
 
@@ -61,7 +62,11 @@ It is necessary to remove the following lines in the 'styles.csv' since they are
 39410,Men,Apparel,Topwear,Shirts,Cream,Summer,2014,Casual,U.S. Polo Assn. Men Cream-Coloured Tailored Fit Casual Shirt
 ```
 
-# Install dependencies
+### Deep fashion dataset
+
+Download from: [https://drive.google.com/drive/folders/0B7EVK8r0v71pekpRNUlMS3Z5cUk](https://drive.google.com/drive/folders/0B7EVK8r0v71pekpRNUlMS3Z5cUk)
+
+### Install dependencies
 
 Step 1: Get Docker
 ```
@@ -78,7 +83,7 @@ Then install Docker Compose.
 [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/)
 ```
 
-# Build project
+## Build project
 
 First of all export the environment variables DATASET_ROOT and WORKDIR_ROOT.
 
@@ -89,7 +94,12 @@ In the root folder execute:
 docker-compose -p imageretrieval build
 ```
 
-This will creaate the Docker image for the API and the Frontend (that also acts as a proxy for the API in the port 80).
+This will create the Docker image for the API and the Frontend (that also acts as a proxy for the API in the port 80).
+
+## Execute project
+
+
+
 
 # <a name="experiments">Experiments
 
