@@ -1,10 +1,10 @@
 # Deep Learning Image retrieval for Fashion Product database
 
-The aim of the project is the creation of a tool that allows the full implementation and evaluation of an image retrieval web application using the [Fashion Product](https://www.kaggle.com/paramaggarwal/fashion-product-images-dataset) dataset as the database. DuSeveral existing pre-trained models are evaluated and also custom models are created from applying Transfer Learning from them.
+The aim of the project is the creation of a tool that allows the full implementation and evaluation of an image retrieval web application using the [Fashion Product](https://www.kaggle.com/paramaggarwal/fashion-product-images-dataset) dataset as the database. Several existing pre-trained models are evaluated and also custom models are created from applying Transfer Learning from them.
 
 The main idea is that a user can obtain the topK ranking products more similar to an image using one of the different models available.
 
-The [Deep Fashion](http://mmlab.ie.cuhk.edu.hk/projects/DeepFashion.html) database is used to evaluate the system with more heterogeneous images (real world images) and finally used to obtain the best model as it is depicted in the evaluation results.
+The [Deep Fashion](http://mmlab.ie.cuhk.edu.hk/projects/DeepFashion.html) database is used to evaluate the system with more heterogeneous images (real world images) and finally used to conclude which is the best model as it is depicted in the experiments documented.
 
 The original code is the Final Project delivery for the UPC [Artificial Intelligence with Deep Learning Postgraduate Course](https://www.talent.upc.edu/ing/estudis/formacio/curs/310401/postgraduate-course-artificial-intelligence-deep-learning/) 2020-2021 edition, authored by:
 
@@ -13,6 +13,8 @@ The original code is the Final Project delivery for the UPC [Artificial Intellig
 * Ferran Candela
 
 Advised by professor Kevin McGuinness 
+
+## Deep Learning Retrieval Engine in use
 
 The final application looks like this  
 
@@ -44,15 +46,16 @@ Documentation of the [experiments](#experiments):
 5. [Custom model with batchnorm](#custommodelbatchnorm)
 6. [Custom model with deep fashion](#custommodeldeepfashion)
 
-
-
 ## General configuration
 
 ### Fashion product dataset
 
 Download from: [https://www.kaggle.com/paramaggarwal/fashion-product-images-dataset/download](https://www.kaggle.com/paramaggarwal/fashion-product-images-dataset/download)
 
-It is necessary to remove the following lines in the 'styles.csv' since they are missing images.
+1. Download zip file and name it `Fashion_Product_Full.zip`
+2. Create a folder in the repository root with name `datasets/Fashion_Product_Full`
+3. Extract the zip inside `datasets/Fashion_Product_Full` so that you have a path like: `{PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset`
+4. It is necessary to remove the following lines in the 'styles.csv' since they are missing images. (We have filters but just in case)
 
 ```
 39425,Men,Apparel,Topwear,Tshirts,Red,Spring,2013,Casual,U.S. Polo Assn. Men Red Polo T-Shirt
@@ -65,6 +68,11 @@ It is necessary to remove the following lines in the 'styles.csv' since they are
 ### Deep fashion dataset
 
 Download from: [https://drive.google.com/drive/folders/0B7EVK8r0v71pekpRNUlMS3Z5cUk](https://drive.google.com/drive/folders/0B7EVK8r0v71pekpRNUlMS3Z5cUk)
+
+1. Download the `img_highres.zip` file.
+2. Create a folder in the repository root with name `datasets/DeepFashion/Img`, if necessary.
+3. Extract the zip inside `datasets/DeepFashion/Img` so that you have a path like: `{PROJECT_ROOT}/datasets/DeepFashion/Img/img/{folders with images}`
+
 
 ### Install dependencies
 
@@ -87,6 +95,9 @@ Then install Docker Compose.
 
 First of all export the environment variables DATASET_ROOT and WORKDIR_ROOT.
 
+* DATASET_ROOT: environment variable that must point to the Fashion Product dataset root (see main README.md). It should be: ${PROJECT_ROOT}/datasets/Fashion_Product_Full/fashion-dataset
+* WORKDIR_ROOT: environment variable that must point to the workdir. It should be: ${PROJECT_ROOT}/dataset/Fashion_Product_Full_Workir
+* PROJECT_ROOT: environment variable pointing to the root of the repository.
 
 In the root folder execute:
 
@@ -98,8 +109,17 @@ This will create the Docker image for the API and the Frontend (that also acts a
 
 ## Execute project
 
+So before, executing the docker-compose up, execute:
 
+```
+export PROJECT_ROOT= {POINT TO THE REPOSITORY ROOT}
 
+export DATASET_ROOT=${PROJECT_ROOT}/datasets/Fashion_Product_Full/ && export WORKDIR_ROOT=${PROJECT_ROOT}/datasets/Fashion_Product_Full_Workdir
+
+docker-compose up
+
+```
+Then wait until all pretrained models are downloaded and all the created models load from their checkpoints.
 
 # <a name="experiments">Experiments
 
