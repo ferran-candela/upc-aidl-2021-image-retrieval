@@ -454,17 +454,30 @@ Results ordered by precision for Fashion product evaluation.
 ...
 |densenet161_custom_deep|5021|NormalizedFeatures|128|600|0,293|0,7291|
 |densenet161_custom_deep|5021|AQEFeatures|128|600|0,336|0,6251|
+|densenet161_custom_deep_retrain|5021|NormalizedFeatures|128|600|0,277|0,7037|
+|densenet161_custom_deep_retrain|5021|AQEFeatures|128|600|0,339|0,6207|
 
 <br>
-We have calculated the confusion matrix and t-SNE for `densenet161_custom_deep` to see how it looks, so the results are not as we expected.
-<img src="docs/imgs/densenet161_custom_deep_confusion_matrix_normalized.png" width="400"/> 
-<img src="docs/imgs/densenet161_custom_deep_tsne_NormalizedFeatures_128.png" width="400"/> 
+We have calculated the confusion matrix and t-SNE for `densenet161_custom_deep` to see how it looks, so the results are not as we expected.<br>
+
+<img src="docs/imgs/densenet161_custom_deep_tsne_NormalizedFeatures_128.png" width="400"/> <br>
+
+<img src="docs/imgs/densenet161_custom_deep_confusion_matrix_normalized.png" width="400"/> <br>
+
+But calculating the confusion matrix with Deep Fashion we obtained good classification: 
+
+<img src="docs/imgs/densenet161_custom_deep_confusion_matrix_normalized_deep_fashion.png" width="400"/> <br>
+
+Also with `densenet161_custom_deep_retrain` we obtained good classification: 
+
+<img src="docs/imgs/densenet161_custom_deep_retrain_confusion_matrix_normalized_deep_fashion.png" width="400"/> <br>
 
 Results ordered by precision for Deep Fashion evaluation.
 
 |Model|DataSetSize|UsedFeatures|FeaturesSize|mAPqueries|mAP|PrecisionHits|
 |-----|----------:|-----------:|-----------:|---------:|--:|------------:|
 |densenet161_custom_deep|1245|NormalizedFeatures|20|1245|0,136|0,344|
+|densenet161_custom_deep|1245|NormalizedFeatures|20|1245|0,124|0,297|
 |densenet161_custom_20|1245|NormalizedFeatures|20|1245|0,218|0,292|
 |densenet161_custom|1245|NormalizedFeatures|128|1245|0,131|0,267|
 |densenet161_custom_deep_batchnorm|1245|NormalizedFeatures|128|1245|0,114|0,244|
@@ -474,7 +487,38 @@ Results ordered by precision for Deep Fashion evaluation.
 
 As it was expected, the model `densenet161_custom_deep` performs better in Deep Learning evaluation, getting the first position. Although, the model has not a good mAP. In the contrary, this model is below in performance when evaluating it with Fashion Product data.
 
-The model `densenet161_custom_deep_retrain` option is still under training.
+The model `densenet161_custom_deep_retrain` does not improve the results.
+
+This is suspicious taking into account that the classifier trained with Deep Fashion data classifies with a Test Accuracy of 0,74, so the results must not as bad when evaluating the models with Deep Fashion in comparison with Fashion Product data.
+
+Investigating this situation we discovered that when splitting data in Deep Fashion product, we obtain a different label encoding so for this reason the correlation matrix with Fashion Product looks crazy and so all learned by model in one side is destroyed by the other since the activations are in different places.
+
+# Final conclusions
+
+Unfortunately we do not have more time to fix this error so we still do not know if we can improve significantly the Retrieval Engine using Deep Fashion data.
+
+What we have learned:
+* DenseNet161 is the best model when freezing layer and training some of them
+* Precision hits is the evaluation metric that fits the best for our use case
+* Fine-tuning with PCA improves significantly the results
+* The use of AQE it is specially useful when you already have a good precision hit 
+* The use of a dataset without real world images makes the model miss important features
+* When using a dataset that is simple the number of important features is very low
+* Fine tuning is very important and time consuming
+
+# Future work
+
+* Visualizations for units in the last convolutional layer
+* Class Activation Map (CAM) / Grad-CAM
+* Occlusions
+* Test time data augmentation (Data augmentation to the test dataset)
+* Graph diffusion (e.g. this [CVPR 2017 paper](https://arxiv.org/abs/1611.05113))
+* [Bags of local convolutional features](https://imatge.upc.edu/web/publications/bags-local-convolutional-features-scalable-instance-search)
+* Center bias, [saliency weighting](https://github.com/imatge-upc/salbow)
+* Regional features (e.g. [RMAC](https://arxiv.org/pdf/1604.01325.pdf))
+* Fine tuning the network using triplet loss
+
+Image retrieval is an active research area!
 
 # Bibliography
 * Resnet50 diagram from [cv-tricks](https://cv-tricks.com/keras/understand-implement-resnets/)
