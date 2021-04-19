@@ -73,6 +73,16 @@ Download from: [https://drive.google.com/drive/folders/0B7EVK8r0v71pekpRNUlMS3Z5
 2. Create a folder in the repository root with name `datasets/DeepFashion/Img`, if necessary.
 3. Extract the zip inside `datasets/DeepFashion/Img` so that you have a path like: `{PROJECT_ROOT}/datasets/DeepFashion/Img/img/{folders with images}`
 
+### Workdir with pretrained models
+
+You can download the pretrained models and the split of the dataset labels in the following link:
+
+https://drive.google.com/drive/folders/1XGxo-Cj1fRe8lIwXD2OLjprwlpCrp_UN?usp=sharing
+
+This folders must be used in the different configuration environment variables like:
+
+* WORKDIR_ROOT
+* WORK_DIR
 
 ### Install dependencies
 
